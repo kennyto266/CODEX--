@@ -1,64 +1,69 @@
-# 港股量化交易 AI Agent 系统
+# AI Agent 量化交易系统 - 多智能体协作平台
 
-一个专门针对港股市场的量化交易系统，由7个专业的AI Agent组成，旨在追求高Sharpe比率的交易策略。
+一个基于多智能体协作的量化交易系统，集成了数据适配器、回测引擎、实时监控和Telegram机器人等功能模块。
 
 ## 系统架构
 
-### 7个专业AI Agent
+### 核心组件
 
-1. **量化分析师 Agent** - 开发数学模型、评估风险、制定交易策略
-2. **量化交易员 Agent** - 识别交易机会、执行买卖订单、优化策略
-3. **投资组合经理 Agent** - 构建投资组合、管理资产配置、监控绩效
-4. **风险分析师 Agent** - 计算风险指标、设计对冲策略、压力测试
-5. **数据科学家 Agent** - 机器学习预测、数据挖掘、异常检测
-6. **量化工程师 Agent** - 系统监控、性能优化、自动部署
-7. **研究分析师 Agent** - 量化研究、策略开发、学术文献分析
+1. **多智能体系统** - 7个专业AI Agent协作处理量化交易
+2. **数据适配器** - 支持多种数据源（HTTP API、原始数据等）
+3. **回测引擎** - 集成Sharpe比率和最大回撤计算
+4. **实时监控** - WebSocket实时数据推送和性能监控
+5. **Telegram集成** - 通过机器人接收交易信号和系统状态
+6. **Web仪表板** - 可视化界面展示系统状态和交易决策
 
 ### 核心特性
 
-- **微服务架构**: 7个独立的AI Agent组件
-- **事件驱动**: Agent间通过消息队列异步通信
-- **实时响应**: 毫秒级交易信号检测和执行
-- **风险管理**: 全面的风险控制和监控体系
-- **高可用性**: 99.9%的系统可用性保证
+- **模块化设计**: 可插拔的组件架构
+- **实时通信**: WebSocket + HTTP API双重通信机制
+- **风险管理**: 集成Sharpe比率和最大回撤计算
+- **多数据源**: 支持HTTP API和原始数据适配器
+- **用户友好**: 提供Web界面和Telegram机器人交互
 
 ## 快速开始
 
 ### 环境要求
 
-- Python 3.9+
-- PostgreSQL 12+
-- Redis 6+
-- Docker (可选)
+- Python 3.10+ (推荐3.10或3.11)
+- Windows 10/11 (当前版本针对Windows优化)
+- PowerShell 5.1+
 
 ### 安装步骤
 
 1. **克隆项目**
 ```bash
 git clone <repository-url>
-cd hk-quant-ai-agents
+cd CODEX-寫量化團隊
 ```
 
-2. **安装依赖**
+2. **创建虚拟环境**
+```bash
+python -m venv .venv310
+.venv310\Scripts\activate
+```
+
+3. **安装依赖**
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **配置环境**
+4. **配置环境**
 ```bash
 cp env.example .env
-# 编辑 .env 文件，配置数据库、Redis等连接信息
-```
-
-4. **初始化数据库**
-```bash
-# 创建数据库迁移
-alembic upgrade head
+# 编辑 .env 文件，配置API密钥和数据库连接
 ```
 
 5. **启动系统**
 ```bash
-python -m src.main
+# 方式1: 完整系统模式
+python run_full_dashboard.py
+
+# 方式2: 简单仪表板
+python simple_web_dashboard.py
+
+# 方式3: 使用脚本启动
+.\scripts\start_server.ps1
 ```
 
 ### 开发环境设置
@@ -77,16 +82,23 @@ pytest tests/
 ## 项目结构
 
 ```
-hk-quant-ai-agents/
+CODEX-寫量化團隊/
 ├── src/
-│   ├── core/           # 核心模块
 │   ├── agents/         # AI Agent实现
-│   ├── models/         # 数据模型
-│   ├── services/       # 业务服务
+│   ├── backtest/       # 回测引擎
+│   ├── core/           # 核心模块
+│   ├── dashboard/      # Web仪表板
+│   ├── data_adapters/  # 数据适配器
+│   ├── integration/    # 系统集成
+│   ├── monitoring/     # 监控模块
+│   ├── strategy_management/ # 策略管理
+│   ├── telegram/       # Telegram机器人
 │   └── utils/          # 工具函数
+├── scripts/            # 启动脚本
 ├── tests/              # 测试文件
 ├── docs/               # 文档
-├── .spec-workflow/     # 规范工作流程文档
+├── config/             # 配置文件
+├── examples/           # 示例代码
 └── requirements.txt    # 依赖包
 ```
 
@@ -94,12 +106,39 @@ hk-quant-ai-agents/
 
 系统支持通过环境变量进行配置，主要配置项包括：
 
-- **数据库配置**: `DATABASE_URL`
-- **Redis配置**: `REDIS_HOST`, `REDIS_PORT`
-- **交易配置**: `TRADING_ENABLED`, `MAX_POSITION_SIZE`
-- **风险控制**: `RISK_LIMIT`, `MAX_DAILY_LOSS`
+- **API配置**: `API_HOST`, `API_PORT`
+- **Telegram配置**: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
+- **数据源配置**: `DATA_SOURCE_URL`, `DATA_API_KEY`
+- **回测配置**: `RISK_FREE_RATE`, `MAX_POSITION_SIZE`
 
 详细配置请参考 `env.example` 文件。
+
+## 主要功能
+
+### 1. 多智能体协作
+- 7个专业AI Agent协同工作
+- 实时消息传递和状态同步
+- 智能决策和风险控制
+
+### 2. 数据适配器
+- HTTP API数据源适配
+- 原始数据文件处理
+- 实时数据流处理
+
+### 3. 回测引擎
+- Sharpe比率计算
+- 最大回撤分析
+- 策略性能评估
+
+### 4. Web仪表板
+- 实时系统状态监控
+- 交易信号可视化
+- 性能指标展示
+
+### 5. Telegram集成
+- 交易信号推送
+- 系统状态通知
+- 远程控制命令
 
 ## 监控和日志
 
