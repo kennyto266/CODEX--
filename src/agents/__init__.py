@@ -1,22 +1,22 @@
 """
-港股量化交易 AI Agent 系统Agent模块
+港股AI代理系统Agent模块
 
 这个模块包含了7个专业的AI Agent实现：
-1. 量化分析师Agent
-2. 量化交易员Agent  
-3. 投资组合经理Agent
-4. 风险分析师Agent
-5. 数据科学家Agent
-6. 量化工程师Agent
-7. 研究分析师Agent
+1. 基本面分析代理
+2. 技术分析代理
+3. 情绪分析代理
+4. 新闻分析代理
+5. 研究辩论代理
+6. 交易代理
+7. 风险管理代理
 
-以及Agent协调器，负责管理所有Agent的生命周期和协调。
+以及代理管理器，负责管理所有代理的生命周期和协调。
 """
 
-from .coordinator import AgentCoordinator
+from .agent_manager import AgentManager
 from .base_agent import BaseAgent
 
 __all__ = [
-    "AgentCoordinator",
+    "AgentManager",
     "BaseAgent"
 ]

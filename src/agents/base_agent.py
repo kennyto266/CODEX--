@@ -1,238 +1,199 @@
 """
-港股量化交易 AI Agent 系统基础Agent类
-
-定义了所有Agent的基础接口和通用功能。
+AI代理基类
+定义所有代理的通用接口和行为
 """
 
 import asyncio
+import aiohttp
+from typing import Dict, Any, Optional, List
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List
 from datetime import datetime
-from dataclasses import dataclass
 
-from ..core import SystemConfig, SystemConstants
-from ..core.message_queue import MessageQueue, Message
-from ..models.base import AgentInfo, AgentStatus
-
-
-@dataclass
-class AgentConfig:
-    """Agent配置"""
-    agent_id: str
-    agent_type: str
-    config: Dict[str, Any]
-    heartbeat_interval: int = 30
-    max_errors: int = 10
-    restart_delay: int = 5
-
+logger = logging.getLogger(__name__)
 
 class BaseAgent(ABC):
-    """基础Agent类"""
+    """AI代理基类"""
     
-    def __init__(
-        self, 
-        config: AgentConfig,
-        message_queue: MessageQueue,
-        system_config: SystemConfig = None
-    ):
-        self.config = config
-        self.message_queue = message_queue
-        self.system_config = system_config or SystemConfig()
-        self.logger = logging.getLogger(f"hk_quant_system.agent.{config.agent_id}")
-        
-        # Agent状态
-        self.status = AgentStatus.IDLE
-        self.start_time: Optional[datetime] = None
-        self.error_count = 0
-        self.messages_processed = 0
-        
-        # 任务管理
-        self.tasks: List[asyncio.Task] = []
-        self.running = False
-        
-        # 统计信息
-        self.cpu_usage = 0.0
-        self.memory_usage = 0.0
-        
+    def __init__(self, cursor_api_key: str, base_url: str):
+        self.cursor_api_key = cursor_api_key
+        self.base_url = base_url
+        self.agent_id: Optional[str] = None
+        self.session: Optional[aiohttp.ClientSession] = None
+    
+    @property
     @abstractmethod
-    async def initialize(self) -> bool:
-        """初始化Agent"""
+    def name(self) -> str:
+        """代理名称"""
+        pass
+    
+    @property
+    @abstractmethod
+    def icon(self) -> str:
+        """代理图标"""
         pass
     
     @abstractmethod
-    async def process_message(self, message: Message) -> bool:
-        """处理消息"""
+    def generate_prompt(self, market_data: List[Dict[str, Any]]) -> str:
+        """
+        生成代理提示词
+        
+        Args:
+            market_data: 市场数据
+            
+        Returns:
+            提示词字符串
+        """
         pass
     
-    @abstractmethod
-    async def cleanup(self):
-        """清理资源"""
-        pass
-    
-    async def start(self) -> bool:
-        """启动Agent"""
+    async def launch(self, market_data: List[Dict[str, Any]]) -> Optional[str]:
+        """
+        启动代理
+        
+        Args:
+            market_data: 市场数据
+            
+        Returns:
+            代理ID
+        """
         try:
-            self.logger.info(f"启动Agent: {self.config.agent_id}")
+            if not self.session:
+                self.session = aiohttp.ClientSession()
             
-            # 初始化Agent
-            if not await self.initialize():
-                self.logger.error(f"Agent初始化失败: {self.config.agent_id}")
-                return False
+            prompt = self.generate_prompt(market_data)
             
-            self.status = AgentStatus.RUNNING
-            self.start_time = datetime.now()
-            self.running = True
+            data = {
+                "prompt": {
+                    "text": f"""
+作为{self.name}，请分析以下港股数据：
+
+{prompt}
+
+请提供专业的分析结果，包括：
+1. 详细的分析过程
+2. 具体的投资建议
+3. 风险提示
+4. 预期收益评估
+
+请以JSON格式输出结果。
+"""
+                },
+                "source": {
+                    "repository": "https://github.com/kennyto266/CODEX--",
+                    "ref": "main"
+                }
+            }
             
-            # 启动心跳任务
-            heartbeat_task = asyncio.create_task(self._heartbeat_loop())
-            self.tasks.append(heartbeat_task)
+            url = f"{self.base_url}/agents"
+            headers = {
+                "Authorization": f"Bearer {self.cursor_api_key}",
+                "Content-Type": "application/json"
+            }
             
-            # 启动消息处理任务
-            message_task = asyncio.create_task(self._message_processing_loop())
-            self.tasks.append(message_task)
-            
-            self.logger.info(f"Agent启动成功: {self.config.agent_id}")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Agent启动失败: {self.config.agent_id}, 错误: {e}")
-            self.status = AgentStatus.ERROR
-            return False
-    
-    async def stop(self):
-        """停止Agent"""
-        self.logger.info(f"停止Agent: {self.config.agent_id}")
-        self.running = False
-        self.status = AgentStatus.STOPPED
-        
-        # 取消所有任务
-        for task in self.tasks:
-            if not task.done():
-                task.cancel()
-        
-        # 等待任务完成
-        if self.tasks:
-            await asyncio.gather(*self.tasks, return_exceptions=True)
-        
-        # 清理资源
-        await self.cleanup()
-        
-        self.logger.info(f"Agent已停止: {self.config.agent_id}")
-    
-    async def restart(self):
-        """重启Agent"""
-        self.logger.info(f"重启Agent: {self.config.agent_id}")
-        await self.stop()
-        await asyncio.sleep(self.config.restart_delay)
-        await self.start()
-    
-    async def _heartbeat_loop(self):
-        """心跳循环"""
-        while self.running:
-            try:
-                await self.message_queue.send_heartbeat(
-                    agent_id=self.config.agent_id,
-                    status=self.status.value
-                )
-                await asyncio.sleep(self.config.heartbeat_interval)
-            except Exception as e:
-                self.logger.error(f"发送心跳失败: {e}")
-                await asyncio.sleep(5)
-    
-    async def _message_processing_loop(self):
-        """消息处理循环"""
-        while self.running:
-            try:
-                # 接收消息
-                message = await self.message_queue.receive_message(
-                    agent_id=self.config.agent_id,
-                    timeout=1.0
-                )
-                
-                if message:
-                    success = await self.process_message(message)
-                    self.messages_processed += 1
+            async with self.session.post(url, headers=headers, json=data, timeout=30) as response:
+                if response.status == 201:
+                    result = await response.json()
+                    self.agent_id = result.get('id')
+                    logger.info(f"代理 {self.name} 启动成功，ID: {self.agent_id}")
+                    return self.agent_id
+                else:
+                    error_text = await response.text()
+                    logger.error(f"代理 {self.name} 启动失败: {response.status} - {error_text}")
+                    return None
                     
-                    if not success:
-                        self.error_count += 1
-                        self.logger.warning(f"消息处理失败: {message.id}")
-                        
-                        # 错误次数过多时重启
-                        if self.error_count >= self.config.max_errors:
-                            self.logger.error(f"错误次数过多，重启Agent: {self.config.agent_id}")
-                            await self.restart()
-                            return
-                
-            except asyncio.TimeoutError:
-                # 超时是正常的，继续循环
-                continue
-            except Exception as e:
-                self.logger.error(f"消息处理循环异常: {e}")
-                self.error_count += 1
-                await asyncio.sleep(1)
+        except Exception as e:
+            logger.error(f"代理 {self.name} 启动出错: {e}")
+            return None
     
-    def get_agent_info(self) -> AgentInfo:
-        """获取Agent信息"""
-        uptime = 0.0
-        if self.start_time:
-            uptime = (datetime.now() - self.start_time).total_seconds()
+    async def get_status(self, agent_id: str) -> Optional[Dict[str, Any]]:
+        """
+        获取代理状态
         
-        return AgentInfo(
-            agent_id=self.config.agent_id,
-            agent_type=self.config.agent_type,
-            status=self.status,
-            last_heartbeat=datetime.now(),
-            cpu_usage=self.cpu_usage,
-            memory_usage=self.memory_usage,
-            messages_processed=self.messages_processed,
-            error_count=self.error_count,
-            uptime=uptime,
-            version="1.0.0",
-            configuration=self.config.config
-        )
+        Args:
+            agent_id: 代理ID
+            
+        Returns:
+            代理状态信息
+        """
+        try:
+            if not self.session:
+                self.session = aiohttp.ClientSession()
+            
+            url = f"{self.base_url}/agents/{agent_id}"
+            headers = {"Authorization": f"Bearer {self.cursor_api_key}"}
+            
+            async with self.session.get(url, headers=headers, timeout=15) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    logger.warning(f"获取代理 {self.name} 状态失败: {response.status}")
+                    return None
+                    
+        except Exception as e:
+            logger.warning(f"获取代理 {self.name} 状态出错: {e}")
+            return None
     
-    async def send_control_message(
-        self, 
-        target_agent: str, 
-        command: str, 
-        parameters: Dict[str, Any] = None
-    ):
-        """发送控制消息"""
-        await self.message_queue.send_control_message(
-            command=command,
-            target_agent=target_agent,
-            parameters=parameters or {},
-            sender=self.config.agent_id
-        )
+    async def get_conversation(self, agent_id: str) -> Optional[Dict[str, Any]]:
+        """
+        获取代理对话
+        
+        Args:
+            agent_id: 代理ID
+            
+        Returns:
+            代理对话内容
+        """
+        try:
+            if not self.session:
+                self.session = aiohttp.ClientSession()
+            
+            url = f"{self.base_url}/agents/{agent_id}/conversation"
+            headers = {"Authorization": f"Bearer {self.cursor_api_key}"}
+            
+            async with self.session.get(url, headers=headers, timeout=15) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    logger.warning(f"获取代理 {self.name} 对话失败: {response.status}")
+                    return None
+                    
+        except Exception as e:
+            logger.warning(f"获取代理 {self.name} 对话出错: {e}")
+            return None
     
-    async def broadcast_message(
-        self, 
-        message_type: str, 
-        content: Dict[str, Any]
-    ):
-        """广播消息"""
-        await self.message_queue.publish_message(
-            message_type=message_type,
-            content=content,
-            sender=self.config.agent_id
-        )
+    async def get_result(self, agent_id: str) -> Optional[Dict[str, Any]]:
+        """
+        获取代理分析结果
+        
+        Args:
+            agent_id: 代理ID
+            
+        Returns:
+            代理分析结果
+        """
+        try:
+            status = await self.get_status(agent_id)
+            conversation = await self.get_conversation(agent_id)
+            
+            if status and conversation:
+                return {
+                    "agent_name": self.name,
+                    "agent_icon": self.icon,
+                    "agent_id": agent_id,
+                    "status": status,
+                    "conversation": conversation,
+                    "last_updated": datetime.now().isoformat()
+                }
+            else:
+                logger.warning(f"代理 {self.name} 结果不完整")
+                return None
+                
+        except Exception as e:
+            logger.error(f"获取代理 {self.name} 结果出错: {e}")
+            return None
     
-    def update_status(self, status: AgentStatus):
-        """更新Agent状态"""
-        old_status = self.status
-        self.status = status
-        self.logger.info(f"Agent状态变更: {old_status.value} -> {status.value}")
-    
-    def reset_error_count(self):
-        """重置错误计数"""
-        self.error_count = 0
-        self.logger.info("错误计数已重置")
-    
-    def is_healthy(self) -> bool:
-        """检查Agent健康状态"""
-        return (
-            self.status == AgentStatus.RUNNING and
-            self.error_count < self.config.max_errors and
-            self.running
-        )
+    async def close(self):
+        """关闭HTTP会话"""
+        if self.session:
+            await self.session.close()
+            self.session = None
