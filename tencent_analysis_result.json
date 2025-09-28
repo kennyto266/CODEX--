@@ -1,0 +1,118 @@
+{
+  "analysis_metadata": {
+    "stock_symbol": "0700.HK",
+    "stock_name": "騰訊控股",
+    "analysis_date": "2025-09-28 10:15:52",
+    "data_period": "30個交易日",
+    "current_price": 644.0,
+    "price_change": 57.0,
+    "price_change_percentage": 9.71,
+    "analyzer_version": "Pure Python v1.0"
+  },
+  "technical_analysis": {
+    "moving_averages": {
+      "ma5": 643.8,
+      "ma10": 645.35,
+      "ma20": 630.33,
+      "current_vs_ma5": 0.03,
+      "current_vs_ma10": -0.21,
+      "current_vs_ma20": 2.17
+    },
+    "momentum": {
+      "rsi": 63.32,
+      "macd": 12.52,
+      "macd_signal": 12.56,
+      "macd_histogram": -0.04
+    },
+    "bollinger_bands": {
+      "upper": 669.42,
+      "middle": 630.33,
+      "lower": 591.23,
+      "position": 0.67
+    }
+  },
+  "trend_and_levels": {
+    "trend_analysis": {
+      "price_trend": "bearish",
+      "ma_trend": "neutral",
+      "recent_high": 664.5,
+      "recent_low": 627.0
+    },
+    "support_resistance": {
+      "resistance_levels": [
+        664.5,
+        621.0,
+        613.0
+      ],
+      "support_levels": [
+        627.0,
+        591.0,
+        590.0
+      ],
+      "key_resistance": 664.5,
+      "key_support": 627.0
+    }
+  },
+  "volume_analysis": {
+    "volume_statistics": {
+      "average_volume": 18690238,
+      "recent_average_volume": 16704547,
+      "volume_trend": "decreasing",
+      "high_volume_days": 1
+    },
+    "price_volume_relationship": {
+      "correlation": 0,
+      "relationship_strength": "weak"
+    }
+  },
+  "risk_assessment": {
+    "volatility": {
+      "daily": 1.32,
+      "annual": 20.96
+    },
+    "value_at_risk": {
+      "var_95": -1.72,
+      "var_99": -2.95
+    },
+    "performance_metrics": {
+      "max_drawdown": 3.93,
+      "sharpe_ratio": 3.68
+    },
+    "risk_assessment": {
+      "risk_level": "medium",
+      "risk_score": 21.0
+    }
+  },
+  "investment_recommendation": {
+    "recommendation": {
+      "action": "持有",
+      "recommendation_code": "hold",
+      "confidence_score": 10,
+      "reasoning": "技術分析評分: 3, 趨勢評分: -2, 總評分: 1"
+    },
+    "price_targets": {
+      "current_price": 644.0,
+      "target_price": 695.52,
+      "stop_loss": 611.8,
+      "upside_potential": 8.0,
+      "downside_risk": -5.0
+    },
+    "expected_returns": {
+      "short_term_1m": 2.4,
+      "medium_term_3m": 5.6,
+      "long_term_6m": 8.0
+    }
+  },
+  "analysis_summary": {
+    "key_findings": [
+      "當前價格 644.0 港元，較前期上漲 9.71%",
+      "RSI指標: 63.32，顯示正常狀態",
+      "趨勢分析: 價格趨勢bearish，均線趨勢neutral",
+      "風險等級: medium，年化波動率 20.96%",
+      "投資建議: 持有，置信度 10%"
+    ],
+    "overall_sentiment": "hold",
+    "key_resistance": 664.5,
+    "key_support": 627.0
+  }
+}
