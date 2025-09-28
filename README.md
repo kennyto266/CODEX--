@@ -1,187 +1,169 @@
-# AI Agent 量化交易系统 - 多智能体协作平台
+# 港股新闻分析代理 (Hong Kong Stock News Analyst Agent)
 
-一个基于多智能体协作的量化交易系统，集成了数据适配器、回测引擎、实时监控和Telegram机器人等功能模块。
+## 概述
 
-## 系统架构
+这是一个专门针对港股市场的量化分析AI代理，角色为「新闻分析代理（News Analyst）」。系统目标是追求高Sharpe Ratio的交易策略，强调风险调整后回报最大化（Sharpe Ratio > 1.5）。
 
-### 核心组件
+## 核心功能
 
-1. **多智能体系统** - 7个专业AI Agent协作处理量化交易
-2. **数据适配器** - 支持多种数据源（HTTP API、原始数据等）
-3. **回测引擎** - 集成Sharpe比率和最大回撤计算
-4. **实时监控** - WebSocket实时数据推送和性能监控
-5. **Telegram集成** - 通过机器人接收交易信号和系统状态
-6. **Web仪表板** - 可视化界面展示系统状态和交易决策
+### 1. 新闻事件分析
+- 扫描香港/全球新闻（如彭博、Yahoo Finance港股频道）
+- 提取关键事件（监管变化、并购、业绩等）
+- 计算影响分数（-0.1到0.1范围）
 
-### 核心特性
+### 2. 投资机会识别  
+- 筛选正面事件股票作为买入候选
+- 避免负面事件股票（影响 > -0.05）
+- 基于事件驱动的选股策略
 
-- **模块化设计**: 可插拔的组件架构
-- **实时通信**: WebSocket + HTTP API双重通信机制
-- **风险管理**: 集成Sharpe比率和最大回撤计算
-- **多数据源**: 支持HTTP API和原始数据适配器
-- **用户友好**: 提供Web界面和Telegram机器人交互
+### 3. 风险评估
+- 计算事件波动对Sharpe Ratio的贡献
+- 评估地缘政治敏感性
+- 建议对冲规则和风险管理
 
-## 快速开始
+### 4. 结构化输出
+- JSON格式输出，包含完整分析结果
+- 事件清单、影响评分、交易建议
+- 预估Sharpe贡献值（-1到1范围）
 
-### 环境要求
+## 文件说明
 
-- Python 3.10+ (推荐3.10或3.11)
-- Windows 10/11 (当前版本针对Windows优化)
-- PowerShell 5.1+
+- `hk_stock_news_analyzer.py` - 核心分析引擎
+- `interactive_analyzer.py` - 交互式分析界面
+- `example_analysis.py` - 示例分析演示
+- `README.md` - 使用说明文档
 
-### 安装步骤
+## 使用方法
 
-1. **克隆项目**
+### 1. 基础分析
+```python
+from hk_stock_news_analyzer import HKStockNewsAnalyzer
+
+analyzer = HKStockNewsAnalyzer()
+
+# 输入数据格式
+data = {
+    "news_items": [
+        "腾讯(0700.HK)宣布收购游戏公司，预期业绩增长20%",
+        "港股监管机构对科技股展开新一轮调查"
+    ],
+    "stock": "0700.HK"
+}
+
+# 执行分析
+result = analyzer.analyze(data)
+print(result)
+```
+
+### 2. 交互式分析
 ```bash
-git clone <repository-url>
-cd CODEX-寫量化團隊
+python3 interactive_analyzer.py
 ```
 
-2. **创建虚拟环境**
+### 3. 示例演示
 ```bash
-python -m venv .venv310
-.venv310\Scripts\activate
+python3 example_analysis.py
 ```
 
-3. **安装依赖**
-```bash
-pip install -r requirements.txt
+## 输入格式
+
+```json
+{
+    "news_items": [
+        "新闻内容1",
+        "新闻内容2"
+    ],
+    "stock": "目标股票代码"
+}
 ```
 
-4. **配置环境**
-```bash
-cp env.example .env
-# 编辑 .env 文件，配置API密钥和数据库连接
+## 输出格式
+
+```json
+{
+    "key_events": [
+        {
+            "description": "事件描述",
+            "impact_score": 0.08,
+            "confidence": 0.7,
+            "category": "事件类别",
+            "affected_stocks": ["股票代码"]
+        }
+    ],
+    "event_count": 5,
+    "sharpe_contribution": -0.088,
+    "recommendations": [
+        "买入建议: 股票代码 - 基于正面事件",
+        "风险警示: 避免某股票 - 重大负面事件"
+    ],
+    "analysis_timestamp": "2025-09-28T06:49:58.699706",
+    "target_stock": "0700.HK"
+}
 ```
 
-5. **启动系统**
-```bash
-# 方式1: 完整系统模式
-python run_full_dashboard.py
+## 分析逻辑
 
-# 方式2: 简单仪表板
-python simple_web_dashboard.py
+### ReAct思考步骤
+1. **Reasoning**: 扫描新闻，识别事件类型，量化影响
+2. **Acting**: 生成JSON输出，提供关键洞见
 
-# 方式3: 使用脚本启动
-.\scripts\start_server.ps1
-```
+### 事件评分机制
+- 正面事件: 并购(+0.08), 业绩超预期(+0.09), 政策支持(+0.09)
+- 负面事件: 监管(-0.07), 调查(-0.08), 制裁(-0.09)
+- 影响分数范围: -0.1 到 0.1
 
-### 开发环境设置
+### Sharpe Ratio计算
+- 基础影响 = Σ(事件影响分数 × 置信度)
+- 风险调整 = Σ(负面事件绝对值 × 0.5)
+- Sharpe贡献 = 基础影响 - 风险调整
 
-```bash
-# 安装开发依赖
-pip install -r requirements-dev.txt
+## 投资建议逻辑
 
-# 设置代码格式化
-pre-commit install
+### 买入信号
+- 正面事件影响 > 0.05
+- 高置信度事件（> 0.7）
+- 目标行业敏感度匹配
 
-# 运行测试
-pytest tests/
-```
+### 风险警示
+- 负面事件影响 < -0.05
+- 监管类事件高权重
+- 地缘政治敏感性考量
 
-## 项目结构
+### 策略建议
+- Sharpe贡献 > 0.3: 增加仓位
+- Sharpe贡献 < -0.3: 降低仓位/对冲
+- 中性区间: 维持当前配置
 
-```
-CODEX-寫量化團隊/
-├── src/
-│   ├── agents/         # AI Agent实现
-│   ├── backtest/       # 回测引擎
-│   ├── core/           # 核心模块
-│   ├── dashboard/      # Web仪表板
-│   ├── data_adapters/  # 数据适配器
-│   ├── integration/    # 系统集成
-│   ├── monitoring/     # 监控模块
-│   ├── strategy_management/ # 策略管理
-│   ├── telegram/       # Telegram机器人
-│   └── utils/          # 工具函数
-├── scripts/            # 启动脚本
-├── tests/              # 测试文件
-├── docs/               # 文档
-├── config/             # 配置文件
-├── examples/           # 示例代码
-└── requirements.txt    # 依赖包
-```
+## 风险管理
 
-## 配置说明
+### 对冲建议
+- 负面事件数量 > 正面事件: 建议恒指期货对冲
+- 高风险事件: 考虑看跌期权保护
+- 监管风险: 分散化投资组合
 
-系统支持通过环境变量进行配置，主要配置项包括：
+### 限制条件
+- 单一事件影响分数限制在±0.1
+- Sharpe贡献值限制在±1.0
+- 置信度最高为1.0
 
-- **API配置**: `API_HOST`, `API_PORT`
-- **Telegram配置**: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
-- **数据源配置**: `DATA_SOURCE_URL`, `DATA_API_KEY`
-- **回测配置**: `RISK_FREE_RATE`, `MAX_POSITION_SIZE`
+## 注意事项
 
-详细配置请参考 `env.example` 文件。
+1. 本系统基于文本分析，需要结合实际市场数据验证
+2. 影响分数为相对值，应结合具体市场环境调整
+3. 建议与传统技术分析和基本面分析结合使用
+4. 高频交易需要更细粒度的实时数据支持
 
-## 主要功能
+## 技术要求
 
-### 1. 多智能体协作
-- 7个专业AI Agent协同工作
-- 实时消息传递和状态同步
-- 智能决策和风险控制
+- Python 3.6+
+- 标准库: json, re, datetime, dataclasses
+- 无外部依赖，可直接运行
 
-### 2. 数据适配器
-- HTTP API数据源适配
-- 原始数据文件处理
-- 实时数据流处理
+## 示例场景
 
-### 3. 回测引擎
-- Sharpe比率计算
-- 最大回撤分析
-- 策略性能评估
-
-### 4. Web仪表板
-- 实时系统状态监控
-- 交易信号可视化
-- 性能指标展示
-
-### 5. Telegram集成
-- 交易信号推送
-- 系统状态通知
-- 远程控制命令
-
-## 监控和日志
-
-- **日志系统**: 基于Python logging模块，支持文件和控制台输出
-- **性能监控**: 集成Prometheus和Grafana
-- **错误追踪**: 集成Sentry错误监控
-
-## 测试
-
-```bash
-# 运行单元测试
-pytest tests/unit/
-
-# 运行集成测试
-pytest tests/integration/
-
-# 运行性能测试
-pytest tests/performance/
-
-# 生成测试覆盖率报告
-pytest --cov=src tests/
-```
-
-## 文档
-
-- [API文档](docs/api_reference.md)
-- [用户指南](docs/user_guide.md)
-- [开发指南](docs/developer_guide.md)
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
-
-## 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 联系方式
-
-- 项目维护者: 港股量化交易团队
-- 邮箱: contact@hk-quant-team.com
-- 项目链接: [https://github.com/hk-quant-team/hk-quant-ai-agents](https://github.com/hk-quant-team/hk-quant-ai-agents)
+适用于以下分析场景:
+- 港股科技股监管事件影响评估
+- 中概股回港上市事件分析
+- 地缘政治事件对恒指影响
+- 并购重组事件投资机会识别
+- 业绩预期变化的量化分析
