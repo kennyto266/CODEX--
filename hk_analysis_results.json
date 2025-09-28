@@ -1,0 +1,45 @@
+{
+  "discovered_strategy": "低PE高ROE動量再平衡策略 + 價值回歸策略",
+  "value_stocks": [
+    {
+      "code": "0700.HK",
+      "pe": 12.8,
+      "roe": 0.168,
+      "debt_equity": 0.42,
+      "value_score": 1.0,
+      "criteria_met": "4/4"
+    }
+  ],
+  "roe_avg": 0.168,
+  "sharpe": 0.067,
+  "strategy_performance": {
+    "momentum_strategy_sharpe": 0.031,
+    "value_reversion_sharpe": 0.051,
+    "buy_hold_sharpe": 0.067,
+    "best_strategy": "買入持有"
+  },
+  "risk_metrics": {
+    "annual_volatility": 0.243,
+    "systematic_risk_score": 0.346,
+    "debt_equity_ratio": 0.42
+  },
+  "recommendations": [
+    "0700.HK符合4/4項價值篩選標準，PE=12.8<15，ROE=16.8%>15%",
+    "推薦採用買入持有，目標Sharpe比率0.07需優化",
+    "債務股權比0.42<1.0，財務槓桿健康",
+    "系統風險評分0.35，建議配置權重不超過組合20%"
+  ],
+  "detailed_analysis": {
+    "investment_thesis": "騰訊為港股科技龍頭，PE估值合理，ROE表現優秀，債務結構健康",
+    "risk_warnings": [
+      "中美科技政策風險",
+      "遊戲監管政策變化",
+      "宏觀經濟下行壓力"
+    ],
+    "expected_returns": {
+      "conservative_scenario": "5-8%年化回報",
+      "base_scenario": "8-12%年化回報",
+      "optimistic_scenario": "12-18%年化回報"
+    }
+  }
+}
