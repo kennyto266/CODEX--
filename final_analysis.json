@@ -1,0 +1,121 @@
+{
+  "analysis_type": "港股交易执行代理分析",
+  "timestamp": "2025-09-28",
+  "input_data": {
+    "balanced_score": 0.75,
+    "signals": [1, -1, 1, 0, 1, -1],
+    "close_prices": [320.5, 85.2, 128.0, 45.6, 180.3, 92.8],
+    "symbols": ["0700.HK", "0941.HK", "2318.HK", "0005.HK", "1299.HK", "3690.HK"]
+  },
+  "orders": [
+    {
+      "symbol": "0700.HK",
+      "action": "BUY",
+      "position_size": 0.2983,
+      "price": 320.5,
+      "expected_return": 0.06,
+      "sharpe_contribution": 0.0179,
+      "trading_cost_rate": 0.005566,
+      "risk_metrics": {
+        "var_95": -0.099422,
+        "var_99": -0.155263,
+        "max_drawdown": -0.226488,
+        "probability_profit": 0.587
+      }
+    },
+    {
+      "symbol": "0941.HK",
+      "action": "SELL",
+      "position_size": 0.2983,
+      "price": 85.2,
+      "expected_return": -0.06,
+      "sharpe_contribution": -0.0537,
+      "trading_cost_rate": 0.005609,
+      "risk_metrics": {
+        "var_95": -0.100423,
+        "var_99": -0.13878,
+        "max_drawdown": -0.21995,
+        "probability_profit": 0.602
+      }
+    },
+    {
+      "symbol": "2318.HK",
+      "action": "BUY",
+      "position_size": 0.2983,
+      "price": 128.0,
+      "expected_return": 0.06,
+      "sharpe_contribution": 0.0179,
+      "trading_cost_rate": 0.005589,
+      "risk_metrics": {
+        "var_95": -0.099422,
+        "var_99": -0.155263,
+        "max_drawdown": -0.226488,
+        "probability_profit": 0.587
+      }
+    },
+    {
+      "symbol": "1299.HK",
+      "action": "BUY",
+      "position_size": 0.2983,
+      "price": 180.3,
+      "expected_return": 0.06,
+      "sharpe_contribution": 0.0179,
+      "trading_cost_rate": 0.005578,
+      "risk_metrics": {
+        "var_95": -0.099422,
+        "var_99": -0.155263,
+        "max_drawdown": -0.226488,
+        "probability_profit": 0.587
+      }
+    },
+    {
+      "symbol": "3690.HK",
+      "action": "SELL",
+      "position_size": 0.2983,
+      "price": 92.8,
+      "expected_return": -0.06,
+      "sharpe_contribution": -0.0537,
+      "trading_cost_rate": 0.005604,
+      "risk_metrics": {
+        "var_95": -0.100423,
+        "var_99": -0.13878,
+        "max_drawdown": -0.21995,
+        "probability_profit": 0.602
+      }
+    }
+  ],
+  "expected_returns": 0.0179,
+  "sharpe_contribution": -0.0484,
+  "portfolio_metrics": {
+    "portfolio_sharpe": -0.0726,
+    "total_risk": 0.1668,
+    "total_trading_cost": 0.0279,
+    "number_of_orders": 5
+  },
+  "recommendations": [
+    "⚠️ 组合Sharpe比率偏低(-0.073)，建议减少仓位或等待更好机会",
+    "💰 总交易成本较高(2.79%)，考虑合并小额订单降低成本",
+    "🎯 当前策略呈现多空平衡，但风险调整收益不佳",
+    "🕐 港股T+2结算制度，需提前安排资金流动性",
+    "📊 建议等待更强信号(balanced_score > 0.8)或降低仓位至15%"
+  ],
+  "risk_assessment": {
+    "overall_risk_level": "中高风险",
+    "key_concerns": [
+      "负Sharpe比率表明风险调整收益不佳",
+      "交易成本占预期收益的156%，严重侵蚀利润",
+      "多空仓位相互抵消，整体收益有限"
+    ],
+    "monte_carlo_summary": {
+      "average_profit_probability": 0.591,
+      "worst_case_scenario": -0.226488,
+      "expected_volatility": 0.1668
+    }
+  },
+  "execution_strategy": {
+    "priority": "低",
+    "suggested_action": "观望",
+    "alternative_approach": "等待更优质信号或考虑单边持仓策略",
+    "position_sizing": "如执行，建议将仓位降至15-20%"
+  }
+}
