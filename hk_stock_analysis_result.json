@@ -1,0 +1,80 @@
+{
+  "analysis_metadata": {
+    "stock_code": "0700.HK",
+    "analysis_date": "2025-09-28 09:50:41",
+    "analyzer_type": "技術分析代理",
+    "data_period": "30個交易日"
+  },
+  "technical_analysis": {
+    "price_data": {
+      "current_price": 644.0,
+      "price_change": 57.0,
+      "change_percent": 9.71,
+      "previous_price": 587.0
+    },
+    "technical_indicators": {
+      "momentum": {
+        "level": "強",
+        "score": 4,
+        "description": "強勁上漲動量，積極市場情緒"
+      },
+      "trend": {
+        "direction": "上升",
+        "strength": "中等",
+        "confidence": 0.7,
+        "daily_avg_change": 0.324
+      },
+      "support_resistance": {
+        "support_1": 587.0,
+        "support_2": 558.5,
+        "resistance_1": 679.23,
+        "resistance_2": 701.0
+      },
+      "volatility": 9.71
+    }
+  },
+  "investment_recommendation": {
+    "recommendation": "強烈買入",
+    "action": "BUY_STRONG",
+    "reasoning": "技術指標顯示強勁上漲動量，建議積極買入",
+    "technical_score": 100,
+    "target_price_range": {
+      "high": 675.27,
+      "low": 611.8
+    },
+    "time_horizon": "1-3個月",
+    "confidence_level": 70.0
+  },
+  "risk_assessment": {
+    "risk_level": "中等",
+    "risk_score": 3,
+    "risk_factors": [
+      "動量風險：價格變化過於劇烈，可能面臨回調",
+      "監管風險：中國科技股面臨政策不確定性",
+      "市場風險：港股受外圍市場影響較大",
+      "流動性風險：大型股票交易量波動影響價格"
+    ],
+    "risk_management": {
+      "stop_loss": 592.48,
+      "position_sizing": "建議單一股票持倉不超過組合的10-15%",
+      "diversification": "建議分散投資不同行業和地區",
+      "monitoring": "密切關注技術指標變化和基本面消息"
+    },
+    "volatility_assessment": {
+      "current_volatility": 9.71,
+      "volatility_level": "高"
+    }
+  },
+  "market_context": {
+    "sector": "科技股",
+    "market_cap": "大型股",
+    "market_sentiment": "樂觀",
+    "sector_outlook": "科技股受到資金追捧，市場對成長性期待較高",
+    "hk_market_factors": [
+      "美聯儲利率政策影響",
+      "中美關係發展",
+      "中國經濟數據表現",
+      "港元匯率穩定性"
+    ]
+  }
+}
