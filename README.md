@@ -1,187 +1,132 @@
-# AI Agent 量化交易系统 - 多智能体协作平台
+# 港股技术分析代理 (HK Stock Technical Analyst)
 
-一个基于多智能体协作的量化交易系统，集成了数据适配器、回测引擎、实时监控和Telegram机器人等功能模块。
+🚀 **专门针对港股的量化分析AI代理，追求高Sharpe Ratio的交易策略**
 
-## 系统架构
+## 🎯 核心特色
 
-### 核心组件
+- **高Sharpe Ratio策略**: 目标Sharpe Ratio > 1.5，强调风险调整后回报最大化
+- **港股专业化**: 针对港股市场高波动性和流动性特点优化
+- **全面技术分析**: 集成MA、RSI、MACD等经典技术指标
+- **智能信号生成**: 自动识别买入/卖出时机，避免超买超卖陷阱
+- **风险管理**: 内置止损建议和仓位管理策略
 
-1. **多智能体系统** - 7个专业AI Agent协作处理量化交易
-2. **数据适配器** - 支持多种数据源（HTTP API、原始数据等）
-3. **回测引擎** - 集成Sharpe比率和最大回撤计算
-4. **实时监控** - WebSocket实时数据推送和性能监控
-5. **Telegram集成** - 通过机器人接收交易信号和系统状态
-6. **Web仪表板** - 可视化界面展示系统状态和交易决策
+## 📊 技术指标
 
-### 核心特性
+### 核心指标
+- **20日移动平均线 (MA20)**: 趋势判断基准
+- **14日相对强弱指数 (RSI)**: 超买超卖识别
+- **MACD指标**: 趋势转换信号
 
-- **模块化设计**: 可插拔的组件架构
-- **实时通信**: WebSocket + HTTP API双重通信机制
-- **风险管理**: 集成Sharpe比率和最大回撤计算
-- **多数据源**: 支持HTTP API和原始数据适配器
-- **用户友好**: 提供Web界面和Telegram机器人交互
+### 信号逻辑
+- **买入条件**: Close > MA20 且 RSI < 70 且 RSI > 30 且 MACD金叉
+- **卖出条件**: RSI > 80 或 Close < MA20*0.95 或 MACD死叉
 
-## 快速开始
+## 🔧 使用方法
 
-### 环境要求
+### 基本用法
 
-- Python 3.10+ (推荐3.10或3.11)
-- Windows 10/11 (当前版本针对Windows优化)
-- PowerShell 5.1+
+```python
+from hk_stock_analyst_simple import HKStockTechnicalAnalyst
 
-### 安装步骤
+# 创建分析器实例
+analyst = HKStockTechnicalAnalyst()
 
-1. **克隆项目**
+# 准备股票数据
+stock_data = {
+    "stock": "0700.HK",  # 股票代码
+    "close_prices": [100, 102, 98, 105, ...],  # 收盘价列表
+    "volumes": [1000000, 1200000, ...]  # 成交量列表（可选）
+}
+
+# 执行分析
+result = analyst.analyze(stock_data)
+print(result)
+```
+
+### 输入数据格式
+
+```json
+{
+    "stock": "0700.HK",
+    "close_prices": [580, 585, 578, 590, 595, ...],
+    "volumes": [1000000, 1200000, 800000, ...]
+}
+```
+
+**注意**: 至少需要20个交易日的数据进行有效分析
+
+## 📈 输出格式
+
+```json
+{
+    "stock": "0700.HK",
+    "signals": [0, 0, 1, -1, 0, ...],  // 1=买入, -1=卖出, 0=持有
+    "rsi_avg": 70.34,                  // 平均RSI
+    "sharpe_contribution": 0.163,      // Sharpe贡献值 (-1到1)
+    "recommendations": [               // 交易建议
+        "技术指标显示买入信号，当前RSI=68.0，建议关注入场机会",
+        "建议设置止损位于634.60（当前价格95%）",
+        "港股市场波动较大，建议控制单次交易仓位不超过总资金20%"
+    ],
+    "technical_indicators": {          // 当前技术指标
+        "current_price": 668,
+        "ma_20": 642.55,
+        "current_rsi": 67.98,
+        "macd": 18.4974
+    },
+    "risk_assessment": {               // 风险评估
+        "volatility_level": "低",      // 低/中等/高
+        "trend_strength": "弱"         // 强/弱
+    }
+}
+```
+
+## 🎪 运行示例
+
+### 快速测试
 ```bash
-git clone <repository-url>
-cd CODEX-寫量化團隊
+python3 hk_stock_analyst_simple.py
 ```
 
-2. **创建虚拟环境**
+### 完整演示
 ```bash
-python -m venv .venv310
-.venv310\Scripts\activate
+python3 demo_analysis.py
 ```
 
-3. **安装依赖**
-```bash
-pip install -r requirements.txt
-```
+演示包含：
+- 腾讯控股(0700.HK) - 上升趋势分析
+- 阿里巴巴-SW(9988.HK) - 震荡行情分析  
+- 比亚迪股份(1211.HK) - 高波动分析
 
-4. **配置环境**
-```bash
-cp env.example .env
-# 编辑 .env 文件，配置API密钥和数据库连接
-```
+## 📋 策略评级
 
-5. **启动系统**
-```bash
-# 方式1: 完整系统模式
-python run_full_dashboard.py
+| Sharpe贡献值 | 评级 | 建议 |
+|-------------|------|------|
+| > 0.5 | 优秀 🟢 | 积极关注买入机会 |
+| 0 ~ 0.5 | 良好 🟡 | 可适度关注，谨慎操作 |
+| -0.5 ~ 0 | 一般 🟠 | 观望为主 |
+| < -0.5 | 较差 🔴 | 建议回避 |
 
-# 方式2: 简单仪表板
-python simple_web_dashboard.py
+## ⚠️ 风险提示
 
-# 方式3: 使用脚本启动
-.\scripts\start_server.ps1
-```
+1. **仅供参考**: 本工具仅提供技术分析参考，不构成投资建议
+2. **港股特色**: 已考虑港股高波动性，但仍需注意市场风险
+3. **数据要求**: 建议使用实时或准实时数据获得最佳效果
+4. **仓位管理**: 建议单次交易不超过总资金20%
+5. **止损纪律**: 严格执行止损策略，避免重大损失
 
-### 开发环境设置
+## 🔄 更新日志
 
-```bash
-# 安装开发依赖
-pip install -r requirements-dev.txt
+- **v1.0**: 基础技术分析功能，支持MA、RSI、MACD指标
+- **v1.1**: 优化信号生成逻辑，增加港股特色建议
+- **v1.2**: 完善风险评估，增加Sharpe贡献计算
 
-# 设置代码格式化
-pre-commit install
+## 📞 技术支持
 
-# 运行测试
-pytest tests/
-```
+如有问题或建议，请通过以下方式联系：
+- 创建Issue反馈问题
+- 提交Pull Request改进代码
 
-## 项目结构
+---
 
-```
-CODEX-寫量化團隊/
-├── src/
-│   ├── agents/         # AI Agent实现
-│   ├── backtest/       # 回测引擎
-│   ├── core/           # 核心模块
-│   ├── dashboard/      # Web仪表板
-│   ├── data_adapters/  # 数据适配器
-│   ├── integration/    # 系统集成
-│   ├── monitoring/     # 监控模块
-│   ├── strategy_management/ # 策略管理
-│   ├── telegram/       # Telegram机器人
-│   └── utils/          # 工具函数
-├── scripts/            # 启动脚本
-├── tests/              # 测试文件
-├── docs/               # 文档
-├── config/             # 配置文件
-├── examples/           # 示例代码
-└── requirements.txt    # 依赖包
-```
-
-## 配置说明
-
-系统支持通过环境变量进行配置，主要配置项包括：
-
-- **API配置**: `API_HOST`, `API_PORT`
-- **Telegram配置**: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
-- **数据源配置**: `DATA_SOURCE_URL`, `DATA_API_KEY`
-- **回测配置**: `RISK_FREE_RATE`, `MAX_POSITION_SIZE`
-
-详细配置请参考 `env.example` 文件。
-
-## 主要功能
-
-### 1. 多智能体协作
-- 7个专业AI Agent协同工作
-- 实时消息传递和状态同步
-- 智能决策和风险控制
-
-### 2. 数据适配器
-- HTTP API数据源适配
-- 原始数据文件处理
-- 实时数据流处理
-
-### 3. 回测引擎
-- Sharpe比率计算
-- 最大回撤分析
-- 策略性能评估
-
-### 4. Web仪表板
-- 实时系统状态监控
-- 交易信号可视化
-- 性能指标展示
-
-### 5. Telegram集成
-- 交易信号推送
-- 系统状态通知
-- 远程控制命令
-
-## 监控和日志
-
-- **日志系统**: 基于Python logging模块，支持文件和控制台输出
-- **性能监控**: 集成Prometheus和Grafana
-- **错误追踪**: 集成Sentry错误监控
-
-## 测试
-
-```bash
-# 运行单元测试
-pytest tests/unit/
-
-# 运行集成测试
-pytest tests/integration/
-
-# 运行性能测试
-pytest tests/performance/
-
-# 生成测试覆盖率报告
-pytest --cov=src tests/
-```
-
-## 文档
-
-- [API文档](docs/api_reference.md)
-- [用户指南](docs/user_guide.md)
-- [开发指南](docs/developer_guide.md)
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
-
-## 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 联系方式
-
-- 项目维护者: 港股量化交易团队
-- 邮箱: contact@hk-quant-team.com
-- 项目链接: [https://github.com/hk-quant-team/hk-quant-ai-agents](https://github.com/hk-quant-team/hk-quant-ai-agents)
+**免责声明**: 本工具仅用于技术分析学习和研究，不构成任何投资建议。投资有风险，入市需谨慎。
