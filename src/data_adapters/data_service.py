@@ -1,97 +1,198 @@
 """
-数据服务管理器
+數據服務管理器 - 統一管理多個真實數據源
 
-统一管理多个数据适配器，提供数据获取、质量监控和故障切换功能。
+支持Yahoo Finance、Alpha Vantage、CCXT等多個數據源
 """
 
 import asyncio
 import logging
-from typing import Dict, Any, List, Optional, Union
 from datetime import datetime, date
-from decimal import Decimal
+from typing import Dict, Any, List, Optional, Union
+from pathlib import Path
+import json
 
-from .base_adapter import BaseDataAdapter, RealMarketData, DataValidationResult
-from .raw_data_adapter import RawDataAdapter, RawDataAdapterConfig
-from .config_manager import DataAdapterConfigManager, AdapterConfigEntry
-from .http_api_adapter import HttpApiDataAdapter, HttpApiAdapterConfig
+from .base_adapter import (
+    BaseDataAdapter, 
+    DataAdapterConfig, 
+    RealMarketData, 
+    DataValidationResult,
+    DataSourceType
+)
+from .yahoo_finance_adapter import YahooFinanceAdapter
+from .alpha_vantage_adapter import AlphaVantageAdapter
+from .ccxt_crypto_adapter import CCXTCryptoAdapter
+from .raw_data_adapter import RawDataAdapter
+from .http_api_adapter import HttpApiDataAdapter
 
 
 class DataService:
-    """数据服务管理器"""
+    """數據服務管理器"""
     
-    def __init__(self, config_manager: Optional[DataAdapterConfigManager] = None):
-        self.config_manager = config_manager or DataAdapterConfigManager()
+    def __init__(self, config_path: str = "config/data_adapters.json"):
+        self.config_path = config_path
         self.logger = logging.getLogger("hk_quant_system.data_service")
         self.adapters: Dict[str, BaseDataAdapter] = {}
+        self.adapter_configs: Dict[str, Dict] = {}
         self._initialized = False
         
     async def initialize(self) -> bool:
-        """初始化数据服务"""
+        """初始化數據服務"""
         try:
             self.logger.info("Initializing data service...")
             
-            # 加载配置
-            await self.config_manager.load_config_from_file()
+            # 加載配置
+            await self._load_config()
             
-            # 初始化适配器
+            # 初始化適配器
             await self._initialize_adapters()
-            
-            # 启动健康检查任务
-            asyncio.create_task(self._health_check_loop())
             
             self._initialized = True
             self.logger.info("Data service initialized successfully")
             return True
             
         except Exception as e:
-            self.logger.error(f"Failed to initialize data service: {e}")
+            self.logger.exception(f"Failed to initialize data service: {e}")
             return False
     
-    async def _initialize_adapters(self) -> None:
-        """初始化所有启用的适配器"""
-        enabled_adapters = self.config_manager.get_enabled_adapters()
-        
-        for entry in enabled_adapters:
-            try:
-                adapter = await self._create_adapter(entry)
-                if adapter:
-                    self.adapters[entry.name] = adapter
-                    self.logger.info(f"Initialized adapter: {entry.name}")
-                else:
-                    self.logger.error(f"Failed to create adapter: {entry.name}")
-                    
-            except Exception as e:
-                self.logger.error(f"Error initializing adapter {entry.name}: {e}")
-    
-    async def _create_adapter(self, entry: AdapterConfigEntry) -> Optional[BaseDataAdapter]:
-        """创建适配器实例"""
+    async def _load_config(self) -> None:
+        """加載配置"""
         try:
-            if str(entry.config.get('source_type')) == "raw_data":
-                raw_config = RawDataAdapterConfig(**entry.config)
-                adapter = RawDataAdapter(raw_config)
-                
-                # 连接到数据源
-                connected = await adapter.connect()
-                if connected:
-                    return adapter
+            config_file = Path(self.config_path)
+            if not config_file.exists():
+                self.logger.warning(f"Config file not found: {self.config_path}")
+                await self._create_default_config()
+                return
+            
+            with open(config_file, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+            
+            self.adapter_configs = {}
+            for adapter_config in config_data.get('adapters', []):
+                name = adapter_config['name']
+                if adapter_config.get('enabled', True):
+                    self.adapter_configs[name] = adapter_config
+                    self.logger.info(f"Loaded adapter config: {name}")
                 else:
-                    self.logger.error(f"Failed to connect adapter: {entry.name}")
-                    return None
-            elif str(entry.config.get('source_type')) == "http_api":
-                http_config = HttpApiAdapterConfig(**entry.config)
-                adapter = HttpApiDataAdapter(http_config)
-                connected = await adapter.connect()
-                if connected:
-                    return adapter
+                    self.logger.info(f"Skipping disabled adapter: {name}")
+                    
+        except Exception as e:
+            self.logger.error(f"Error loading config: {e}")
+            await self._create_default_config()
+    
+    async def _create_default_config(self) -> None:
+        """創建默認配置"""
+        try:
+            config_dir = Path(self.config_path).parent
+            config_dir.mkdir(parents=True, exist_ok=True)
+            
+            default_config = {
+                "adapters": [
+                    {
+                        "name": "yahoo_finance",
+                        "enabled": True,
+                        "priority": 1,
+                        "config": {
+                            "source_type": "yahoo_finance",
+                            "source_path": "https://finance.yahoo.com",
+                            "update_frequency": 60,
+                            "max_retries": 3,
+                            "timeout": 30,
+                            "cache_enabled": True,
+                            "cache_ttl": 300,
+                            "quality_threshold": 0.8
+                        }
+                    },
+                    {
+                        "name": "alpha_vantage",
+                        "enabled": False,  # 需要API密鑰
+                        "priority": 2,
+                        "config": {
+                            "source_type": "alpha_vantage",
+                            "source_path": "https://www.alphavantage.co",
+                            "api_key": "YOUR_API_KEY_HERE",
+                            "update_frequency": 60,
+                            "max_retries": 3,
+                            "timeout": 30,
+                            "cache_enabled": True,
+                            "cache_ttl": 300,
+                            "quality_threshold": 0.8
+                        }
+                    },
+                    {
+                        "name": "binance_crypto",
+                        "enabled": True,
+                        "priority": 3,
+                        "config": {
+                            "source_type": "custom",
+                            "source_path": "https://api.binance.com",
+                            "exchange": "binance",
+                            "sandbox": True,
+                            "api_key": None,
+                            "secret": None,
+                            "update_frequency": 30,
+                            "max_retries": 3,
+                            "timeout": 30,
+                            "cache_enabled": True,
+                            "cache_ttl": 60,
+                            "quality_threshold": 0.8
+                        }
+                    }
+                ]
+            }
+            
+            with open(self.config_path, 'w', encoding='utf-8') as f:
+                json.dump(default_config, f, indent=2, ensure_ascii=False)
+            
+            self.logger.info(f"Created default config: {self.config_path}")
+            
+        except Exception as e:
+            self.logger.error(f"Error creating default config: {e}")
+    
+    async def _initialize_adapters(self) -> None:
+        """初始化適配器"""
+        try:
+            for name, config in self.adapter_configs.items():
+                try:
+                    adapter = await self._create_adapter(name, config)
+                    if adapter:
+                        self.adapters[name] = adapter
+                        self.logger.info(f"Initialized adapter: {name}")
+                    else:
+                        self.logger.warning(f"Failed to initialize adapter: {name}")
+                        
+                except Exception as e:
+                    self.logger.error(f"Error initializing adapter {name}: {e}")
+                    
+        except Exception as e:
+            self.logger.error(f"Error initializing adapters: {e}")
+    
+    async def _create_adapter(self, name: str, config: Dict) -> Optional[BaseDataAdapter]:
+        """創建適配器實例"""
+        try:
+            adapter_config = DataAdapterConfig(**config['config'])
+            
+            # 根據數據源類型創建相應的適配器
+            if adapter_config.source_type == DataSourceType.YAHOO_FINANCE:
+                return YahooFinanceAdapter(adapter_config)
+            elif adapter_config.source_type == DataSourceType.ALPHA_VANTAGE:
+                return AlphaVantageAdapter(adapter_config)
+            elif adapter_config.source_type == DataSourceType.RAW_DATA:
+                return RawDataAdapter(adapter_config)
+            elif adapter_config.source_type == DataSourceType.HTTP_API:
+                return HttpApiDataAdapter(adapter_config)
+            elif adapter_config.source_type == DataSourceType.CUSTOM:
+                # 檢查是否為加密貨幣適配器
+                if config['config'].get('exchange'):
+                    return CCXTCryptoAdapter(adapter_config)
                 else:
-                    self.logger.error(f"Failed to connect adapter: {entry.name}")
+                    self.logger.warning(f"Unknown custom adapter type: {name}")
                     return None
             else:
-                self.logger.warning(f"Unsupported adapter type: {entry.config.get('source_type')}")
+                self.logger.warning(f"Unknown adapter type: {adapter_config.source_type}")
                 return None
                 
         except Exception as e:
-            self.logger.error(f"Failed to create adapter {entry.name}: {e}")
+            self.logger.error(f"Error creating adapter {name}: {e}")
             return None
     
     async def get_market_data(
@@ -99,285 +200,255 @@ class DataService:
         symbol: str, 
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        source_preference: Optional[str] = None
+        preferred_adapter: Optional[str] = None
     ) -> List[RealMarketData]:
-        """获取市场数据（支持多数据源和故障切换）"""
+        """獲取市場數據"""
+        if not self._initialized:
+            self.logger.error("Data service not initialized")
+            return []
+        
         try:
-            if not self._initialized:
-                self.logger.error("Data service not initialized")
-                return []
-            
-            # 确定要使用的适配器
-            adapters_to_try = self._select_adapters(source_preference)
-            
-            last_error = None
-            for adapter_entry in adapters_to_try:
-                adapter_name = adapter_entry.name
-                if adapter_name not in self.adapters:
-                    self.logger.warning(f"Adapter {adapter_name} not available")
-                    continue
-                
-                try:
-                    adapter = self.adapters[adapter_name]
+            # 如果指定了優先適配器，先嘗試該適配器
+            if preferred_adapter and preferred_adapter in self.adapters:
+                adapter = self.adapters[preferred_adapter]
+                if await adapter.connect():
                     data = await adapter.get_market_data(symbol, start_date, end_date)
-                    
                     if data:
-                        self.logger.info(f"Successfully retrieved {len(data)} records for {symbol} from {adapter_name}")
+                        self.logger.info(f"Got data from preferred adapter: {preferred_adapter}")
                         return data
+            
+            # 按優先級嘗試所有適配器
+            sorted_adapters = sorted(
+                self.adapters.items(),
+                key=lambda x: self.adapter_configs[x[0]].get('priority', 999)
+            )
+            
+            for adapter_name, adapter in sorted_adapters:
+                try:
+                    if await adapter.connect():
+                        data = await adapter.get_market_data(symbol, start_date, end_date)
+                        if data:
+                            self.logger.info(f"Got data from adapter: {adapter_name}")
+                            return data
+                        else:
+                            self.logger.debug(f"No data from adapter: {adapter_name}")
                     else:
-                        self.logger.warning(f"No data returned from adapter {adapter_name} for {symbol}")
+                        self.logger.warning(f"Failed to connect to adapter: {adapter_name}")
                         
                 except Exception as e:
-                    last_error = e
-                    self.logger.warning(f"Adapter {adapter_name} failed for {symbol}: {e}")
+                    self.logger.error(f"Error with adapter {adapter_name}: {e}")
                     continue
             
-            # 所有适配器都失败了
-            self.logger.error(f"All adapters failed to retrieve data for {symbol}. Last error: {last_error}")
+            self.logger.warning(f"No data found for symbol: {symbol}")
             return []
             
         except Exception as e:
-            self.logger.error(f"Failed to get market data for {symbol}: {e}")
+            self.logger.error(f"Error getting market data: {e}")
             return []
     
-    def _select_adapters(self, source_preference: Optional[str] = None) -> List[AdapterConfigEntry]:
-        """选择要使用的适配器（按优先级排序）"""
-        if source_preference:
-            # 优先使用指定的适配器
-            preferred_entry = self.config_manager.get_adapter_config(source_preference)
-            if preferred_entry and preferred_entry.enabled:
-                adapters = [preferred_entry]
-                # 添加其他启用的适配器作为备用
-                other_adapters = [
-                    entry for entry in self.config_manager.get_enabled_adapters()
-                    if entry.name != source_preference
-                ]
-                adapters.extend(other_adapters)
-                return adapters
-        
-        # 返回所有启用的适配器（按优先级排序）
-        return self.config_manager.get_enabled_adapters()
-    
-    async def validate_data_quality(
+    async def get_real_time_data(
         self, 
-        data: List[RealMarketData],
-        adapter_name: Optional[str] = None
-    ) -> DataValidationResult:
-        """验证数据质量"""
+        symbol: str, 
+        preferred_adapter: Optional[str] = None
+    ) -> Optional[RealMarketData]:
+        """獲取實時數據"""
+        if not self._initialized:
+            self.logger.error("Data service not initialized")
+            return None
+        
         try:
-            if not data:
-                return DataValidationResult(
-                    is_valid=False,
-                    quality_score=0.0,
-                    quality_level="unknown",
-                    errors=["No data provided"],
-                    warnings=[]
-                )
+            # 如果指定了優先適配器，先嘗試該適配器
+            if preferred_adapter and preferred_adapter in self.adapters:
+                adapter = self.adapters[preferred_adapter]
+                if await adapter.connect():
+                    data = await adapter.get_real_time_data(symbol)
+                    if data:
+                        return data
             
-            # 使用指定适配器或第一个可用适配器进行验证
-            if adapter_name and adapter_name in self.adapters:
-                adapter = self.adapters[adapter_name]
-            else:
-                # 使用第一个可用的适配器
-                available_adapters = list(self.adapters.values())
-                if not available_adapters:
-                    return DataValidationResult(
-                        is_valid=False,
-                        quality_score=0.0,
-                        quality_level="unknown",
-                        errors=["No adapters available for validation"],
-                        warnings=[]
-                    )
-                adapter = available_adapters[0]
-            
-            return await adapter.validate_data(data)
-            
-        except Exception as e:
-            self.logger.error(f"Failed to validate data quality: {e}")
-            return DataValidationResult(
-                is_valid=False,
-                quality_score=0.0,
-                quality_level="unknown",
-                errors=[f"Validation error: {str(e)}"],
-                warnings=[]
+            # 按優先級嘗試所有適配器
+            sorted_adapters = sorted(
+                self.adapters.items(),
+                key=lambda x: self.adapter_configs[x[0]].get('priority', 999)
             )
-    
-    async def get_available_symbols(self, adapter_name: Optional[str] = None) -> List[str]:
-        """获取可用的股票代码列表"""
-        try:
-            if adapter_name:
-                if adapter_name in self.adapters:
-                    adapter = self.adapters[adapter_name]
-                    if hasattr(adapter, 'get_available_symbols'):
-                        return await adapter.get_available_symbols()
-                return []
             
-            # 从所有适配器获取股票代码
-            all_symbols = set()
-            for adapter in self.adapters.values():
-                if hasattr(adapter, 'get_available_symbols'):
-                    try:
-                        symbols = await adapter.get_available_symbols()
-                        all_symbols.update(symbols)
-                    except Exception as e:
-                        self.logger.warning(f"Failed to get symbols from adapter: {e}")
+            for adapter_name, adapter in sorted_adapters:
+                try:
+                    if await adapter.connect():
+                        data = await adapter.get_real_time_data(symbol)
+                        if data:
+                            return data
+                            
+                except Exception as e:
+                    self.logger.error(f"Error with adapter {adapter_name}: {e}")
+                    continue
             
-            return sorted(list(all_symbols))
+            return None
             
         except Exception as e:
-            self.logger.error(f"Failed to get available symbols: {e}")
+            self.logger.error(f"Error getting real-time data: {e}")
+            return None
+    
+    async def get_multiple_symbols_data(
+        self, 
+        symbols: List[str], 
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        preferred_adapter: Optional[str] = None
+    ) -> Dict[str, List[RealMarketData]]:
+        """批量獲取多個標的數據"""
+        try:
+            # 並行獲取數據
+            tasks = [
+                self.get_market_data(symbol, start_date, end_date, preferred_adapter)
+                for symbol in symbols
+            ]
+            
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            symbol_data = {}
+            for symbol, result in zip(symbols, results):
+                if isinstance(result, Exception):
+                    self.logger.error(f"Error fetching data for {symbol}: {result}")
+                    symbol_data[symbol] = []
+                else:
+                    symbol_data[symbol] = result
+            
+            successful_symbols = len([s for s, data in symbol_data.items() if data])
+            self.logger.info(f"Successfully fetched data for {successful_symbols}/{len(symbols)} symbols")
+            
+            return symbol_data
+            
+        except Exception as e:
+            self.logger.error(f"Error fetching multiple symbols data: {e}")
+            return {}
+    
+    async def search_symbols(self, query: str) -> List[Dict[str, Any]]:
+        """搜索標的符號"""
+        try:
+            all_results = []
+            
+            # 從所有適配器搜索
+            for adapter_name, adapter in self.adapters.items():
+                try:
+                    if await adapter.connect():
+                        results = await adapter.search_symbols(query)
+                        for result in results:
+                            result['adapter'] = adapter_name
+                        all_results.extend(results)
+                        
+                except Exception as e:
+                    self.logger.error(f"Error searching with adapter {adapter_name}: {e}")
+                    continue
+            
+            # 去重並排序
+            unique_results = []
+            seen_symbols = set()
+            
+            for result in all_results:
+                symbol = result.get('symbol', '')
+                if symbol not in seen_symbols:
+                    seen_symbols.add(symbol)
+                    unique_results.append(result)
+            
+            return unique_results[:50]  # 限制結果數量
+            
+        except Exception as e:
+            self.logger.error(f"Error searching symbols: {e}")
             return []
     
-    async def health_check(self) -> Dict[str, Any]:
-        """健康检查"""
+    async def get_adapter_status(self) -> Dict[str, Any]:
+        """獲取所有適配器狀態"""
         try:
-            health_status = {
-                "service_status": "healthy" if self._initialized else "unhealthy",
-                "initialized": self._initialized,
-                "total_adapters": len(self.adapters),
-                "config_summary": self.config_manager.get_config_summary(),
-                "adapters": {}
-            }
+            status = {}
             
-            # 检查每个适配器的健康状态
-            for name, adapter in self.adapters.items():
+            for adapter_name, adapter in self.adapters.items():
                 try:
-                    adapter_health = await adapter.health_check()
-                    health_status["adapters"][name] = adapter_health
+                    health_info = await adapter.health_check()
+                    status[adapter_name] = {
+                        "status": health_info.get("status", "unknown"),
+                        "source_type": health_info.get("source_type", "unknown"),
+                        "last_update": health_info.get("last_update"),
+                        "cache_size": health_info.get("cache_size", 0),
+                        "config": health_info.get("config", {})
+                    }
                 except Exception as e:
-                    health_status["adapters"][name] = {
+                    status[adapter_name] = {
                         "status": "error",
                         "error": str(e)
                     }
             
-            return health_status
+            return status
             
         except Exception as e:
-            self.logger.error(f"Health check failed: {e}")
-            return {
-                "service_status": "error",
-                "error": str(e),
-                "initialized": self._initialized
-            }
+            self.logger.error(f"Error getting adapter status: {e}")
+            return {}
     
-    async def _health_check_loop(self) -> None:
-        """定期健康检查循环"""
-        while True:
-            try:
-                await asyncio.sleep(60)  # 每分钟检查一次
-                health_status = await self.health_check()
-                
-                # 检查是否有适配器需要重新连接
-                for name, adapter_health in health_status.get("adapters", {}).items():
-                    if adapter_health.get("status") == "unhealthy":
-                        self.logger.warning(f"Adapter {name} is unhealthy, attempting to reconnect...")
-                        await self._reconnect_adapter(name)
-                        
-            except Exception as e:
-                self.logger.error(f"Health check loop error: {e}")
-    
-    async def _reconnect_adapter(self, adapter_name: str) -> bool:
-        """重新连接适配器"""
+    async def validate_data_quality(
+        self, 
+        symbol: str, 
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> Dict[str, DataValidationResult]:
+        """驗證所有適配器的數據質量"""
         try:
-            if adapter_name not in self.adapters:
-                return False
+            validation_results = {}
             
-            # 断开现有连接
-            adapter = self.adapters[adapter_name]
-            await adapter.disconnect()
-            
-            # 重新创建适配器
-            entry = self.config_manager.get_adapter_config(adapter_name)
-            if entry:
-                new_adapter = await self._create_adapter(entry)
-                if new_adapter:
-                    self.adapters[adapter_name] = new_adapter
-                    self.logger.info(f"Successfully reconnected adapter: {adapter_name}")
-                    return True
-            
-            return False
-            
-        except Exception as e:
-            self.logger.error(f"Failed to reconnect adapter {adapter_name}: {e}")
-            return False
-    
-    async def refresh_adapter(self, adapter_name: str) -> bool:
-        """刷新适配器（重新扫描数据文件等）"""
-        try:
-            if adapter_name not in self.adapters:
-                self.logger.error(f"Adapter {adapter_name} not found")
-                return False
-            
-            adapter = self.adapters[adapter_name]
-            if hasattr(adapter, 'refresh_data_files'):
-                return await adapter.refresh_data_files()
-            
-            self.logger.warning(f"Adapter {adapter_name} does not support refresh operation")
-            return False
-            
-        except Exception as e:
-            self.logger.error(f"Failed to refresh adapter {adapter_name}: {e}")
-            return False
-    
-    async def get_data_statistics(self) -> Dict[str, Any]:
-        """获取数据统计信息"""
-        try:
-            stats = {
-                "total_adapters": len(self.adapters),
-                "enabled_adapters": len([a for a in self.adapters.values()]),
-                "timestamp": datetime.now(),
-                "adapters": {}
-            }
-            
-            for name, adapter in self.adapters.items():
+            for adapter_name, adapter in self.adapters.items():
                 try:
-                    adapter_stats = {
-                        "source_type": adapter.config.source_type,
-                        "last_update": adapter._last_update,
-                        "cache_size": len(adapter._cache),
-                        "config": {
-                            "update_frequency": adapter.config.update_frequency,
-                            "cache_enabled": adapter.config.cache_enabled,
-                            "quality_threshold": adapter.config.quality_threshold
-                        }
-                    }
-                    
-                    # 获取可用股票代码数量
-                    if hasattr(adapter, 'get_available_symbols'):
-                        try:
-                            symbols = await adapter.get_available_symbols()
-                            adapter_stats["available_symbols_count"] = len(symbols)
-                        except:
-                            adapter_stats["available_symbols_count"] = "unknown"
-                    
-                    stats["adapters"][name] = adapter_stats
-                    
+                    if await adapter.connect():
+                        data = await adapter.get_market_data(symbol, start_date, end_date)
+                        if data:
+                            validation_result = await adapter.validate_data(data)
+                            validation_results[adapter_name] = validation_result
+                        else:
+                            validation_results[adapter_name] = DataValidationResult(
+                                is_valid=False,
+                                quality_score=0.0,
+                                quality_level="unknown",
+                                errors=["No data available"],
+                                warnings=[]
+                            )
+                            
                 except Exception as e:
-                    stats["adapters"][name] = {"error": str(e)}
+                    validation_results[adapter_name] = DataValidationResult(
+                        is_valid=False,
+                        quality_score=0.0,
+                        quality_level="unknown",
+                        errors=[f"Adapter error: {str(e)}"],
+                        warnings=[]
+                    )
             
-            return stats
+            return validation_results
             
         except Exception as e:
-            self.logger.error(f"Failed to get data statistics: {e}")
-            return {"error": str(e)}
+            self.logger.error(f"Error validating data quality: {e}")
+            return {}
     
     async def cleanup(self) -> None:
-        """清理资源"""
+        """清理資源"""
         try:
-            self.logger.info("Cleaning up data service...")
-            
-            # 断开所有适配器连接
-            for name, adapter in self.adapters.items():
+            for adapter_name, adapter in self.adapters.items():
                 try:
                     await adapter.disconnect()
-                    self.logger.debug(f"Disconnected adapter: {name}")
+                    self.logger.info(f"Disconnected adapter: {adapter_name}")
                 except Exception as e:
-                    self.logger.warning(f"Error disconnecting adapter {name}: {e}")
+                    self.logger.error(f"Error disconnecting adapter {adapter_name}: {e}")
             
             self.adapters.clear()
+            self.adapter_configs.clear()
             self._initialized = False
             
             self.logger.info("Data service cleanup completed")
             
         except Exception as e:
-            self.logger.error(f"Error during data service cleanup: {e}")
+            self.logger.error(f"Error during cleanup: {e}")
+    
+    def get_available_adapters(self) -> List[str]:
+        """獲取可用的適配器列表"""
+        return list(self.adapters.keys())
+    
+    def get_adapter_info(self, adapter_name: str) -> Optional[Dict]:
+        """獲取適配器信息"""
+        if adapter_name in self.adapter_configs:
+            return self.adapter_configs[adapter_name]
+        return None

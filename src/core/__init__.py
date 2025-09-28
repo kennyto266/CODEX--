@@ -45,6 +45,7 @@ class SystemConfig(BaseSettings):
     # Agent配置
     max_concurrent_agents: int = Field(default=10, env="MAX_CONCURRENT_AGENTS")
     agent_heartbeat_interval: int = Field(default=30, env="AGENT_HEARTBEAT_INTERVAL")
+    update_interval: int = Field(default=5, env="UPDATE_INTERVAL")
     
     # 交易配置
     trading_enabled: bool = Field(default=False, env="TRADING_ENABLED")
@@ -58,108 +59,102 @@ class SystemConfig(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # 忽略額外的環境變量
 
 
-class Logger:
-    """系统日志管理器"""
-    
-    _instance = None
-    _logger = None
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._setup_logger()
-        return cls._instance
-    
-    def _setup_logger(self):
-        """设置日志系统"""
-        config = SystemConfig()
-        
-        # 创建日志目录
-        log_path = Path(config.log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # 配置日志格式
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        
-        # 配置日志处理器
-        handlers = [
-            logging.FileHandler(log_path, encoding='utf-8'),
-            logging.StreamHandler()
-        ]
-        
-        # 设置日志级别
-        log_level = getattr(logging, config.log_level.upper(), logging.INFO)
-        
-        # 配置根日志器
-        logging.basicConfig(
-            level=log_level,
-            format=log_format,
-            handlers=handlers
-        )
-        
-        self._logger = logging.getLogger("hk_quant_system")
-    
-    def get_logger(self, name: str = None) -> logging.Logger:
-        """获取日志器"""
-        if name:
-            return logging.getLogger(f"hk_quant_system.{name}")
-        return self._logger
-
-
-# 系统常量
 class SystemConstants:
-    """系统常量定义"""
+    """系统常量"""
     
-    # 港股市场常量
-    HK_MARKET_TIMEZONE = "Asia/Hong_Kong"
-    HK_TRADING_HOURS = {
-        "morning": {"start": "09:30", "end": "12:00"},
-        "afternoon": {"start": "13:00", "end": "16:00"}
-    }
+    # Agent类型
+    AGENT_TYPES = [
+        "quant_analyst",      # 量化分析师
+        "quant_trader",       # 量化交易员
+        "portfolio_manager",  # 投资组合经理
+        "risk_analyst",       # 风险分析师
+        "data_scientist",     # 数据科学家
+        "quant_engineer",     # 量化工程师
+        "research_analyst"    # 研究分析师
+    ]
     
     # Agent状态
     AGENT_STATUS = {
         "IDLE": "idle",
         "RUNNING": "running", 
+        "STOPPED": "stopped",
         "ERROR": "error",
-        "STOPPED": "stopped"
-    }
-    
-    # 交易信号类型
-    SIGNAL_TYPES = {
-        "BUY": "buy",
-        "SELL": "sell",
-        "HOLD": "hold"
-    }
-    
-    # 风险指标
-    RISK_METRICS = {
-        "VAR_95": "var_95",
-        "VAR_99": "var_99",
-        "SHARPE_RATIO": "sharpe_ratio",
-        "MAX_DRAWDOWN": "max_drawdown"
+        "MAINTENANCE": "maintenance"
     }
     
     # 消息类型
     MESSAGE_TYPES = {
-        "SIGNAL": "signal",
-        "DATA": "data",
+        "HEARTBEAT": "heartbeat",
         "CONTROL": "control",
-        "HEARTBEAT": "heartbeat"
+        "DATA": "data",
+        "ALERT": "alert",
+        "STATUS": "status"
+    }
+    
+    # 默认配置
+    DEFAULT_CONFIG = {
+        "max_agents": 10,
+        "heartbeat_interval": 30,
+        "data_update_interval": 60,
+        "log_level": "INFO"
     }
 
 
-# 全局配置实例
-config = SystemConfig()
-logger = Logger()
+def setup_logging(config: SystemConfig = None):
+    """设置日志配置"""
+    if config is None:
+        config = SystemConfig()
+    
+    # 创建日志目录
+    log_dir = Path(config.log_file).parent
+    log_dir.mkdir(exist_ok=True)
+    
+    # 配置日志格式
+    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    
+    # 设置日志级别
+    log_level = getattr(logging, config.log_level.upper(), logging.INFO)
+    
+    # 配置日志处理器
+    handlers = [
+        logging.StreamHandler(),  # 控制台输出
+        logging.FileHandler(config.log_file, encoding='utf-8')  # 文件输出
+    ]
+    
+    # 应用配置
+    logging.basicConfig(
+        level=log_level,
+        format=log_format,
+        handlers=handlers
+    )
+    
+    return logging.getLogger("hk_quant_system")
 
-# 导出主要组件
+
+def get_project_root() -> Path:
+    """获取项目根目录"""
+    return Path(__file__).parent.parent
+
+
+def get_config_path() -> Path:
+    """获取配置文件路径"""
+    return get_project_root() / "config"
+
+
+def get_logs_path() -> Path:
+    """获取日志目录路径"""
+    return get_project_root() / "logs"
+
+
+# 导出主要类和函数
 __all__ = [
     "SystemConfig",
-    "Logger", 
-    "SystemConstants",
-    "config",
-    "logger"
+    "SystemConstants", 
+    "setup_logging",
+    "get_project_root",
+    "get_config_path",
+    "get_logs_path"
 ]

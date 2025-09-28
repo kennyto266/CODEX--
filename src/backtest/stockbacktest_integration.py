@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from ..core import config as system_config
+from ..core import SystemConfig
 from ..data_adapters.base_adapter import RealMarketData
 from .config import StockBacktestConfig
 from .engine_interface import (
