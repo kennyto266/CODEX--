@@ -1,435 +1,500 @@
 """
-HTML生成器
-生成Dashboard的HTML内容
+HTML模板生成器
+
+负责生成各种仪表板页面的HTML内容
 """
 
-from typing import List, Dict, Any
+import logging
+from typing import Dict, Any, Optional
 from datetime import datetime
 
+
 class HTMLGenerator:
-    """HTML生成器"""
+    """HTML模板生成器"""
     
-    def generate_dashboard_html(self, agent_results: List[Dict[str, Any]]) -> str:
-        """
-        生成Dashboard HTML
+    def __init__(self):
+        self.logger = logging.getLogger("hk_quant_system.html_generator")
+    
+    def get_dashboard_html(self, agent_data: Dict[str, Any] = None) -> str:
+        """生成主仪表板HTML"""
+        agent_data = agent_data or {}
         
-        Args:
-            agent_results: 代理分析结果
-            
-        Returns:
-            HTML字符串
-        """
-        html = f"""
+        return f"""
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港股AI代理系统 Dashboard</title>
+    <title>港股量化交易 AI Agent 仪表板</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        {self._get_css_styles()}
+        {self._get_dashboard_css()}
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>🚀 港股AI代理系统 Dashboard</h1>
-            <p class="subtitle">实时AI代理分析结果展示</p>
-            <div class="status-bar">
-                <span class="status-item">📊 总代理数: {len(agent_results)}</span>
-                <span class="status-item">✅ 已完成: {len([r for r in agent_results if r.get('status', {}).get('status') == 'completed'])}</span>
-                <span class="status-item">⏰ 更新时间: {datetime.now().strftime('%H:%M:%S')}</span>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-robot"></i> HK Quant AI Agents
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/performance">绩效分析</a>
+                <a class="nav-link" href="/system">系统状态</a>
             </div>
-        </header>
-        
-        <main class="main-content">
-            {self._generate_agents_section(agent_results)}
-            {self._generate_summary_section(agent_results)}
-        </main>
-        
-        <footer class="footer">
-            <p>港股AI代理系统 v1.0 | 基于Cursor API | 实时更新</p>
-        </footer>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-tachometer-alt"></i> 实时监控仪表板
+                </h2>
+            </div>
+        </div>
+
+        <div class="row" id="agent-cards">
+            {self._generate_agent_cards(agent_data)}
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-line"></i> 系统性能</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="performanceChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-exclamation-triangle"></i> 系统告警</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="alerts-container">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 系统运行正常
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        {self._get_javascript()}
+        {self._get_dashboard_js()}
     </script>
 </body>
 </html>
-"""
-        return html
+        """
     
-    def _get_css_styles(self) -> str:
-        """获取CSS样式"""
+    def get_agent_detail_html(self, agent_id: str, agent_data: Dict[str, Any] = None) -> str:
+        """生成Agent详情页面HTML"""
+        agent_data = agent_data or {}
+        
+        return f"""
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent详情 - {agent_id}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-arrow-left"></i> 返回仪表板
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-robot"></i> Agent详情: {agent_id}</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Agent状态</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="agent-status">
+                            {self._generate_agent_status(agent_data)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>快速操作</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary btn-sm mb-2" onclick="startAgent('{agent_id}')">
+                            <i class="fas fa-play"></i> 启动
+                        </button>
+                        <button class="btn btn-warning btn-sm mb-2" onclick="stopAgent('{agent_id}')">
+                            <i class="fas fa-stop"></i> 停止
+                        </button>
+                        <button class="btn btn-info btn-sm mb-2" onclick="restartAgent('{agent_id}')">
+                            <i class="fas fa-redo"></i> 重启
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        {self._get_agent_detail_js()}
+    </script>
+</body>
+</html>
+        """
+    
+    def get_strategy_detail_html(self, agent_id: str, strategy_data: Dict[str, Any] = None) -> str:
+        """生成策略详情页面HTML"""
+        strategy_data = strategy_data or {}
+        
+        return f"""
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>策略详情 - {agent_id}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/agent/{agent_id}">
+                <i class="fas fa-arrow-left"></i> 返回Agent详情
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-chart-line"></i> 策略详情: {agent_id}</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>策略参数</h5>
+                    </div>
+                    <div class="card-body">
+                        {self._generate_strategy_params(strategy_data)}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>绩效指标</h5>
+                    </div>
+                    <div class="card-body">
+                        {self._generate_performance_metrics(strategy_data)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+        """
+    
+    def get_performance_html(self) -> str:
+        """生成绩效分析页面HTML"""
         return """
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .subtitle {
-            font-size: 1.2em;
-            color: #666;
-            margin-bottom: 20px;
-        }
-        
-        .status-bar {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .status-item {
-            background: #f8f9fa;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 500;
-            color: #495057;
-        }
-        
-        .main-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .agents-section {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        
-        .agents-section h2 {
-            margin-bottom: 20px;
-            color: #495057;
-            font-size: 1.5em;
-        }
-        
-        .agents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绩效分析</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-arrow-left"></i> 返回仪表板
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-chart-bar"></i> 绩效分析</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <canvas id="performanceChart" width="800" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
+        """
+    
+    def get_system_status_html(self) -> str:
+        """生成系统状态页面HTML"""
+        return """
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统状态</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-arrow-left"></i> 返回仪表板
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-server"></i> 系统状态</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>系统资源</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" style="width: 25%">CPU: 25%</div>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 60%">内存: 60%</div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 40%">磁盘: 40%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>服务状态</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>数据库连接</span>
+                            <span class="badge bg-success">正常</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>消息队列</span>
+                            <span class="badge bg-success">正常</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>API服务</span>
+                            <span class="badge bg-success">正常</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+        """
+    
+    def _get_dashboard_css(self) -> str:
+        """获取仪表板CSS样式"""
+        return """
         .agent-card {
-            background: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            transition: transform 0.2s;
         }
-        
         .agent-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            border-color: #667eea;
         }
-        
-        .agent-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .agent-icon {
-            font-size: 2em;
-            margin-right: 15px;
-        }
-        
-        .agent-name {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .agent-status {
-            margin-left: auto;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-        
-        .status-running {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-completed {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .agent-content {
-            color: #6c757d;
-            line-height: 1.6;
-        }
-        .content-box {
-            white-space: pre-wrap;
-            background: #ffffff;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 12px;
-            max-height: 300px;
-            overflow: auto;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        }
-        
-        .summary-section {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        
-        .summary-section h2 {
-            margin-bottom: 20px;
-            color: #495057;
-            font-size: 1.5em;
-        }
-        
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-        
-        .summary-label {
-            font-weight: 500;
-            color: #495057;
-        }
-        
-        .summary-value {
-            font-weight: 600;
-            color: #667eea;
-        }
-        
-        .footer {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9em;
-        }
-        
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 15px 25px;
-            font-size: 1em;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-        }
-        
-        .refresh-btn:hover {
-            background: #5a6fd8;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-        
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .status-bar {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .agents-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        .status-running { color: #28a745; }
+        .status-stopped { color: #dc3545; }
+        .status-error { color: #ffc107; }
         """
     
-    def _generate_agents_section(self, agent_results: List[Dict[str, Any]]) -> str:
-        """生成代理部分HTML"""
-        if not agent_results:
-            return """
-            <div class="agents-section">
-                <h2>🤖 AI代理分析结果</h2>
-                <p>暂无代理分析结果，请等待代理完成分析...</p>
-            </div>
-            """
-        
-        agents_html = ""
-        for result in agent_results:
-            agent_name = result.get('agent_name', '未知代理')
-            agent_icon = result.get('agent_icon', '🤖')
-            agent_id = result.get('agent_id', 'N/A')
-            status = result.get('status', {})
-            conversation = result.get('conversation', {})
-            
-            status_text = status.get('status', 'unknown')
-            status_class = f"status-{status_text.lower()}"
-            
-            # 获取对话内容：优先展示最新的assistant回复；若没有，则提示仍在分析并展示最近的用户指令摘要
-            messages = conversation.get('messages', [])
-            content = "暂无分析内容"
-            if messages:
-                # 找到最新的assistant消息
-                assistant_text = None
-                for msg in reversed(messages):
-                    if isinstance(msg, dict) and msg.get('type') == 'assistant_message':
-                        assistant_text = msg.get('text') or msg.get('content')
-                        if assistant_text:
-                            break
-                if assistant_text:
-                    content = assistant_text
-                else:
-                    # 没有assistant输出，展示用户最近一次指令的摘要，并提示正在分析
-                    user_text = None
-                    for msg in reversed(messages):
-                        if isinstance(msg, dict) and msg.get('type') == 'user_message':
-                            user_text = msg.get('text') or msg.get('content')
-                            if user_text:
-                                break
-                    preview = (user_text or "(无)")
-                    if len(preview) > 300:
-                        preview = preview[:300] + "..."
-                    content = "正在分析中，請稍後自動刷新查看AI回覆...\n\n最近一次指令:\n" + preview
-            
-            # 不截断内容，显示完整分析结果
-            # if len(content) > 1200:
-            #     content = content[:1200] + "\n... (内容过长，已截断)"
-            
-            agents_html += f"""
-            <div class="agent-card">
-                <div class="agent-header">
-                    <span class="agent-icon">{agent_icon}</span>
-                    <span class="agent-name">{agent_name}</span>
-                    <span class="agent-status {status_class}">{status_text.upper()}</span>
-                </div>
-                <div class="agent-content">
-                    <p><strong>代理ID:</strong> {agent_id}</p>
-                    <p><strong>分析内容:</strong></p>
-                    <pre class="content-box">{content}</pre>
-                </div>
-            </div>
-            """
-        
-        return f"""
-        <div class="agents-section">
-            <h2>🤖 AI代理分析结果</h2>
-            <div class="agents-grid">
-                {agents_html}
-            </div>
-        </div>
-        """
-    
-    def _generate_summary_section(self, agent_results: List[Dict[str, Any]]) -> str:
-        """生成摘要部分HTML"""
-        total_agents = len(agent_results)
-        completed_agents = len([r for r in agent_results if str(r.get('status', {}).get('status', '')).lower() in ['completed', 'finished']])
-        running_agents = len([r for r in agent_results if str(r.get('status', {}).get('status', '')).lower() in ['running', 'in_progress']])
-        error_agents = total_agents - completed_agents - running_agents
-        completion_rate = 0.0 if total_agents == 0 else (completed_agents/total_agents*100)
-        
-        return f"""
-        <div class="summary-section">
-            <h2>📊 系统摘要</h2>
-            <div class="summary-item">
-                <span class="summary-label">总代理数</span>
-                <span class="summary-value">{total_agents}</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">已完成</span>
-                <span class="summary-value">{completed_agents}</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">运行中</span>
-                <span class="summary-value">{running_agents}</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">错误</span>
-                <span class="summary-value">{error_agents}</span>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">完成率</span>
-                <span class="summary-value">{completion_rate:.1f}%</span>
-            </div>
-        </div>
-        """
-    
-    def _get_javascript(self) -> str:
-        """获取JavaScript代码"""
+    def _get_dashboard_js(self) -> str:
+        """获取仪表板JavaScript代码"""
         return """
-        // 自动刷新功能
-        function autoRefresh() {
-            setTimeout(() => {
-                location.reload();
-            }, 30000); // 30秒刷新一次
+        // WebSocket连接
+        const ws = new WebSocket('ws://localhost:8000/ws');
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            updateDashboard(data);
+        };
+        
+        function updateDashboard(data) {
+            // 更新仪表板数据
+            console.log('Dashboard updated:', data);
         }
         
-        // 手动刷新功能
-        function manualRefresh() {
-            location.reload();
-        }
-        
-        // 添加刷新按钮
-        function addRefreshButton() {
-            const refreshBtn = document.createElement('button');
-            refreshBtn.className = 'refresh-btn';
-            refreshBtn.innerHTML = '🔄 刷新';
-            refreshBtn.onclick = manualRefresh;
-            document.body.appendChild(refreshBtn);
-        }
-        
-        // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function() {
-            addRefreshButton();
-            autoRefresh();
+        // 初始化图表
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                datasets: [{
+                    label: '收益率',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
         });
         """
+    
+    def _get_agent_detail_js(self) -> str:
+        """获取Agent详情页面JavaScript代码"""
+        return """
+        function startAgent(agentId) {
+            fetch(`/api/agents/${agentId}/start`, {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Agent启动成功');
+                        location.reload();
+                    } else {
+                        alert('Agent启动失败: ' + data.error);
+                    }
+                });
+        }
+        
+        function stopAgent(agentId) {
+            fetch(`/api/agents/${agentId}/stop`, {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Agent停止成功');
+                        location.reload();
+                    } else {
+                        alert('Agent停止失败: ' + data.error);
+                    }
+                });
+        }
+        
+        function restartAgent(agentId) {
+            fetch(`/api/agents/${agentId}/restart`, {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Agent重启成功');
+                        location.reload();
+                    } else {
+                        alert('Agent重启失败: ' + data.error);
+                    }
+                });
+        }
+        """
+    
+    def _generate_agent_cards(self, agent_data: Dict[str, Any]) -> str:
+        """生成Agent卡片HTML"""
+        cards = []
+        for agent_id, data in agent_data.items():
+            status_class = f"status-{data.get('status', 'stopped')}"
+            cards.append(f"""
+            <div class="col-md-4 mb-3">
+                <div class="card agent-card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-robot"></i> {agent_id}
+                        </h5>
+                        <p class="card-text">
+                            <span class="{status_class}">
+                                <i class="fas fa-circle"></i> {data.get('status', 'stopped')}
+                            </span>
+                        </p>
+                        <a href="/agent/{agent_id}" class="btn btn-primary btn-sm">查看详情</a>
+                    </div>
+                </div>
+            </div>
+            """)
+        return "".join(cards)
+    
+    def _generate_agent_status(self, agent_data: Dict[str, Any]) -> str:
+        """生成Agent状态HTML"""
+        return f"""
+        <div class="row">
+            <div class="col-md-6">
+                <strong>状态:</strong> {agent_data.get('status', 'unknown')}
+            </div>
+            <div class="col-md-6">
+                <strong>运行时间:</strong> {agent_data.get('uptime', '0')}秒
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <strong>CPU使用率:</strong> {agent_data.get('cpu_usage', '0')}%
+            </div>
+            <div class="col-md-6">
+                <strong>内存使用率:</strong> {agent_data.get('memory_usage', '0')}%
+            </div>
+        </div>
+        """
+    
+    def _generate_strategy_params(self, strategy_data: Dict[str, Any]) -> str:
+        """生成策略参数HTML"""
+        params = strategy_data.get('parameters', {})
+        html = "<ul class='list-unstyled'>"
+        for key, value in params.items():
+            html += f"<li><strong>{key}:</strong> {value}</li>"
+        html += "</ul>"
+        return html
+    
+    def _generate_performance_metrics(self, strategy_data: Dict[str, Any]) -> str:
+        """生成绩效指标HTML"""
+        metrics = strategy_data.get('metrics', {})
+        html = "<ul class='list-unstyled'>"
+        for key, value in metrics.items():
+            html += f"<li><strong>{key}:</strong> {value}</li>"
+        html += "</ul>"
+        return html

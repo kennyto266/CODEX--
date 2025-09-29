@@ -1,87 +1,51 @@
-#!/usr/bin/env python3
-"""
-簡化測試腳本 - 只測試基本功能
-"""
+import sys
+import os
 
-def test_basic_imports():
-    """測試基本導入"""
-    print("🔍 測試基本導入...")
-    
-    try:
-        # 測試核心模組
-        from src.core import SystemConfig
-        print("✅ SystemConfig")
-        
-        # 測試數據適配器
-        from src.data_adapters.data_service import DataService
-        print("✅ DataService")
-        
-        from src.data_adapters.http_api_adapter import HttpApiDataAdapter
-        print("✅ HttpApiDataAdapter")
-        
-        print("\n🎉 基本導入測試通過！")
-        return True
-        
-    except ImportError as e:
-        print(f"❌ 導入錯誤: {e}")
-        return False
-    except Exception as e:
-        print(f"❌ 其他錯誤: {e}")
-        return False
+# 设置路径
+project_path = "C:/Users/Penguin8n/.cursor/CODEX 寫量化團隊"
+sys.path.insert(0, project_path)
+os.chdir(project_path)
 
-def test_class_instantiation():
-    """測試類實例化"""
-    print("\n🔧 測試類實例化...")
-    
-    try:
-        from src.core import SystemConfig
-        from src.data_adapters.data_service import DataService
-        
-        # 測試配置創建
-        config = SystemConfig()
-        print("✅ SystemConfig 實例化")
-        
-        # 測試數據服務創建
-        data_service = DataService()
-        print("✅ DataService 實例化")
-        
-        print("\n🎉 基本實例化測試通過！")
-        return True
-        
-    except Exception as e:
-        print(f"❌ 實例化錯誤: {e}")
-        return False
+print(f"Project path: {project_path}")
+print(f"Current dir: {os.getcwd()}")
 
-def main():
-    """主測試函數"""
-    print("🚀 真實量化交易系統 - 簡化測試")
-    print("=" * 50)
+try:
+    import complete_project_system
+    print("✅ 导入成功")
     
-    # 測試導入
-    import_success = test_basic_imports()
+    # 测试策略优化函数
+    from complete_project_system import run_strategy_optimization
+    print("✅ 策略优化函数导入成功")
     
-    if not import_success:
-        print("\n❌ 導入測試失敗，系統無法使用")
-        return False
+    # 创建简单测试数据
+    import pandas as pd
+    import numpy as np
     
-    # 測試實例化
-    instantiation_success = test_class_instantiation()
+    data = []
+    for i in range(200):
+        data.append({
+            'date': f'2023-01-{i+1:02d}',
+            'open': 100 + i * 0.1,
+            'high': 105 + i * 0.1,
+            'low': 95 + i * 0.1,
+            'close': 100 + i * 0.1 + np.random.normal(0, 1),
+            'volume': 1000
+        })
     
-    if not instantiation_success:
-        print("\n❌ 實例化測試失敗，系統無法使用")
-        return False
+    print(f"✅ 测试数据创建成功: {len(data)} 条记录")
     
-    print("\n" + "=" * 50)
-    print("🎉 基本測試通過！系統核心功能正常！")
-    print("\n📋 下一步操作:")
-    print("   1. 運行: python start_real_system.py")
-    print("   2. 查看: REAL_SYSTEM_GUIDE.md")
-    print("   3. 配置環境變量（如需要）")
-    print("\n✨ 您的真實量化交易系統核心已準備就緒！")
+    # 测试策略优化
+    print("开始测试策略优化...")
+    results = run_strategy_optimization(data, 'ma')
+    print(f"✅ 策略优化测试成功: 找到 {len(results)} 个策略")
     
-    return True
-
-if __name__ == "__main__":
-    success = main()
-    if not success:
-        exit(1)
+    if results:
+        print(f"最佳策略: {results[0]['strategy_name']}")
+        print(f"Sharpe比率: {results[0]['sharpe_ratio']:.4f}")
+        print(f"年化收益率: {results[0]['annual_return']:.2f}%")
+        print(f"最大回撤: {results[0]['max_drawdown']:.2f}%")
+    
+except Exception as e:
+    print(f"❌ 测试失败: {e}")
+    import traceback
+    traceback.print_exc()

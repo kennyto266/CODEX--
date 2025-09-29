@@ -44,28 +44,62 @@ class AgentManager:
             RiskManagerAgent(self.cursor_api_key, self.base_url),
         ]
     
-    async def run_all_agents(self, market_data: List[Dict[str, Any]], on_progress: Optional[callable] = None) -> List[Dict[str, Any]]:
+    async def run_all_agents(self, market_data: List[Dict[str, Any]], on_progress: Optional[callable] = None, 
+                           parallel: bool = True, max_concurrent: int = 3) -> List[Dict[str, Any]]:
         """
-        运行所有代理
+        运行所有代理 - 优化版本支持并行处理
         
         Args:
             market_data: 市场数据
+            on_progress: 进度回调
+            parallel: 是否并行执行
+            max_concurrent: 最大并发数
             
         Returns:
             代理分析结果列表
         """
-        logger.info(f"启动 {len(self.agents)} 个AI代理")
-        # 优先使用Cursor API Agent模式
-        local_tools_mode = False
+        logger.info(f"启动 {len(self.agents)} 个AI代理 (并行模式: {parallel})")
         
-        # 串行启动代理，避免API限制
+        if parallel and max_concurrent > 1:
+            # 并行执行模式
+            return await self._run_agents_parallel(market_data, on_progress, max_concurrent)
+        else:
+            # 串行执行模式（保持向后兼容）
+            return await self._run_agents_serial(market_data, on_progress)
+    
+    async def _run_agents_parallel(self, market_data: List[Dict[str, Any]], on_progress: Optional[callable] = None, 
+                                 max_concurrent: int = 3) -> List[Dict[str, Any]]:
+        """并行运行代理"""
+        semaphore = asyncio.Semaphore(max_concurrent)
+        
+        async def run_with_semaphore(agent):
+            async with semaphore:
+                return await self._run_single_agent(agent, market_data, on_progress)
+        
+        # 创建所有任务
+        tasks = [run_with_semaphore(agent) for agent in self.agents]
+        
+        # 并行执行
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # 处理结果
+        successful_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.error(f"代理 {self.agents[i].name} 运行失败: {result}")
+            elif result:
+                successful_results.append(result)
+                self.agent_results[self.agents[i].agent_id] = result
+        
+        logger.info(f"并行执行完成，成功 {len(successful_results)} 个代理分析")
+        return successful_results
+    
+    async def _run_agents_serial(self, market_data: List[Dict[str, Any]], on_progress: Optional[callable] = None) -> List[Dict[str, Any]]:
+        """串行运行代理（原逻辑）"""
         results = []
         for i, agent in enumerate(self.agents):
             logger.info(f"启动代理 {i+1}/{len(self.agents)}: {agent.name}")
-            if local_tools_mode and hasattr(agent, "run_with_local_tools"):
-                result = await agent.run_with_local_tools(market_data)
-            else:
-                result = await self._run_single_agent(agent, market_data, on_progress)
+            result = await self._run_single_agent(agent, market_data, on_progress)
             results.append(result)
             
             # 代理之间稍作延迟
@@ -82,7 +116,7 @@ class AgentManager:
                 successful_results.append(result)
                 self.agent_results[self.agents[i].agent_id] = result
         
-        logger.info(f"成功完成 {len(successful_results)} 个代理分析")
+        logger.info(f"串行执行完成，成功 {len(successful_results)} 个代理分析")
         return successful_results
     
     async def _run_single_agent(self, agent: BaseAgent, market_data: List[Dict[str, Any]], on_progress: Optional[callable] = None) -> Optional[Dict[str, Any]]:

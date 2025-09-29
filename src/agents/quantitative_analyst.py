@@ -77,11 +77,12 @@ class QuantitativeAnalysisEngine:
         self.logger = logging.getLogger("hk_quant_system.quantitative_analyst.engine")
     
     def calculate_technical_indicators(self, data: pd.DataFrame) -> TechnicalIndicators:
-        """计算技术指标"""
+        """计算技术指标 - 优化版本"""
         try:
             if len(data) < 50:  # 需要足够的数据点
                 raise ValueError("数据点不足，至少需要50个数据点")
             
+            # 使用向量化操作提高性能
             close = data['close'].values
             high = data['high'].values
             low = data['low'].values
@@ -89,15 +90,13 @@ class QuantitativeAnalysisEngine:
             
             indicators = TechnicalIndicators()
             
-            # 移动平均线
-            indicators.sma_20 = np.mean(close[-20:])
-            indicators.sma_50 = np.mean(close[-50:])
+            # 移动平均线 - 使用pandas内置函数
+            indicators.sma_20 = data['close'].rolling(window=20).mean().iloc[-1]
+            indicators.sma_50 = data['close'].rolling(window=50).mean().iloc[-1]
             
-            # EMA计算
-            alpha_12 = 2 / (12 + 1)
-            alpha_26 = 2 / (26 + 1)
-            indicators.ema_12 = self._calculate_ema(close, alpha_12)
-            indicators.ema_26 = self._calculate_ema(close, alpha_26)
+            # EMA计算 - 使用pandas内置函数
+            indicators.ema_12 = data['close'].ewm(span=12).mean().iloc[-1]
+            indicators.ema_26 = data['close'].ewm(span=26).mean().iloc[-1]
             
             # MACD
             indicators.macd = indicators.ema_12 - indicators.ema_26
@@ -105,23 +104,23 @@ class QuantitativeAnalysisEngine:
             indicators.macd_signal = self._calculate_ema([indicators.macd], macd_signal_alpha)
             indicators.macd_histogram = indicators.macd - indicators.macd_signal
             
-            # RSI
-            indicators.rsi = self._calculate_rsi(close)
+            # RSI - 使用向量化计算
+            indicators.rsi = self._calculate_rsi_vectorized(data['close'])
             
-            # 布林带
+            # 布林带 - 使用pandas内置函数
             bb_period = 20
             bb_std = 2
-            sma_20 = np.mean(close[-bb_period:])
-            std_20 = np.std(close[-bb_period:])
-            indicators.bollinger_middle = sma_20
-            indicators.bollinger_upper = sma_20 + (bb_std * std_20)
-            indicators.bollinger_lower = sma_20 - (bb_std * std_20)
+            rolling_mean = data['close'].rolling(window=bb_period).mean()
+            rolling_std = data['close'].rolling(window=bb_period).std()
+            indicators.bollinger_middle = rolling_mean.iloc[-1]
+            indicators.bollinger_upper = (rolling_mean + bb_std * rolling_std).iloc[-1]
+            indicators.bollinger_lower = (rolling_mean - bb_std * rolling_std).iloc[-1]
             
-            # ATR (平均真实波幅)
-            indicators.atr = self._calculate_atr(high, low, close)
+            # ATR (平均真实波幅) - 优化版本
+            indicators.atr = self._calculate_atr_vectorized(data)
             
-            # 成交量指标
-            indicators.volume_sma = np.mean(volume[-20:])
+            # 成交量指标 - 使用pandas内置函数
+            indicators.volume_sma = data['volume'].rolling(window=20).mean().iloc[-1]
             indicators.volume_ratio = volume[-1] / indicators.volume_sma if indicators.volume_sma > 0 else 1.0
             
             return indicators
@@ -131,7 +130,7 @@ class QuantitativeAnalysisEngine:
             return TechnicalIndicators()
     
     def _calculate_ema(self, prices: List[float], alpha: float) -> float:
-        """计算指数移动平均"""
+        """计算指数移动平均 - 保持向后兼容"""
         if len(prices) == 1:
             return prices[0]
         
@@ -139,6 +138,51 @@ class QuantitativeAnalysisEngine:
         for price in prices[1:]:
             ema = alpha * price + (1 - alpha) * ema
         return ema
+    
+    def _calculate_rsi_vectorized(self, prices: pd.Series, period: int = 14) -> float:
+        """向量化RSI计算 - 性能优化版本"""
+        if len(prices) < period + 1:
+            return 50.0
+        
+        # 计算价格变化
+        delta = prices.diff()
+        
+        # 分离上涨和下跌
+        gains = delta.where(delta > 0, 0)
+        losses = -delta.where(delta < 0, 0)
+        
+        # 计算平均收益和损失
+        avg_gains = gains.rolling(window=period).mean()
+        avg_losses = losses.rolling(window=period).mean()
+        
+        # 计算RSI
+        rs = avg_gains / avg_losses
+        rsi = 100 - (100 / (1 + rs))
+        
+        return rsi.iloc[-1] if not pd.isna(rsi.iloc[-1]) else 50.0
+    
+    def _calculate_atr_vectorized(self, data: pd.DataFrame, period: int = 14) -> float:
+        """向量化ATR计算 - 性能优化版本"""
+        if len(data) < period + 1:
+            return 0.0
+        
+        # 计算真实波幅
+        high = data['high']
+        low = data['low']
+        close = data['close']
+        
+        # 计算三个值
+        tr1 = high - low
+        tr2 = abs(high - close.shift(1))
+        tr3 = abs(low - close.shift(1))
+        
+        # 取最大值
+        true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        
+        # 计算ATR
+        atr = true_range.rolling(window=period).mean()
+        
+        return atr.iloc[-1] if not pd.isna(atr.iloc[-1]) else 0.0
     
     def _calculate_rsi(self, prices: List[float], period: int = 14) -> float:
         """计算RSI指标"""
