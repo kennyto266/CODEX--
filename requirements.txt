@@ -13,3 +13,4 @@ pyfolio-reloaded
 akshare 
 seaborn
 PyJWT==2.8.0
+plotly==5.17.0
