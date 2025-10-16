@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Penguin8n/CODEX--/**)",
+      "Bash(dir \"C:\\Users\\Penguin8n\\CODEX--\\codex\" /b)",
+      "Bash(python simple_strategy_optimizer.py:*)",
+      "Bash(chmod:*)",
+      "SlashCommand(/speckit.specify 0700.HK RSI 回測規範\n目標：計算0700.HK的RSI（窗口1-300，步距1）策略，尋找最佳Sharpe Ratio。\n功能：導入日頻價格數據，清洗數據，計算RSI，實現買入（RSI<30）賣出（RSI>70）邏輯，計算年化Sharpe Ratio（無風險利率2%），繪製收益曲線及RSI-Sharpe關係圖。\n要求：Python實現，模塊化代碼，支持交易成本（傭金0.1%、印花稅0.1%），確保無look-ahead bias，提供報告及日誌。\n驗收：正確計算最佳RSI參數，生成圖表)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \".specify\\scripts\\powershell\\create-new-feature.ps1\" -Json -ShortName \"rsi-backtest-optimizer\")",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \".specify/scripts/powershell/check-prerequisites.ps1\" -Json)",
+      "Bash(powershell.exe:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
