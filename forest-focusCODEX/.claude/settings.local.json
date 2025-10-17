@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Read(//c/Users/Penguin8n/CODEX--/specs/001-rsi-backtest-optimizer/checklists/**)",
+      "Read(//c/Users/Penguin8n/CODEX--/specs/001-rsi-backtest-optimizer/**)",
+      "Bash(cat:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

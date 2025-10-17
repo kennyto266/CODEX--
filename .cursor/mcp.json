@@ -9,14 +9,6 @@
     "context7": {
       "url": "https://mcp.context7.com/mcp",
       "headers": {}
-    },
-    "spec-workflow": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@pimzino/spec-workflow-mcp@latest",
-        "C:\\Users\\Penguin8n\\.cursor\\CODEX 寫量化團隊"
-      ]
     }
   }
 }
