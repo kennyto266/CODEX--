@@ -1,14 +1,49 @@
 """
-GOV 爬蟲系統 - 數據處理模塊
+GOV 爬蟲系統 - 數據處理模塊 (Phase 2 增強版)
+
+功能改進：
+- Schema 驗證
+- 數據類型檢查
+- 範圍驗證
+- 異常值檢測
+- 一致性檢查
+- 詳細驗證報告
 """
 
 import logging
 import pandas as pd
-from typing import Dict, Any, List, Optional
+import numpy as np
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
 import json
+from dataclasses import dataclass, asdict
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ValidationRule:
+    """數據驗證規則"""
+    column: str
+    dtype: Optional[str] = None  # 期望的數據類型
+    min_value: Optional[float] = None  # 最小值
+    max_value: Optional[float] = None  # 最大值
+    allowed_values: Optional[List[Any]] = None  # 允許的值
+    required: bool = True  # 是否必需
+    max_length: Optional[int] = None  # 字符串最大長度
+    pattern: Optional[str] = None  # 正則表達式模式
+
+
+@dataclass
+class ValidationResult:
+    """驗證結果"""
+    is_valid: bool
+    total_rows: int
+    valid_rows: int
+    invalid_rows: int
+    errors: List[str]
+    warnings: List[str]
+    details: Dict[str, Any]
 
 
 class DataProcessor:
@@ -290,7 +325,7 @@ class DataProcessor:
 
     def validate_data_quality(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
-        驗證數據質量
+        驗證數據質量 (Legacy method - 保留向後兼容)
 
         Args:
             df: 輸入 DataFrame
@@ -321,3 +356,302 @@ class DataProcessor:
 
         logger.info(f"數據質量檢查完成 - 有效: {quality_report['is_valid']}")
         return quality_report
+
+    # ========== Phase 2: 新增強數據驗證方法 ==========
+
+    def validate_schema(self, df: pd.DataFrame, rules: List[ValidationRule]) -> ValidationResult:
+        """
+        驗證數據結構和類型
+
+        Args:
+            df: 輸入 DataFrame
+            rules: 驗證規則列表
+
+        Returns:
+            驗證結果
+        """
+        errors = []
+        warnings = []
+        details = {}
+
+        # 檢查必需的列
+        required_columns = [r.column for r in rules if r.required]
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            errors.append(f"缺少必需的列: {missing_columns}")
+
+        # 逐列驗證
+        for rule in rules:
+            if rule.column not in df.columns:
+                if rule.required:
+                    errors.append(f"列 '{rule.column}' 不存在且被標記為必需")
+                continue
+
+            col_details = {'valid': 0, 'invalid': 0, 'issues': []}
+
+            # 驗證數據類型
+            if rule.dtype:
+                dtype_mapping = {
+                    'int': 'int64',
+                    'float': 'float64',
+                    'str': 'object',
+                    'datetime': 'datetime64'
+                }
+                expected_dtype = dtype_mapping.get(rule.dtype, rule.dtype)
+
+                # 嘗試轉換
+                try:
+                    if rule.dtype == 'int':
+                        df[rule.column] = pd.to_numeric(df[rule.column], errors='coerce').astype('Int64')
+                    elif rule.dtype == 'float':
+                        df[rule.column] = pd.to_numeric(df[rule.column], errors='coerce')
+                    elif rule.dtype == 'datetime':
+                        df[rule.column] = pd.to_datetime(df[rule.column], errors='coerce')
+                except Exception as e:
+                    warnings.append(f"列 '{rule.column}' 類型轉換失敗: {e}")
+
+            # 驗證範圍
+            if rule.min_value is not None or rule.max_value is not None:
+                numeric_col = pd.to_numeric(df[rule.column], errors='coerce')
+                if rule.min_value is not None:
+                    out_of_range = (numeric_col < rule.min_value).sum()
+                    if out_of_range > 0:
+                        col_details['issues'].append(f"{out_of_range} 個值小於最小值 {rule.min_value}")
+
+                if rule.max_value is not None:
+                    out_of_range = (numeric_col > rule.max_value).sum()
+                    if out_of_range > 0:
+                        col_details['issues'].append(f"{out_of_range} 個值大於最大值 {rule.max_value}")
+
+            # 驗證允許的值
+            if rule.allowed_values:
+                invalid_values = df[~df[rule.column].isin(rule.allowed_values)][rule.column].unique()
+                if len(invalid_values) > 0:
+                    col_details['issues'].append(f"發現不允許的值: {list(invalid_values)[:5]}")
+
+            # 驗證字符串長度
+            if rule.max_length and df[rule.column].dtype == 'object':
+                too_long = (df[rule.column].astype(str).str.len() > rule.max_length).sum()
+                if too_long > 0:
+                    col_details['issues'].append(f"{too_long} 個字符串超過最大長度 {rule.max_length}")
+
+            details[rule.column] = col_details
+
+        valid_rows = len(df) - len(df[df.isnull().any(axis=1)])
+        invalid_rows = len(df) - valid_rows
+
+        is_valid = len(errors) == 0
+
+        result = ValidationResult(
+            is_valid=is_valid,
+            total_rows=len(df),
+            valid_rows=valid_rows,
+            invalid_rows=invalid_rows,
+            errors=errors,
+            warnings=warnings,
+            details=details
+        )
+
+        logger.info(f"Schema 驗證完成 - 有效: {result.is_valid}, "
+                   f"有效行數: {result.valid_rows}/{result.total_rows}")
+        return result
+
+    def detect_outliers(self, df: pd.DataFrame, columns: Optional[List[str]] = None,
+                       method: str = 'iqr', threshold: float = 1.5) -> Dict[str, Any]:
+        """
+        檢測異常值（離群點）
+
+        Args:
+            df: 輸入 DataFrame
+            columns: 要檢測的列（如為 None，則檢測所有數值列）
+            method: 檢測方法 ('iqr', 'zscore')
+            threshold: 閾值 (IQR: 1.5, Z-score: 3)
+
+        Returns:
+            異常值檢測結果
+        """
+        if columns is None:
+            columns = df.select_dtypes(include=[np.number]).columns.tolist()
+
+        outliers = {}
+
+        for col in columns:
+            if col not in df.columns:
+                logger.warning(f"列 '{col}' 不存在")
+                continue
+
+            numeric_col = pd.to_numeric(df[col], errors='coerce')
+
+            if method == 'iqr':
+                Q1 = numeric_col.quantile(0.25)
+                Q3 = numeric_col.quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - threshold * IQR
+                upper_bound = Q3 + threshold * IQR
+
+                outlier_mask = (numeric_col < lower_bound) | (numeric_col > upper_bound)
+                outlier_indices = df[outlier_mask].index.tolist()
+
+            elif method == 'zscore':
+                mean = numeric_col.mean()
+                std = numeric_col.std()
+                z_scores = np.abs((numeric_col - mean) / std)
+                outlier_mask = z_scores > threshold
+                outlier_indices = df[outlier_mask].index.tolist()
+
+            else:
+                logger.error(f"不支持的方法: {method}")
+                continue
+
+            outliers[col] = {
+                'count': len(outlier_indices),
+                'percentage': (len(outlier_indices) / len(df) * 100),
+                'indices': outlier_indices[:100]  # 限制輸出前 100 個
+            }
+
+        logger.info(f"異常值檢測完成 - 檢測了 {len(outliers)} 列")
+        return outliers
+
+    def check_consistency(self, df: pd.DataFrame, rules: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        檢查數據一致性
+
+        Args:
+            df: 輸入 DataFrame
+            rules: 一致性檢查規則
+                例如: {
+                    'primary_key': ['id'],  # 主鍵（唯一性檢查）
+                    'referential': {  # 外鍵檢查
+                        'user_id': {'table': 'users', 'column': 'id'}
+                    },
+                    'conditional': {  # 條件檢查
+                        'if_status_active_then_has_date': lambda r: r['status'] == 'active' and r['date'] is not None
+                    }
+                }
+
+        Returns:
+            一致性檢查結果
+        """
+        consistency_report = {
+            'is_consistent': True,
+            'issues': [],
+            'details': {}
+        }
+
+        # 檢查主鍵唯一性
+        if 'primary_key' in rules:
+            pk_columns = rules['primary_key']
+            duplicates = df[df.duplicated(subset=pk_columns, keep=False)]
+            if len(duplicates) > 0:
+                consistency_report['issues'].append(
+                    f"主鍵不唯一: {pk_columns}，發現 {len(duplicates)} 個重複值"
+                )
+                consistency_report['is_consistent'] = False
+                consistency_report['details']['duplicate_keys'] = len(duplicates)
+
+        # 檢查條件規則
+        if 'conditional' in rules:
+            for rule_name, rule_func in rules['conditional'].items():
+                invalid_rows = df[~df.apply(rule_func, axis=1)]
+                if len(invalid_rows) > 0:
+                    consistency_report['issues'].append(
+                        f"條件規則 '{rule_name}' 失敗: {len(invalid_rows)} 行不符合條件"
+                    )
+                    consistency_report['is_consistent'] = False
+
+        logger.info(f"一致性檢查完成 - 一致: {consistency_report['is_consistent']}")
+        return consistency_report
+
+    def validate_data_completeness(self, df: pd.DataFrame,
+                                  threshold: float = 0.8) -> Dict[str, Any]:
+        """
+        驗證數據完整性
+
+        Args:
+            df: 輸入 DataFrame
+            threshold: 接受的最小完整性比例（默認 80%）
+
+        Returns:
+            完整性檢查結果
+        """
+        if df.empty:
+            return {'is_complete': False, 'completeness': 0.0, 'reason': '數據集為空'}
+
+        total_cells = len(df) * len(df.columns)
+        missing_cells = df.isnull().sum().sum()
+        completeness = (total_cells - missing_cells) / total_cells
+
+        completeness_report = {
+            'is_complete': completeness >= threshold,
+            'completeness': completeness,
+            'threshold': threshold,
+            'total_cells': total_cells,
+            'missing_cells': missing_cells,
+            'by_column': {}
+        }
+
+        # 逐列統計缺失數據
+        for col in df.columns:
+            col_completeness = 1 - (df[col].isnull().sum() / len(df))
+            completeness_report['by_column'][col] = {
+                'completeness': col_completeness,
+                'missing_count': df[col].isnull().sum()
+            }
+
+        logger.info(f"數據完整性檢查完成 - 完整性: {completeness:.2%}")
+        return completeness_report
+
+    def generate_validation_report(self, df: pd.DataFrame,
+                                  rules: List[ValidationRule]) -> str:
+        """
+        生成驗證報告
+
+        Args:
+            df: 輸入 DataFrame
+            rules: 驗證規則
+
+        Returns:
+            報告字符串
+        """
+        report = []
+        report.append("=" * 70)
+        report.append("數據驗證報告")
+        report.append("=" * 70)
+        report.append(f"時間: {datetime.now().isoformat()}")
+        report.append(f"數據行數: {len(df)}")
+        report.append(f"數據列數: {len(df.columns)}")
+        report.append("")
+
+        # Schema 驗證
+        schema_result = self.validate_schema(df, rules)
+        report.append("Schema 驗證結果:")
+        report.append(f"  是否有效: {schema_result.is_valid}")
+        report.append(f"  有效行數: {schema_result.valid_rows}/{schema_result.total_rows}")
+        if schema_result.errors:
+            report.append("  錯誤:")
+            for error in schema_result.errors:
+                report.append(f"    - {error}")
+        if schema_result.warnings:
+            report.append("  警告:")
+            for warning in schema_result.warnings:
+                report.append(f"    - {warning}")
+        report.append("")
+
+        # 完整性檢查
+        completeness = self.validate_data_completeness(df)
+        report.append("數據完整性:")
+        report.append(f"  完整性比例: {completeness['completeness']:.2%}")
+        report.append(f"  缺失單元格: {completeness['missing_cells']}")
+        report.append("")
+
+        # 異常值檢測
+        outliers = self.detect_outliers(df)
+        if outliers:
+            report.append("異常值檢測結果:")
+            for col, details in outliers.items():
+                if details['count'] > 0:
+                    report.append(f"  列 '{col}': {details['count']} 個異常值 ({details['percentage']:.2f}%)")
+        report.append("")
+
+        report.append("=" * 70)
+        return "\n".join(report)

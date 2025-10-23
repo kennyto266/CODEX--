@@ -1,16 +1,41 @@
 """
-GOV 爬蟲系統 - 存儲管理模塊
+GOV 爬蟲系統 - 存儲管理模塊 (Phase 2 優化版)
+
+功能優化：
+- 增量更新機制
+- 數據壓縮支持
+- 備份管理
+- 大文件分批讀取
+- 文件完整性檢查
+- 索引管理
 """
 
 import logging
 import os
 import pandas as pd
 import json
-from typing import Dict, Any, Optional
-from datetime import datetime
+import gzip
+import shutil
+import hashlib
+from typing import Dict, Any, Optional, List, Iterator
+from datetime import datetime, timedelta
 from pathlib import Path
+from dataclasses import dataclass, asdict
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class FileMetadata:
+    """文件元數據"""
+    filename: str
+    filepath: str
+    size_bytes: int
+    created_at: str
+    modified_at: str
+    checksum: str  # MD5 校驗和
+    rows_count: Optional[int] = None
+    compressed: bool = False
 
 
 class StorageManager:
@@ -323,7 +348,6 @@ class StorageManager:
             刪除的文件數
         """
         try:
-            from datetime import timedelta
             cutoff_date = datetime.now() - timedelta(days=days_old)
             deleted_count = 0
 
@@ -343,3 +367,387 @@ class StorageManager:
         except Exception as e:
             logger.error(f"清理舊數據失敗: {e}")
             return 0
+
+    # ========== Phase 2: 新增優化存儲方法 ==========
+
+    @staticmethod
+    def _calculate_file_checksum(filepath: str) -> str:
+        """
+        計算文件的 MD5 校驗和
+
+        Args:
+            filepath: 文件路徑
+
+        Returns:
+            MD5 校驗和
+        """
+        md5_hash = hashlib.md5()
+        with open(filepath, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b''):
+                md5_hash.update(chunk)
+        return md5_hash.hexdigest()
+
+    def compress_data(self, filepath: str) -> Optional[str]:
+        """
+        壓縮數據文件（使用 gzip）
+
+        Args:
+            filepath: 源文件路徑
+
+        Returns:
+            壓縮後的文件路徑
+        """
+        try:
+            if not os.path.exists(filepath):
+                logger.warning(f"文件不存在: {filepath}")
+                return None
+
+            # 如果已是 .gz 文件，跳過
+            if filepath.endswith('.gz'):
+                logger.info(f"文件已壓縮: {filepath}")
+                return filepath
+
+            compressed_path = f"{filepath}.gz"
+
+            # 壓縮文件
+            with open(filepath, 'rb') as f_in:
+                with gzip.open(compressed_path, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            # 獲取文件大小（壓縮前後對比）
+            original_size = os.path.getsize(filepath)
+            compressed_size = os.path.getsize(compressed_path)
+            compression_ratio = (1 - compressed_size / original_size) * 100
+
+            logger.info(f"文件已壓縮: {filepath} → {compressed_path} "
+                       f"({compression_ratio:.1f}% 縮減)")
+
+            # 刪除原始文件
+            os.remove(filepath)
+
+            return compressed_path
+
+        except Exception as e:
+            logger.error(f"壓縮文件失敗: {e}")
+            return None
+
+    def decompress_data(self, filepath: str) -> Optional[str]:
+        """
+        解壓數據文件
+
+        Args:
+            filepath: 壓縮文件路徑
+
+        Returns:
+            解壓後的文件路徑
+        """
+        try:
+            if not filepath.endswith('.gz'):
+                logger.warning(f"文件不是 gzip 格式: {filepath}")
+                return filepath
+
+            decompressed_path = filepath[:-3]  # 移除 .gz 後綴
+
+            with gzip.open(filepath, 'rb') as f_in:
+                with open(decompressed_path, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            logger.info(f"文件已解壓: {filepath} → {decompressed_path}")
+            return decompressed_path
+
+        except Exception as e:
+            logger.error(f"解壓文件失敗: {e}")
+            return None
+
+    def create_backup(self, dataset_name: str, backup_dir: Optional[str] = None) -> Optional[str]:
+        """
+        備份數據集
+
+        Args:
+            dataset_name: 數據集名稱
+            backup_dir: 備份目錄（如果為 None，使用 archive_dir）
+
+        Returns:
+            備份文件路徑
+        """
+        try:
+            backup_dir = backup_dir or self.archive_dir
+
+            # 查找最新的處理數據
+            files = [f for f in os.listdir(self.processed_data_dir)
+                    if f.startswith(dataset_name)]
+
+            if not files:
+                logger.warning(f"找不到 {dataset_name} 的數據")
+                return None
+
+            latest_file = sorted(files)[-1]
+            source_path = os.path.join(self.processed_data_dir, latest_file)
+
+            # 創建備份
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_filename = f"{dataset_name}_backup_{timestamp}.gz"
+            backup_path = os.path.join(backup_dir, backup_filename)
+
+            # 壓縮備份
+            with open(source_path, 'rb') as f_in:
+                with gzip.open(backup_path, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            logger.info(f"已創建備份: {backup_path}")
+            return backup_path
+
+        except Exception as e:
+            logger.error(f"創建備份失敗: {e}")
+            return None
+
+    def restore_backup(self, backup_path: str, restore_dir: Optional[str] = None) -> Optional[str]:
+        """
+        從備份恢復數據
+
+        Args:
+            backup_path: 備份文件路徑
+            restore_dir: 恢復目錄（如果為 None，使用 processed_data_dir）
+
+        Returns:
+            恢復的文件路徑
+        """
+        try:
+            restore_dir = restore_dir or self.processed_data_dir
+
+            if not os.path.exists(backup_path):
+                logger.warning(f"備份文件不存在: {backup_path}")
+                return None
+
+            # 生成恢復文件名
+            backup_filename = os.path.basename(backup_path)
+            if backup_filename.endswith('.gz'):
+                restore_filename = backup_filename[:-3] + f"_restored_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            else:
+                restore_filename = backup_filename + f"_restored_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+            restore_path = os.path.join(restore_dir, restore_filename)
+
+            # 解壓備份
+            with gzip.open(backup_path, 'rb') as f_in:
+                with open(restore_path, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            logger.info(f"已從備份恢復: {backup_path} → {restore_path}")
+            return restore_path
+
+        except Exception as e:
+            logger.error(f"恢復備份失敗: {e}")
+            return None
+
+    def read_large_file_chunked(self, filepath: str, chunksize: int = 10000) -> Iterator[pd.DataFrame]:
+        """
+        分批讀取大文件（避免一次性加載到內存）
+
+        Args:
+            filepath: 文件路徑
+            chunksize: 每批行數
+
+        Returns:
+            DataFrame 生成器
+        """
+        try:
+            if not os.path.exists(filepath):
+                logger.warning(f"文件不存在: {filepath}")
+                return
+
+            file_size = os.path.getsize(filepath)
+            logger.info(f"開始分批讀取文件: {filepath} (大小: {file_size / 1024 / 1024:.2f} MB)")
+
+            if filepath.endswith('.csv'):
+                for chunk in pd.read_csv(filepath, chunksize=chunksize):
+                    yield chunk
+            elif filepath.endswith('.json'):
+                df = pd.read_json(filepath)
+                for i in range(0, len(df), chunksize):
+                    yield df.iloc[i:i + chunksize]
+            elif filepath.endswith('.parquet'):
+                df = pd.read_parquet(filepath)
+                for i in range(0, len(df), chunksize):
+                    yield df.iloc[i:i + chunksize]
+            else:
+                logger.error(f"不支持的文件格式: {filepath}")
+
+        except Exception as e:
+            logger.error(f"讀取文件失敗: {e}")
+
+    def verify_file_integrity(self, filepath: str, expected_checksum: Optional[str] = None) -> bool:
+        """
+        驗證文件完整性
+
+        Args:
+            filepath: 文件路徑
+            expected_checksum: 期望的校驗和（如果為 None，與最新備份比對）
+
+        Returns:
+            是否完整
+        """
+        try:
+            if not os.path.exists(filepath):
+                logger.warning(f"文件不存在: {filepath}")
+                return False
+
+            actual_checksum = self._calculate_file_checksum(filepath)
+
+            if expected_checksum:
+                is_valid = actual_checksum == expected_checksum
+                logger.info(f"文件完整性驗證: {filepath} - {'✓ 有效' if is_valid else '✗ 無效'}")
+                return is_valid
+            else:
+                logger.info(f"文件校驗和: {filepath} - {actual_checksum}")
+                return True
+
+        except Exception as e:
+            logger.error(f"驗證文件完整性失敗: {e}")
+            return False
+
+    def create_index(self, dataset_name: str, index_columns: List[str]) -> Optional[str]:
+        """
+        為數據創建索引文件
+
+        Args:
+            dataset_name: 數據集名稱
+            index_columns: 要索引的列
+
+        Returns:
+            索引文件路徑
+        """
+        try:
+            # 加載最新的數據
+            df = self.load_processed_data(dataset_name, format='csv')
+            if df is None:
+                logger.warning(f"找不到 {dataset_name} 的數據")
+                return None
+
+            # 創建索引
+            index_data = {
+                'dataset': dataset_name,
+                'created_at': datetime.now().isoformat(),
+                'total_rows': len(df),
+                'columns': list(df.columns),
+                'index_columns': index_columns,
+                'unique_values': {}
+            }
+
+            # 計算各列的唯一值
+            for col in index_columns:
+                if col in df.columns:
+                    unique_vals = df[col].unique()
+                    index_data['unique_values'][col] = {
+                        'count': len(unique_vals),
+                        'values': unique_vals[:100].tolist()  # 限制前 100 個
+                    }
+
+            # 保存索引
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            index_filename = f"{dataset_name}_index_{timestamp}.json"
+            index_path = os.path.join(self.metadata_dir, index_filename)
+
+            with open(index_path, 'w', encoding='utf-8') as f:
+                json.dump(index_data, f, ensure_ascii=False, indent=2)
+
+            logger.info(f"已創建索引: {index_path}")
+            return index_path
+
+        except Exception as e:
+            logger.error(f"創建索引失敗: {e}")
+            return None
+
+    def incremental_update(self, dataset_name: str, new_data: pd.DataFrame,
+                          key_columns: Optional[List[str]] = None) -> Optional[str]:
+        """
+        增量更新數據（只保存新增/修改的記錄）
+
+        Args:
+            dataset_name: 數據集名稱
+            new_data: 新數據 DataFrame
+            key_columns: 用於識別重複記錄的列（如 None，則視為全新數據）
+
+        Returns:
+            更新後的文件路徑
+        """
+        try:
+            # 加載現有數據
+            existing_df = self.load_processed_data(dataset_name, format='csv')
+
+            if existing_df is None or existing_df.empty:
+                # 沒有現有數據，直接保存新數據
+                logger.info(f"未找到現有數據，保存新數據集: {dataset_name}")
+                return self.save_processed_data(dataset_name, new_data, format='csv')
+
+            # 使用 key_columns 進行增量合併
+            if key_columns:
+                # 移除新數據中已存在的記錄
+                merged_df = existing_df.copy()
+                new_records = new_data[~new_data[key_columns].isin(existing_df[key_columns].values).all(axis=1)]
+                merged_df = pd.concat([merged_df, new_records], ignore_index=True)
+
+                logger.info(f"增量更新: {len(new_records)} 個新記錄，共 {len(merged_df)} 行")
+            else:
+                # 如果沒有 key_columns，則追加新數據
+                merged_df = pd.concat([existing_df, new_data], ignore_index=True)
+                merged_df = merged_df.drop_duplicates()
+
+                logger.info(f"追加新數據: {len(new_data)} 行，共 {len(merged_df)} 行")
+
+            return self.save_processed_data(dataset_name, merged_df, format='csv')
+
+        except Exception as e:
+            logger.error(f"增量更新失敗: {e}")
+            return None
+
+    def get_file_metadata(self, filepath: str) -> Optional[FileMetadata]:
+        """
+        獲取文件元數據
+
+        Args:
+            filepath: 文件路徑
+
+        Returns:
+            文件元數據
+        """
+        try:
+            if not os.path.exists(filepath):
+                logger.warning(f"文件不存在: {filepath}")
+                return None
+
+            stat_info = os.stat(filepath)
+            checksum = self._calculate_file_checksum(filepath)
+
+            # 嘗試獲取行數
+            rows_count = None
+            try:
+                if filepath.endswith('.csv'):
+                    df = pd.read_csv(filepath)
+                    rows_count = len(df)
+                elif filepath.endswith('.json'):
+                    df = pd.read_json(filepath)
+                    rows_count = len(df)
+                elif filepath.endswith('.parquet'):
+                    df = pd.read_parquet(filepath)
+                    rows_count = len(df)
+            except Exception as e:
+                logger.debug(f"無法獲取行數: {e}")
+
+            metadata = FileMetadata(
+                filename=os.path.basename(filepath),
+                filepath=filepath,
+                size_bytes=stat_info.st_size,
+                created_at=datetime.fromtimestamp(stat_info.st_ctime).isoformat(),
+                modified_at=datetime.fromtimestamp(stat_info.st_mtime).isoformat(),
+                checksum=checksum,
+                rows_count=rows_count,
+                compressed=filepath.endswith('.gz')
+            )
+
+            logger.info(f"已獲取文件元數據: {filepath}")
+            return metadata
+
+        except Exception as e:
+            logger.error(f"獲取文件元數據失敗: {e}")
+            return None
