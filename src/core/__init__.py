@@ -18,7 +18,7 @@ try:
 except ImportError:
     from pydantic import BaseSettings
 
-# Phase 2: Import base interfaces for calculation layer
+# Phase 2: Import base interfaces and implementations for calculation layer
 try:
     from .base_strategy import (
         IStrategy,
@@ -31,6 +31,27 @@ try:
     )
 except ImportError:
     # Interfaces may not be available during initialization
+    pass
+
+# Phase 2.3: Import unified backtest engine
+try:
+    from .backtest_interface import (
+        IBacktestEngine,
+        UnifiedBacktestEngine,
+        BacktestConfig,
+        BacktestMetrics,
+        Trade,
+    )
+except ImportError:
+    pass
+
+# Phase 2.3: Import strategy executor
+try:
+    from .strategy_executor import (
+        StrategyExecutor,
+        StrategyFactory,
+    )
+except ImportError:
     pass
 
 
@@ -166,7 +187,7 @@ def get_logs_path() -> Path:
 
 # 导出主要类和函数
 __all__ = [
-    # Existing exports
+    # System configuration
     "SystemConfig",
     "SystemConstants",
     "setup_logging",
@@ -181,4 +202,13 @@ __all__ = [
     "Signal",
     "SignalType",
     "Variable",
+    # Phase 2.3 backtest engine
+    "IBacktestEngine",
+    "UnifiedBacktestEngine",
+    "BacktestConfig",
+    "BacktestMetrics",
+    "Trade",
+    # Phase 2.3 strategy executor
+    "StrategyExecutor",
+    "StrategyFactory",
 ]
