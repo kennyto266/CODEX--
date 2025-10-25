@@ -2,8 +2,12 @@
 数据库初始化脚本
 """
 
-import sqlite3
+import sys
 import os
+sys.stdout.reconfigure(encoding='utf-8')
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+
+import sqlite3
 
 def init_database():
     """初始化数据库"""

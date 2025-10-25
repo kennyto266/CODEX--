@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(openspec validate:*)",
+      "Bash(openspec show:*)",
+      "Bash(openspec list:*)",
+      "Bash(python:*)",
+      "Bash(wsl --list:*)",
+      "Bash(wsl bash -c \"node --version\")",
+      "Bash(wsl bash -c \"npm --version\")",
+      "Bash(wsl bash:*)",
+      "Bash(wsl -e bash -c \"cd /mnt/c/Users/Penguin8n/CODEX--/CODEX-- && bash setup_mcp_wsl.sh\")",
+      "Bash(wsl -e bash -c \"sudo npm install -g node-pty\")",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp list:*)",
+      "mcp__persistent-terminal__create_terminal_basic",
+      "mcp__persistent-terminal__open_terminal_ui",
+      "mcp__persistent-terminal__list_terminals",
+      "mcp__persistent-terminal__read_terminal",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(claude:*)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(git --version)",
+      "Bash(git clone https://github.com/ChromeDevTools/chrome-devtools-mcp.git)",
+      "Bash(dir)",
+      "Bash(npm install)",
+      "Bash(npm run build)",
+      "Read(//c/Users/Penguin8n/**)",
+      "Bash(npm test)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

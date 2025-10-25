@@ -6,9 +6,10 @@ Phase 5: Real-time Trading System
 
 import os
 import asyncio
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from datetime import datetime
 
 from src.infrastructure.production_setup import ProductionManager
@@ -53,35 +54,85 @@ app.include_router(dashboard_routes)
 
 # ==================== Root Endpoint ====================
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """根路徑處理器 - 返回系統狀態概覽"""
-    return {
-        "message": "CODEX Trading System - Phase 5 (Real-time Trading)",
-        "status": "operational",
-        "version": "1.0.0",
-        "timestamp": datetime.now().isoformat(),
-        "endpoints": {
-            "docs": "/docs",
-            "redoc": "/redoc",
-            "health": "/health",
-            "api": {
-                "portfolio": "/api/trading/portfolio",
-                "performance": "/api/trading/performance",
-                "risk": "/api/risk/summary",
-                "system": "/api/system/status",
-                "dashboard": "/api/dashboard/complete",
-                "performance_summary": "/api/performance/summary"
-            },
-            "websocket": {
-                "portfolio": "/ws/portfolio",
-                "performance": "/ws/performance",
-                "risk": "/ws/risk",
-                "orders": "/ws/orders",
-                "system": "/ws/system"
-            }
+    """根路徑處理器 - 返回完整HTML仪表板"""
+    try:
+        # Load dashboard template from file
+        # Using absolute path construction from the application module location
+        app_dir = Path(__file__).parent
+        template_path = app_dir / "dashboard" / "templates" / "index.html"
+
+        production_manager.logger.debug(f"Looking for template at: {template_path}")
+        production_manager.logger.debug(f"Template exists: {template_path.exists()}")
+
+        if template_path.exists():
+            content = template_path.read_text(encoding='utf-8')
+            production_manager.logger.info(f"Successfully loaded dashboard template ({len(content)} bytes)")
+            return content
+        else:
+            production_manager.logger.warning(f"Template file not found at: {template_path}")
+    except Exception as e:
+        production_manager.logger.error(f"Failed to load template: {type(e).__name__}: {e}", exc_info=True)
+
+    # Fallback HTML if template not found
+    html_content = """<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CODEX Trading System - Real-time Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         }
-    }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            transition: all 0.3s ease;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-100 p-6">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent flex items-center">
+                        CODEX Trading System
+                        <span class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-lg text-sm ml-4">Phase 5</span>
+                    </h1>
+                    <p class="text-gray-400 mt-2">Real-time Trading & Risk Management Platform</p>
+                </div>
+                <div class="flex items-center space-x-3 glass-card px-4 py-2 rounded-lg">
+                    <div class="status-indicator bg-green-500"></div>
+                    <span class="text-green-400 font-semibold">OPERATIONAL</span>
+                </div>
+            </div>
+        </header>
+        <div class="glass-card p-8 rounded-xl text-center">
+            <p class="text-xl text-gray-300 mb-4">Dashboard Template Loading Error</p>
+            <p class="text-gray-500">Check <a href="/docs" class="text-blue-400 hover:underline">/docs</a> for API documentation</p>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_content
 
 # ==================== Health & Status Endpoints ====================
 

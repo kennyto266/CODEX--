@@ -1,0 +1,79 @@
+================================================================================
+COMPREHENSIVE HONG KONG MARKET QUANTITATIVE ANALYSIS
+================================================================================
+
+Analysis Date: 2025-10-24 03:50:22
+
+DATA SOURCES:
+- HKEX Market Data: 33 trading days
+- HIBOR Rates: 262 days
+- Visitor Statistics: 12 months
+
+RISK METRICS SUMMARY:
+- sharpe_ratio: 0.5631
+- sortino_ratio: 0.9773
+- max_drawdown: -0.0748
+- var_95: -0.0207
+- var_99: -0.0300
+- cvar_95: -0.0286
+- cvar_99: -0.0323
+- beta: 0.0950
+- alpha: 0.1281
+- win_rate: 0.5312
+- win_loss_ratio: 0.9779
+
+KEY CORRELATIONS:
+- Trading_Volume: -0.0120
+- Turnover_HKD: -0.3458
+- Deals: -0.3970
+- hibor_overnight: 0.2479
+- hibor_1m: -0.2691
+- hibor_3m: -0.0640
+- hibor_6m: -0.0667
+- hibor_12m: 0.2573
+
+RECOMMENDED TRADING STRATEGIES:
+
+1. HIBOR Mean Reversion
+   - type: Mean Reversion
+   - signal_source: 3M HIBOR
+   - entry_long: < 4.2461%
+   - entry_short: > 4.3447%
+   - risk_level: Medium
+   - entry_condition: nan
+   - bullish_threshold: nan
+   - bearish_threshold: nan
+   - high_quality: nan
+
+2. Volume Momentum
+   - type: Momentum
+   - signal_source: Trading Volume + Returns
+   - entry_long: nan
+   - entry_short: nan
+   - risk_level: Medium-High
+   - entry_condition: Volume > Mean + 1 Std
+   - bullish_threshold: nan
+   - bearish_threshold: nan
+   - high_quality: nan
+
+3. HIBOR Term Structure
+   - type: Arbitrage
+   - signal_source: HIBOR Curve Spread
+   - entry_long: nan
+   - entry_short: nan
+   - risk_level: Low-Medium
+   - entry_condition: nan
+   - bullish_threshold: > 0.2293%
+   - bearish_threshold: < 0.0926%
+   - high_quality: nan
+
+4. Turnover Efficiency
+   - type: Quality Signal
+   - signal_source: Turnover / Deals
+   - entry_long: nan
+   - entry_short: nan
+   - risk_level: Low
+   - entry_condition: nan
+   - bullish_threshold: nan
+   - bearish_threshold: nan
+   - high_quality: > HKD 70,308

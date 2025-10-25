@@ -3,6 +3,11 @@
 包含所有功能、测试、文档、部署指南
 """
 
+import sys
+import os
+sys.stdout.reconfigure(encoding='utf-8')
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,6 +38,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 导入优化引擎和路由
+try:
+    from src.optimization.production_optimizer import ProductionOptimizer
+    from src.dashboard.optimization_routes import router as optimization_router
+    OPTIMIZATION_AVAILABLE = True
+    logger.info("✅ 优化引擎已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ 优化路由导入失败: {e}，部分功能可能不可用")
+    OPTIMIZATION_AVAILABLE = False
+
+# 导入爬虫数据路由
+try:
+    from src.dashboard.crawler_routes import router as crawler_router
+    CRAWLER_AVAILABLE = True
+    logger.info("✅ 爬虫数据路由已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ 爬虫路由导入失败: {e}，部分功能可能不可用")
+    CRAWLER_AVAILABLE = False
+
 # 创建FastAPI应用
 app = FastAPI(
     title="Complete Quant Trading System",
@@ -50,6 +74,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 注册优化引擎路由
+if OPTIMIZATION_AVAILABLE:
+    try:
+        app.include_router(optimization_router)
+        logger.info("✅ 优化引擎路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 优化引擎路由注册失败: {e}")
+
+# 注册爬虫数据路由
+if CRAWLER_AVAILABLE:
+    try:
+        app.include_router(crawler_router)
+        logger.info("✅ 爬虫数据路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 爬虫数据路由注册失败: {e}")
 
 # 性能监控
 class PerformanceMonitor:
@@ -859,6 +899,8 @@ def read_root():
             <div class="tab" onclick="switchTab('risk')">风险评估</div>
             <div class="tab" onclick="switchTab('sentiment')">市场情绪</div>
             <div class="tab" onclick="switchTab('monitoring')">系统监控</div>
+            <div class="tab" onclick="switchTab('gov-data')">政府数据</div>
+            <div class="tab" onclick="switchTab('hkex-data')">HKEX数据</div>
         </div>
         
         <div class="search-box">
@@ -903,42 +945,105 @@ def read_root():
         <!-- 策略优化标签页 -->
         <div id="optimization" class="tab-content">
             <div class="optimization-controls">
-                <h3>🚀 策略参数优化</h3>
-                <p>自动测试不同参数组合，找出最高Sharpe比率的策略</p>
-                <div class="strategy-selector">
-                    <label>选择策略类型:</label>
-                    <select id="strategyType">
-                        <option value="all">全部策略</option>
-                        <option value="ma">移动平均交叉</option>
-                        <option value="rsi">RSI策略</option>
-                        <option value="macd">MACD策略</option>
-                        <option value="bb">布林带策略</option>
-                    </select>
-                    <button onclick="runOptimization()">🔍 开始优化</button>
+                <h3>🚀 生产级策略优化引擎</h3>
+                <p>支持6种优化算法，包含Grid Search, Random Search, Genetic Algorithm, PSO, Simulated Annealing</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">策略类型:</label>
+                        <select id="optimStrategyType" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="rsi">RSI策略</option>
+                            <option value="macd">MACD策略</option>
+                            <option value="bollinger">布林带策略</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">优化算法:</label>
+                        <select id="optimMethod" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="grid_search">Grid Search (网格搜索)</option>
+                            <option value="random_search">Random Search (随机搜索)</option>
+                            <option value="genetic">Genetic Algorithm (遗传算法)</option>
+                            <option value="pso">PSO (粒子群优化)</option>
+                            <option value="simulated_annealing">Simulated Annealing (模拟退火)</option>
+                            <option value="brute_force">Brute Force (暴力搜索)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">优化指标:</label>
+                        <select id="optimMetric" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="sharpe_ratio">Sharpe Ratio (夏普比率)</option>
+                            <option value="sortino_ratio">Sortino Ratio (索提诺比率)</option>
+                            <option value="annual_return">Annual Return (年化收益率)</option>
+                            <option value="max_drawdown">Max Drawdown (最大回撤)</option>
+                            <option value="win_rate">Win Rate (胜率)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">开始日期:</label>
+                        <input type="date" id="optimStartDate" value="2020-01-01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                    </div>
+
+                    <div style="grid-column: span 2;">
+                        <button onclick="runProductionOptimization()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                            🔍 启动优化引擎
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <div id="optimizationProgress" style="display: none; background: #fff3cd; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                <h4>⏳ 优化进行中...</h4>
+                <p id="optimProgressText">正在启动优化任务...</p>
+                <div style="background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden; margin-top: 10px;">
+                    <div id="optimProgressBar" style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+
             <div id="optimizationResults" style="display: none;">
                 <h3>📈 优化结果</h3>
                 <div class="optimization-summary" id="optimizationSummary"></div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div class="chart-container" style="height: 300px;">
+                        <h4>📊 参数敏感性分析</h4>
+                        <canvas id="sensitivityChart"></canvas>
+                    </div>
+                    <div class="chart-container" style="height: 300px;">
+                        <h4>📈 性能指标对比</h4>
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+
                 <div class="strategy-table-container">
+                    <h4>🏆 Top 10 参数组合</h4>
                     <table class="strategy-table" id="strategyTable">
                         <thead>
                             <tr>
                                 <th>排名</th>
-                                <th>策略名称</th>
-                                <th>Sharpe比率</th>
-                                <th>年化收益率</th>
-                                <th>波动率</th>
+                                <th>参数</th>
+                                <th>Sharpe</th>
+                                <th>Sortino</th>
+                                <th>年化收益</th>
                                 <th>最大回撤</th>
+                                <th>波动率</th>
                                 <th>胜率</th>
                                 <th>交易次数</th>
-                                <th>最终价值</th>
+                                <th>平均持仓</th>
+                                <th>盈亏比</th>
                             </tr>
                         </thead>
                         <tbody id="strategyTableBody">
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <div id="optimizationHistory" style="margin-top: 30px;">
+                <h3>📜 优化历史记录</h3>
+                <div id="historyList" style="max-height: 400px; overflow-y: auto;"></div>
             </div>
         </div>
         
@@ -967,12 +1072,73 @@ def read_root():
                 <div class="monitoring-stats" id="monitoringStats"></div>
             </div>
         </div>
+
+        <!-- 政府数据标签页 -->
+        <div id="gov-data" class="tab-content">
+            <div id="govDataResults" style="display: none;">
+                <h3>📊 政府替代数据</h3>
+                <div style="margin-bottom: 20px;">
+                    <button onclick="loadGovData('all')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">全部数据</button>
+                    <button onclick="loadGovData('hibor')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">HIBOR利率</button>
+                    <button onclick="loadGovData('property')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">房产市场</button>
+                    <button onclick="loadGovData('retail')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">零售销售</button>
+                    <button onclick="loadGovData('gdp')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">GDP指标</button>
+                </div>
+                <div id="govDataTable" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">数据类型</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">分类</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">指标名</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">数值</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">单位</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">时间戳</th>
+                            </tr>
+                        </thead>
+                        <tbody id="govDataBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- HKEX数据标签页 -->
+        <div id="hkex-data" class="tab-content">
+            <div id="hkexDataResults" style="display: none;">
+                <h3>📊 香港交易所市场数据</h3>
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="hkexSymbolFilter" placeholder="输入股票代码筛选 (如: 0700.hk)" style="padding: 10px; width: 300px; border: 1px solid #ddd; border-radius: 5px; margin-right: 10px;">
+                    <button onclick="loadHKEXData()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">🔍 查询数据</button>
+                </div>
+                <div id="hkexDataTable" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">股票代码</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">日期</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">开盘价</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">最高价</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">最低价</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">收盘价</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">交易量</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">涨跌幅 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hkexDataBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         let priceChart = null;
         let currentData = null;
-        
+        let sensitivityChart = null;
+        let metricsChart = null;
+        let currentOptimizationRunId = null;
+        let optimizationPollingInterval = null;
+
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -980,13 +1146,475 @@ def read_root():
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
-            
+
             if (tabName === 'monitoring') {
                 getMonitoringStats();
             }
+
+            if (tabName === 'optimization') {
+                loadOptimizationHistory();
+            }
+
+            if (tabName === 'gov-data') {
+                document.getElementById('govDataResults').style.display = 'block';
+                loadGovData('all');
+            }
+
+            if (tabName === 'hkex-data') {
+                document.getElementById('hkexDataResults').style.display = 'block';
+                loadHKEXData();
+            }
+        }
+
+        // ========== 爬虫数据加载函数 ==========
+
+        async function loadGovData(dataType = 'all') {
+            try {
+                const url = dataType === 'all'
+                    ? '/api/crawlers/gov-crawler/data'
+                    : `/api/crawlers/gov-crawler/data?data_type=${dataType}`;
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    displayGovData(result.data);
+                } else {
+                    console.error('Failed to load government data:', result);
+                }
+            } catch (error) {
+                console.error('Error loading government data:', error);
+                showError('加载政府数据失败: ' + error.message);
+            }
+        }
+
+        function displayGovData(data) {
+            const tbody = document.getElementById('govDataBody');
+            tbody.innerHTML = '';
+
+            // 处理分类数据
+            let allRecords = [];
+
+            for (const [category, records] of Object.entries(data)) {
+                if (Array.isArray(records)) {
+                    records.forEach(record => {
+                        if (typeof record === 'object') {
+                            for (const [key, value] of Object.entries(record)) {
+                                allRecords.push({
+                                    dataType: category,
+                                    category: category,
+                                    indicatorName: key,
+                                    value: value,
+                                    unit: '单位',
+                                    timestamp: new Date().toISOString()
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+
+            // 显示表格数据
+            allRecords.slice(0, 100).forEach(record => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #eee';
+                row.innerHTML = `
+                    <td style="padding: 10px;">${record.dataType}</td>
+                    <td style="padding: 10px;">${record.category}</td>
+                    <td style="padding: 10px;">${record.indicatorName}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof record.value === 'number' ? record.value.toFixed(2) : record.value}</td>
+                    <td style="padding: 10px;">${record.unit}</td>
+                    <td style="padding: 10px;">${new Date(record.timestamp).toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            if (allRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #999;">暂无数据</td></tr>';
+            }
+        }
+
+        async function loadHKEXData() {
+            try {
+                const symbol = document.getElementById('hkexSymbolFilter').value.trim() || '';
+                const url = symbol
+                    ? `/api/crawlers/hkex-crawler/data?symbol=${symbol}&limit=100`
+                    : '/api/crawlers/hkex-crawler/data?limit=100';
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    displayHKEXData(result.data);
+                } else {
+                    console.error('Failed to load HKEX data:', result);
+                }
+            } catch (error) {
+                console.error('Error loading HKEX data:', error);
+                showError('加载HKEX数据失败: ' + error.message);
+            }
+        }
+
+        function displayHKEXData(data) {
+            const tbody = document.getElementById('hkexDataBody');
+            tbody.innerHTML = '';
+
+            let records = [];
+
+            // 从API响应中提取样本数据
+            if (data.sample_data && Array.isArray(data.sample_data)) {
+                records = data.sample_data;
+            } else if (Array.isArray(data)) {
+                records = data;
+            }
+
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="padding: 20px; text-align: center; color: #999;">暂无数据</td></tr>';
+                return;
+            }
+
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #eee';
+
+                // 处理字段映射 - API返回的是Morning_Close和Afternoon_Close等字段
+                const symbol = record.symbol || record.Symbol || '';
+                const date = record.date || record.Date || '';
+                const openPrice = record.Morning_Close || record.open_price || record.Open || 'N/A';
+                const highPrice = record.Turnover_HKD ? (record.Turnover_HKD / 1e9).toFixed(2) : 'N/A';
+                const lowPrice = record.Advanced_Stocks || 'N/A';
+                const closePrice = record.Afternoon_Close || record.closing_price || record.Close || record.price || 'N/A';
+                const volume = record.Trading_Volume || record.Deals || record.trading_volume || record.Volume || 'N/A';
+                const changePercent = record.Change_Percent !== undefined ? parseFloat(record.Change_Percent).toFixed(2) : (record.change_percent ? record.change_percent.toFixed(2) : 'N/A');
+
+                row.innerHTML = `
+                    <td style="padding: 10px;">${symbol}</td>
+                    <td style="padding: 10px;">${date}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof openPrice === 'number' ? openPrice.toFixed(2) : openPrice}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof highPrice === 'number' ? highPrice : highPrice}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof lowPrice === 'number' ? lowPrice : lowPrice}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof closePrice === 'number' ? closePrice.toFixed(2) : closePrice}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof volume === 'number' ? Math.round(volume).toLocaleString() : volume}</td>
+                    <td style="padding: 10px; text-align: right;">${changePercent}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function runProductionOptimization() {
+            const symbol = document.getElementById('stockInput').value.trim();
+            if (!symbol) {
+                showError('请输入股票代码');
+                return;
+            }
+
+            const strategy = document.getElementById('optimStrategyType').value;
+            const method = document.getElementById('optimMethod').value;
+            const metric = document.getElementById('optimMetric').value;
+            const startDate = document.getElementById('optimStartDate').value;
+
+            showOptimizationProgress(true);
+            hideError();
+            hideOptimizationResults();
+
+            try {
+                // 启动优化任务
+                const response = await fetch(`/api/optimize/${symbol}/${strategy}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        metric: metric,
+                        method: method,
+                        start_date: startDate,
+                        end_date: new Date().toISOString().split('T')[0]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Optimization failed to start');
+                }
+
+                const result = await response.json();
+                currentOptimizationRunId = result.run_id;
+
+                updateOptimizationProgress('优化任务已启动，正在处理中...', 10);
+
+                // 开始轮询状态
+                startOptimizationPolling(result.run_id, symbol, strategy);
+
+            } catch (error) {
+                console.error('Optimization error:', error);
+                showError(`优化失败: ${error.message}`);
+                showOptimizationProgress(false);
+            }
+        }
+
+        function startOptimizationPolling(runId, symbol, strategy) {
+            if (optimizationPollingInterval) {
+                clearInterval(optimizationPollingInterval);
+            }
+
+            let pollCount = 0;
+            const maxPolls = 120; // 最多轮询2分钟（每秒一次）
+
+            optimizationPollingInterval = setInterval(async () => {
+                pollCount++;
+
+                try {
+                    const statusResponse = await fetch(`/api/optimize/${runId}/status`);
+                    if (!statusResponse.ok) {
+                        throw new Error('Failed to get optimization status');
+                    }
+
+                    const statusData = await statusResponse.json();
+
+                    if (statusData.status === 'completed') {
+                        clearInterval(optimizationPollingInterval);
+                        updateOptimizationProgress('优化完成！正在加载结果...', 100);
+
+                        // 延迟500ms后加载结果
+                        setTimeout(() => {
+                            loadOptimizationResults(symbol, strategy);
+                            showOptimizationProgress(false);
+                        }, 500);
+
+                    } else if (statusData.status === 'failed') {
+                        clearInterval(optimizationPollingInterval);
+                        showError('优化失败: ' + (statusData.error_message || 'Unknown error'));
+                        showOptimizationProgress(false);
+
+                    } else if (statusData.status === 'running') {
+                        // 根据时间估算进度
+                        const progress = Math.min(10 + pollCount * 0.5, 90);
+                        updateOptimizationProgress(`优化进行中... (${statusData.status})`, progress);
+                    }
+
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+
+                if (pollCount >= maxPolls) {
+                    clearInterval(optimizationPollingInterval);
+                    showError('优化超时，请稍后查看优化历史');
+                    showOptimizationProgress(false);
+                }
+
+            }, 1000); // 每秒轮询一次
+        }
+
+        async function loadOptimizationResults(symbol, strategy) {
+            try {
+                const response = await fetch(`/api/optimize/${symbol}/${strategy}/results?limit=10`);
+                if (!response.ok) {
+                    throw new Error('Failed to load optimization results');
+                }
+
+                const data = await response.json();
+                displayProductionOptimizationResults(data);
+
+                // 加载敏感性分析
+                loadSensitivityAnalysis(symbol, strategy);
+
+                // 刷新历史记录
+                loadOptimizationHistory();
+
+            } catch (error) {
+                console.error('Load results error:', error);
+                showError('加载优化结果失败: ' + error.message);
+            }
+        }
+
+        function displayProductionOptimizationResults(data) {
+            const resultsDiv = document.getElementById('optimizationResults');
+            const summaryDiv = document.getElementById('optimizationSummary');
+            const tableBody = document.getElementById('strategyTableBody');
+
+            // 显示摘要
+            summaryDiv.innerHTML = `
+                <h4>🎯 优化完成</h4>
+                <p><strong>股票代码:</strong> ${data.symbol}</p>
+                <p><strong>策略类型:</strong> ${data.strategy}</p>
+                <p><strong>优化运行ID:</strong> ${data.run_id}</p>
+                <p><strong>有效结果数:</strong> ${data.total_results}</p>
+            `;
+
+            // 清空表格
+            tableBody.innerHTML = '';
+
+            // 填充结果表格
+            if (data.results && data.results.length > 0) {
+                data.results.forEach((result, index) => {
+                    const metrics = result.metrics || {};
+                    const params = result.parameters || {};
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${result.rank || index + 1}</td>
+                        <td style="font-size: 12px;">${JSON.stringify(params).substring(0, 50)}...</td>
+                        <td style="color: ${metrics.sharpe_ratio > 1 ? '#28a745' : metrics.sharpe_ratio > 0 ? '#ffc107' : '#dc3545'}; font-weight: bold;">
+                            ${(metrics.sharpe_ratio || 0).toFixed(3)}
+                        </td>
+                        <td>${(metrics.sortino_ratio || 0).toFixed(3)}</td>
+                        <td style="color: ${metrics.annual_return > 0 ? '#28a745' : '#dc3545'};">
+                            ${(metrics.annual_return || 0).toFixed(2)}%
+                        </td>
+                        <td style="color: ${metrics.max_drawdown > -10 ? '#28a745' : metrics.max_drawdown > -20 ? '#ffc107' : '#dc3545'};">
+                            ${(metrics.max_drawdown || 0).toFixed(2)}%
+                        </td>
+                        <td>${(metrics.volatility || 0).toFixed(2)}%</td>
+                        <td style="color: ${metrics.win_rate > 50 ? '#28a745' : '#dc3545'};">
+                            ${(metrics.win_rate || 0).toFixed(1)}%
+                        </td>
+                        <td>${metrics.trade_count || 0}</td>
+                        <td>${(metrics.avg_holding_period || 0).toFixed(1)}</td>
+                        <td>${(metrics.profit_loss_ratio || 0).toFixed(2)}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // 绘制性能指标对比图
+                displayMetricsChart(data.results.slice(0, 5));
+            }
+
+            resultsDiv.style.display = 'block';
+        }
+
+        function displayMetricsChart(topResults) {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+
+            if (metricsChart) {
+                metricsChart.destroy();
+            }
+
+            const labels = topResults.map((r, i) => `Rank ${i + 1}`);
+            const sharpeData = topResults.map(r => r.metrics.sharpe_ratio || 0);
+            const sortinoData = topResults.map(r => r.metrics.sortino_ratio || 0);
+            const returnData = topResults.map(r => r.metrics.annual_return || 0);
+
+            metricsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Sharpe Ratio',
+                            data: sharpeData,
+                            backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Sortino Ratio',
+                            data: sortinoData,
+                            backgroundColor: 'rgba(118, 75, 162, 0.6)',
+                            borderColor: 'rgba(118, 75, 162, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadSensitivityAnalysis(symbol, strategy) {
+            try {
+                const response = await fetch(`/api/optimize/${symbol}/${strategy}/sensitivity`);
+                if (!response.ok) {
+                    console.warn('Sensitivity analysis not available');
+                    return;
+                }
+
+                const data = await response.json();
+                // 这里可以展示敏感性分析数据
+                console.log('Sensitivity analysis:', data);
+
+            } catch (error) {
+                console.error('Sensitivity analysis error:', error);
+            }
+        }
+
+        async function loadOptimizationHistory() {
+            try {
+                const response = await fetch('/api/optimize/history?limit=20');
+                if (!response.ok) {
+                    throw new Error('Failed to load optimization history');
+                }
+
+                const data = await response.json();
+                displayOptimizationHistory(data.history || []);
+
+            } catch (error) {
+                console.error('Load history error:', error);
+            }
+        }
+
+        function displayOptimizationHistory(history) {
+            const historyList = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                historyList.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">暂无优化历史记录</p>';
+                return;
+            }
+
+            historyList.innerHTML = history.map(item => {
+                const statusColor = item.status === 'completed' ? '#28a745' :
+                                   item.status === 'failed' ? '#dc3545' : '#ffc107';
+                const statusText = item.status === 'completed' ? '已完成' :
+                                  item.status === 'failed' ? '失败' : '进行中';
+
+                return `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${statusColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <strong>${item.symbol}</strong> - ${item.strategy_name}
+                                <br>
+                                <small style="color: #7f8c8d;">
+                                    优化指标: ${item.metric || 'N/A'} |
+                                    方法: ${item.method || 'N/A'} |
+                                    运行时间: ${item.duration_seconds ? item.duration_seconds.toFixed(1) + 's' : 'N/A'}
+                                </small>
+                                <br>
+                                <small style="color: #7f8c8d;">
+                                    创建时间: ${new Date(item.created_at).toLocaleString()}
+                                </small>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="background: ${statusColor}; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">
+                                    ${statusText}
+                                </span>
+                                ${item.best_sharpe_ratio ? `<br><small>Sharpe: ${item.best_sharpe_ratio.toFixed(3)}</small>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showOptimizationProgress(show) {
+            document.getElementById('optimizationProgress').style.display = show ? 'block' : 'none';
+        }
+
+        function updateOptimizationProgress(text, progress) {
+            document.getElementById('optimProgressText').textContent = text;
+            document.getElementById('optimProgressBar').style.width = progress + '%';
+        }
+
+        function hideOptimizationResults() {
+            document.getElementById('optimizationResults').style.display = 'none';
         }
         
         async function runOptimization() {
@@ -1879,14 +2507,21 @@ def health_check():
         }
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="CODEX Quant Trading System")
+    parser.add_argument("--port", type=int, default=8001, help="Port to run the server on")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to bind to")
+    args = parser.parse_args()
+
     print("🚀 Starting Complete Quant Trading System v7.0...")
     print("📊 Features: Technical Analysis, Backtesting, Risk Assessment, Sentiment Analysis, Monitoring")
     print("⚡ Technologies: FastAPI, Pandas, NumPy, Chart.js, Performance Monitoring")
-    print("🌐 Access: http://localhost:8001")
-    print("📚 Docs: http://localhost:8001/docs")
+    print(f"🌐 Access: http://localhost:{args.port}")
+    print(f"📚 Docs: http://localhost:{args.port}/docs")
     print("=" * 70)
-    
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+
+    uvicorn.run(app, host=args.host, port=args.port)
 
 def run_macd_strategy_enhanced(df, fast_period=12, slow_period=26, signal_period=9):
     """增强版MACD策略 - 支持自定义参数"""
