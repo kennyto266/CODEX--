@@ -18,6 +18,21 @@ try:
 except ImportError:
     from pydantic import BaseSettings
 
+# Phase 2: Import base interfaces for calculation layer
+try:
+    from .base_strategy import (
+        IStrategy,
+        IVariableManager,
+        IParameterManager,
+        IExecutionEngine,
+        Signal,
+        SignalType,
+        Variable,
+    )
+except ImportError:
+    # Interfaces may not be available during initialization
+    pass
+
 
 class SystemConfig(BaseSettings):
     """系统配置类"""
@@ -151,10 +166,19 @@ def get_logs_path() -> Path:
 
 # 导出主要类和函数
 __all__ = [
+    # Existing exports
     "SystemConfig",
-    "SystemConstants", 
+    "SystemConstants",
     "setup_logging",
     "get_project_root",
     "get_config_path",
-    "get_logs_path"
+    "get_logs_path",
+    # Phase 2 base interfaces
+    "IStrategy",
+    "IVariableManager",
+    "IParameterManager",
+    "IExecutionEngine",
+    "Signal",
+    "SignalType",
+    "Variable",
 ]
