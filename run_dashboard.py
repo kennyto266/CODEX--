@@ -242,7 +242,84 @@ def create_app(data_service: DashboardDataService) -> FastAPI:
         )
         return Response(content=favicon_data, media_type="image/x-icon")
 
-    logger.info("FastAPI 應用已創建，共註冊 8 條路由")
+    # ==================== Stock Data API ====================
+
+    @app.get("/api/stock/data")
+    async def get_stock_data(symbol: str) -> Dict[str, Any]:
+        """獲取股票數據"""
+        logger.debug(f"API 調用: GET /api/stock/data?symbol={symbol}")
+
+        # Mock 股票數據 - 實際使用時應連接真實數據源
+        mock_stocks = {
+            "0700.HK": {
+                "symbol": "0700.HK",
+                "name": "Tencent (騰訊)",
+                "last_price": 325.50,
+                "change": 2.50,
+                "change_percent": 0.77,
+                "high": 328.00,
+                "low": 321.00,
+                "volume": 45230000,
+                "market_cap": "3.2T"
+            },
+            "0939.HK": {
+                "symbol": "0939.HK",
+                "name": "China Construction Bank (中國建設銀行)",
+                "last_price": 6.85,
+                "change": -0.05,
+                "change_percent": -0.72,
+                "high": 7.00,
+                "low": 6.80,
+                "volume": 123450000,
+                "market_cap": "1.1T"
+            },
+            "0388.HK": {
+                "symbol": "0388.HK",
+                "name": "Hong Kong Exchanges (香港交易所)",
+                "last_price": 420.80,
+                "change": 5.20,
+                "change_percent": 1.25,
+                "high": 425.00,
+                "low": 415.00,
+                "volume": 2340000,
+                "market_cap": "354B"
+            },
+            "1398.HK": {
+                "symbol": "1398.HK",
+                "name": "ICBC (工商銀行)",
+                "last_price": 5.42,
+                "change": -0.02,
+                "change_percent": -0.37,
+                "high": 5.50,
+                "low": 5.38,
+                "volume": 234560000,
+                "market_cap": "923B"
+            }
+        }
+
+        symbol_upper = symbol.upper()
+
+        if symbol_upper in mock_stocks:
+            stock_data = mock_stocks[symbol_upper]
+            stock_data["timestamp"] = datetime.now().isoformat()
+            return stock_data
+        else:
+            # 如果沒有在 mock 數據中找到，返回默認結構
+            return {
+                "symbol": symbol_upper,
+                "name": "Unknown Stock",
+                "last_price": 0.0,
+                "change": 0.0,
+                "change_percent": 0.0,
+                "high": 0.0,
+                "low": 0.0,
+                "volume": 0,
+                "market_cap": "N/A",
+                "timestamp": datetime.now().isoformat(),
+                "note": "This is mock data. For real data, connect to actual data source."
+            }
+
+    logger.info("FastAPI 應用已創建，共註冊 9 條路由")
     return app
 
 
