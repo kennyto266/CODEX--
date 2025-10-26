@@ -392,6 +392,77 @@ class PipelineProcessor:
         """Check if pipeline had errors."""
         return len(self.execution_log["errors"]) > 0
 
+    # =========================================================================
+    # OpenSpec Compatibility Methods
+    # =========================================================================
+
+    def process_with_config(
+        self,
+        df: pd.DataFrame,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> pd.DataFrame:
+        """
+        OpenSpec-compatible process method that accepts configuration dictionary.
+
+        Args:
+            df: Input DataFrame
+            config: Configuration dictionary with keys like:
+                - 'cleaning_strategy': 'balanced', 'conservative', 'aggressive'
+                - 'normalization_method': 'zscore', 'minmax'
+                - 'generate_lagged_features': True/False
+                - 'lags': [1, 5, 20]
+                - etc.
+
+        Returns:
+            Processed DataFrame
+        """
+        if config is None:
+            config = {}
+
+        # Reset steps if reconfiguring
+        if self.steps:
+            self.steps = []
+
+        # Add cleaning step
+        clean_config = {
+            "missing_value_strategy": "interpolate",
+            "outlier_strategy": "cap",
+        }
+        if "cleaning_strategy" in config:
+            # Map strategy names to actual parameters
+            strategy = config["cleaning_strategy"]
+            if strategy == "conservative":
+                clean_config["missing_value_strategy"] = "forward_fill"
+                clean_config["outlier_strategy"] = "keep"
+            elif strategy == "balanced":
+                clean_config["missing_value_strategy"] = "interpolate"
+                clean_config["outlier_strategy"] = "cap"
+            elif strategy == "aggressive":
+                clean_config["missing_value_strategy"] = "mean"
+                clean_config["outlier_strategy"] = "remove"
+
+        self.add_step("cleaning", "clean", clean_config)
+
+        # Add alignment step
+        align_config = {}
+        if config.get("generate_lagged_features"):
+            align_config["generate_lags"] = True
+            align_config["lags"] = config.get("lags", [1, 5, 20])
+
+        self.add_step("alignment", "align", align_config)
+
+        # Add normalization step
+        norm_config = {
+            "method": config.get("normalization_method", "zscore"),
+        }
+        self.add_step("normalization", "normalize", norm_config)
+
+        # Add scoring step
+        self.add_step("scoring", "score", {})
+
+        # Execute the built pipeline
+        return self.process(df)
+
 
 # Usage examples
 if __name__ == "__main__":

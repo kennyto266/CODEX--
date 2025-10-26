@@ -390,6 +390,19 @@ class DataCleaner:
 
         return True, f"Data quality valid (completeness: {completeness:.1%})"
 
+    # =========================================================================
+    # OpenSpec Compatibility Aliases
+    # =========================================================================
+
+    def get_report(self) -> Dict[str, Any]:
+        """
+        OpenSpec-compatible alias for get_quality_report().
+
+        Returns:
+            Dictionary with quality metrics
+        """
+        return self.get_quality_report()
+
 
 # Usage examples and integration
 if __name__ == "__main__":

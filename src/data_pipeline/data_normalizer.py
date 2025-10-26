@@ -340,6 +340,59 @@ class DataNormalizer:
 
         return True, f"Normalization validation passed for {len(columns)} columns"
 
+    # =========================================================================
+    # OpenSpec Compatibility Aliases
+    # =========================================================================
+
+    def zscore_normalize(self, df: pd.DataFrame, columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """
+        OpenSpec-compatible alias for Z-score normalization.
+
+        Args:
+            df: Input DataFrame
+            columns: Columns to normalize
+
+        Returns:
+            Z-score normalized DataFrame
+        """
+        # Create a new normalizer with zscore method and fit_transform
+        normalizer = DataNormalizer(method="zscore")
+        return normalizer.fit_transform(df, columns)
+
+    def minmax_scale(self, df: pd.DataFrame, columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """
+        OpenSpec-compatible alias for Min-Max scaling.
+
+        Args:
+            df: Input DataFrame
+            columns: Columns to scale
+
+        Returns:
+            Min-Max scaled DataFrame
+        """
+        # Create a new normalizer with minmax method and fit_transform
+        normalizer = DataNormalizer(method="minmax")
+        return normalizer.fit_transform(df, columns)
+
+    def inverse_zscore_normalize(self, df: pd.DataFrame, columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """
+        OpenSpec-compatible alias for inverse Z-score normalization.
+
+        Note: This requires the normalizer to have been previously fitted.
+        If not fitted, will try to use parameters stored from previous fit.
+
+        Args:
+            df: Z-score normalized DataFrame
+            columns: Columns to denormalize
+
+        Returns:
+            Original scale DataFrame
+        """
+        if not self.is_fitted or self.method != "zscore":
+            logger.warning("Normalizer not fitted for zscore or method mismatch")
+
+        return self.inverse_transform(df, columns)
+
 
 class DataNormalizerPipeline:
     """

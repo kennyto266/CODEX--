@@ -393,6 +393,61 @@ class QualityScorer:
         min_threshold = grade_thresholds.get(min_grade, 0.7)
         return self.last_score >= min_threshold
 
+    # =========================================================================
+    # OpenSpec Compatibility Aliases
+    # =========================================================================
+
+    def calculate_completeness_score(self, series: pd.Series) -> float:
+        """
+        OpenSpec-compatible method for calculating completeness of a single series.
+
+        Args:
+            series: Pandas Series to analyze
+
+        Returns:
+            Completeness score between 0 and 1
+        """
+        if series.empty:
+            return 0.0
+
+        total_values = len(series)
+        non_null_values = series.count()
+        completeness = non_null_values / total_values if total_values > 0 else 0.0
+
+        return max(0.0, min(1.0, completeness))
+
+    def calculate_freshness_score(self, df: pd.DataFrame, date_column: Optional[str] = None) -> float:
+        """
+        OpenSpec-compatible alias for freshness scoring.
+
+        Args:
+            df: Input DataFrame
+            date_column: Name of date column
+
+        Returns:
+            Freshness score between 0 and 1
+        """
+        return self._calculate_freshness(df, date_column)
+
+    def calculate_overall_grade(self, df: pd.DataFrame, date_column: Optional[str] = None) -> Dict[str, Any]:
+        """
+        OpenSpec-compatible method for overall quality grading.
+
+        Args:
+            df: Input DataFrame
+            date_column: Name of date column for freshness
+
+        Returns:
+            Dictionary with 'score' and 'grade' keys
+        """
+        score = self.calculate_quality(df, date_column)
+        grade = self.get_grade()
+
+        return {
+            "score": score,
+            "grade": grade,
+        }
+
 
 # Usage examples
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ from ..models.agent_dashboard import (
     AgentControlAction,
     ControlActionType
 )
+from ..backtest.result_service import get_result_service  # Phase 4.7
 
 
 class DashboardAPI:
@@ -49,6 +50,7 @@ class DashboardAPI:
         self.strategy_data_service = StrategyDataService(coordinator, message_queue)
         self.performance_service = PerformanceService(coordinator, message_queue)
         self.agent_control_service = AgentControlService(coordinator, message_queue)
+        self.result_service = get_result_service()  # Phase 4.7: Backtest result service
         self.realtime_service = RealtimeService(
             self.agent_data_service,
             self.strategy_data_service,
@@ -428,7 +430,85 @@ class DashboardAPI:
             except Exception as e:
                 self.logger.error(f"获取最新信号失败: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-    
+
+        # Phase 4.7: Backtest alternative data analysis endpoints
+        @self.router.get("/backtest/{result_id}")
+        async def get_backtest_result(result_id: str):
+            """获取回测结果 - Phase 4.7"""
+            try:
+                result = await self.result_service.get_result(result_id)
+                if not result:
+                    raise HTTPException(status_code=404, detail=f"Result {result_id} not found")
+                return {
+                    "id": result.metadata.result_id,
+                    "symbol": result.metadata.symbol,
+                    "strategy_name": result.metadata.strategy_name,
+                    "use_alt_data": result.metadata.use_alt_data,
+                    "metrics": {
+                        "total_return": result.total_return,
+                        "sharpe_ratio": result.sharpe_ratio,
+                        "max_drawdown": result.max_drawdown,
+                        "win_rate": result.win_rate,
+                    }
+                }
+            except Exception as e:
+                self.logger.error(f"获取回测结果失败: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.router.get("/backtest/{result_id}/alt-data-analysis")
+        async def get_alt_data_analysis(result_id: str):
+            """获取替代数据分析 - Phase 4.7"""
+            try:
+                result = await self.result_service.get_result(result_id)
+                if not result:
+                    raise HTTPException(status_code=404, detail=f"Result {result_id} not found")
+                signal_viz = await self.result_service.get_signal_visualization_data(result_id)
+                return {
+                    "result_id": result.metadata.result_id,
+                    "symbol": result.metadata.symbol,
+                    "use_alt_data": result.metadata.use_alt_data,
+                    "alt_data_indicators": result.metadata.alt_data_indicators,
+                    "metrics": {
+                        "sharpe_ratio": result.sharpe_ratio,
+                        "max_drawdown": result.max_drawdown,
+                        "win_rate": result.win_rate,
+                        "alt_data_contribution_pct": result.alt_data_contribution_pct,
+                    },
+                    "signals": signal_viz,
+                }
+            except Exception as e:
+                self.logger.error(f"获取替代数据分析失败: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.router.get("/backtest/list")
+        async def list_backtest_results(
+            symbol: Optional[str] = None,
+            strategy_name: Optional[str] = None,
+            limit: int = 50
+        ):
+            """列出回测结果 - Phase 4.7"""
+            try:
+                results = await self.result_service.list_results(
+                    symbol=symbol,
+                    strategy_name=strategy_name,
+                    limit=limit
+                )
+                return {
+                    "total": len(results),
+                    "results": [
+                        {
+                            "id": r.result_id,
+                            "symbol": r.symbol,
+                            "strategy_name": r.strategy_name,
+                            "created_at": r.created_at.isoformat(),
+                        }
+                        for r in results
+                    ]
+                }
+            except Exception as e:
+                self.logger.error(f"列出回测结果失败: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
     async def cleanup(self):
         """清理资源"""
         try:

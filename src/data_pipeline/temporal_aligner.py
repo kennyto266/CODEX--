@@ -97,7 +97,7 @@ class TemporalAligner:
     def align_to_trading_days(
         self,
         df: pd.DataFrame,
-        date_column: str,
+        date_column: Optional[str] = None,
         fill_method: str = "forward_fill",
     ) -> pd.DataFrame:
         """
@@ -107,7 +107,7 @@ class TemporalAligner:
 
         Args:
             df: Input DataFrame
-            date_column: Name of date column
+            date_column: Name of date column (None = use index as date)
             fill_method: How to handle gaps ("forward_fill", "interpolate", "drop")
 
         Returns:
@@ -119,6 +119,27 @@ class TemporalAligner:
 
         # Convert date column to datetime
         df_copy = df.copy()
+
+        # If date_column not specified, use index as date
+        if date_column is None:
+            if isinstance(df_copy.index, pd.DatetimeIndex):
+                date_column = "date"
+                df_copy[date_column] = df_copy.index
+            else:
+                # Try to infer date column from index name
+                if df_copy.index.name and "date" in df_copy.index.name.lower():
+                    date_column = "date"
+                    df_copy[date_column] = df_copy.index
+                else:
+                    # Last resort: look for a date column
+                    date_cols = [c for c in df_copy.columns if "date" in c.lower()]
+                    if date_cols:
+                        date_column = date_cols[0]
+                    else:
+                        logger.warning("Could not determine date column, using index")
+                        date_column = "date"
+                        df_copy[date_column] = df_copy.index
+
         df_copy[date_column] = pd.to_datetime(df_copy[date_column])
 
         # Get all unique dates
@@ -394,6 +415,47 @@ class TemporalAligner:
     def is_trading_day(self, date: datetime) -> bool:
         """Check if a date is a trading day."""
         return self.trading_calendar.is_trading_day(date)
+
+    # =========================================================================
+    # OpenSpec Compatibility Aliases
+    # =========================================================================
+
+    def convert_frequency(
+        self,
+        df: pd.DataFrame,
+        target_freq: str = "W",
+        date_column: Optional[str] = None,
+        agg_functions: Optional[Dict[str, str]] = None,
+    ) -> pd.DataFrame:
+        """
+        OpenSpec-compatible alias for resample_data().
+
+        Args:
+            df: Input DataFrame
+            target_freq: Target frequency ("W" for weekly, "M" for monthly, etc.)
+            date_column: Name of date column (will infer if not provided)
+            agg_functions: Aggregation functions per column
+
+        Returns:
+            Resampled DataFrame
+        """
+        # Infer date column if not provided
+        if date_column is None:
+            if "date" in df.columns:
+                date_column = "date"
+            else:
+                date_cols = [c for c in df.columns if "date" in c.lower()]
+                if date_cols:
+                    date_column = date_cols[0]
+                else:
+                    raise ValueError("Could not infer date column")
+
+        return self.resample_data(
+            df,
+            date_column=date_column,
+            target_frequency=target_freq,
+            agg_functions=agg_functions,
+        )
 
 
 # Usage examples

@@ -36,8 +36,8 @@ logger = logging.getLogger("hk_quant_system.role_provider")
 class CoordinatorRole(BaseRole):
     """Coordinator Agent Role - Orchestrates other agents"""
 
-    def __init__(self):
-        super().__init__("coordinator")
+    def __init__(self, role_name: str = "coordinator"):
+        super().__init__(role_name)
         self.coordinated_agents = {}
 
     async def initialize(self, agent) -> bool:
@@ -107,6 +107,9 @@ class CoordinatorRole(BaseRole):
 class DataScientistRole(BaseRole):
     """Data Scientist Agent Role - Data analysis and anomaly detection"""
 
+    def __init__(self, role_name: str = "data_scientist"):
+        super().__init__(role_name)
+
     async def initialize(self, agent) -> bool:
         """Initialize data scientist role"""
         try:
@@ -170,6 +173,9 @@ class DataScientistRole(BaseRole):
 
 class QuantitativeAnalystRole(BaseRole):
     """Quantitative Analyst Role - Quantitative analysis and modeling"""
+
+    def __init__(self, role_name: str = "quantitative_analyst"):
+        super().__init__(role_name)
 
     async def initialize(self, agent) -> bool:
         """Initialize quantitative analyst role"""
@@ -865,7 +871,16 @@ class RoleProvider:
             return None
 
         try:
-            return role_class()
+            # Try to create with role_name parameter first
+            role_name = role_type
+            try:
+                return role_class(role_name)
+            except TypeError:
+                # If role class doesn't accept role_name, create without it
+                # and set role_name manually
+                role = role_class()
+                role.role_name = role_name
+                return role
         except Exception as e:
             self.logger.error(f"Failed to create role {role_type}: {e}")
             return None
