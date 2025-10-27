@@ -228,21 +228,22 @@ const loadComponentAsync = (componentName) => {
 // Create Pinia store
 const pinia = createPinia();
 
-// Get the app element
-const appElement = document.getElementById('app');
-
-// Initialize Vue app without a custom component
-// This will use the existing HTML as the template
-const app = createApp({
-    template: '',
+// Create a root component that uses the existing HTML
+const AppComponent = {
+    template: '<div id="app"><!-- Existing HTML --></div>',
     setup() {
-        // No setup needed, we're using the HTML template
         return {};
     }
-});
+};
 
+// Initialize Vue app with the root component
+const app = createApp(AppComponent);
+
+// Use plugins
 app.use(router);
 app.use(pinia);
+
+// Mount the app
 app.mount('#app');
 
 // Export for global access
@@ -255,3 +256,110 @@ window.App = {
 
 console.log('✅ CODEX Dashboard initialized with Vue 3 + Router + Pinia');
 console.log('✅ Routes configured:', routes.map(r => r.path).join(', '));
+
+// Manual DOM manipulation for router-view
+// This is a temporary solution until we migrate to a proper SPA
+const updateActiveNavLink = () => {
+    const currentHash = window.location.hash || '#/';
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        if (link.getAttribute('href') === currentHash) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+};
+
+// Handle navigation
+window.addEventListener('hashchange', () => {
+    updateActiveNavLink();
+
+    // Update router-view content based on route
+    const route = window.location.hash.substring(1) || '/';
+    const routerView = document.getElementById('router-view');
+
+    if (routerView) {
+        let content = '';
+        switch(route) {
+            case '/':
+                content = `
+                    <div class="dashboard">
+                        <h1 class="text-3xl font-bold mb-6 text-white">Dashboard Overview</h1>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-slate-800 bg-opacity-70 p-6 rounded-lg border border-slate-700">
+                                <h3 class="text-slate-400 text-sm mb-2">Initial Capital</h3>
+                                <p class="text-3xl font-bold text-white">$1,000,000</p>
+                            </div>
+                            <div class="bg-slate-800 bg-opacity-70 p-6 rounded-lg border border-slate-700">
+                                <h3 class="text-slate-400 text-sm mb-2">Portfolio Value</h3>
+                                <p class="text-3xl font-bold text-white">$1,000,000</p>
+                            </div>
+                            <div class="bg-slate-800 bg-opacity-70 p-6 rounded-lg border border-slate-700">
+                                <h3 class="text-slate-400 text-sm mb-2">Active Positions</h3>
+                                <p class="text-3xl font-bold text-white">0</p>
+                            </div>
+                            <div class="bg-slate-800 bg-opacity-70 p-6 rounded-lg border border-slate-700">
+                                <h3 class="text-slate-400 text-sm mb-2">Total Return</h3>
+                                <p class="text-3xl font-bold text-green-400">0.00%</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-slate-800 bg-opacity-70 p-6 rounded-lg border border-slate-700 hover:border-blue-500 transition-colors">
+                                <h2 class="text-xl font-bold mb-4 text-white flex items-center">
+                                    <i class="fas fa-robot mr-2 text-blue-400"></i>
+                                    Agent Management
+                                </h2>
+                                <p class="text-slate-400 mb-4">Monitor and control AI agents</p>
+                                <a href="#/agents" class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                    View Agents
+                                </a>
+                            </div>
+                            <div class="bg-slate-800 bg-opacity-70 p-6 rounded-lg border border-slate-700 hover:border-purple-500 transition-colors">
+                                <h2 class="text-xl font-bold mb-4 text-white flex items-center">
+                                    <i class="fas fa-chart-line mr-2 text-purple-400"></i>
+                                    Strategy Backtest
+                                </h2>
+                                <p class="text-slate-400 mb-4">Test trading strategies</p>
+                                <a href="#/backtest" class="inline-block px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
+                                    Run Backtest
+                                </a>
+                            </div>
+                            <div class="bg-slate-800 bg-opacity-70 p-6 rounded-lg border border-slate-700 hover:border-red-500 transition-colors">
+                                <h2 class="text-xl font-bold mb-4 text-white flex items-center">
+                                    <i class="fas fa-shield-alt mr-2 text-red-400"></i>
+                                    Risk Dashboard
+                                </h2>
+                                <p class="text-slate-400 mb-4">Monitor portfolio risk</p>
+                                <a href="#/risk" class="inline-block px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                                    View Risk
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                break;
+            case '/agents':
+                content = '<h1 class="text-3xl font-bold text-white mb-6">Agent Management</h1><p class="text-slate-400">Vue components will be loaded dynamically...</p>';
+                break;
+            case '/backtest':
+                content = '<h1 class="text-3xl font-bold text-white mb-6">Strategy Backtest</h1><p class="text-slate-400">Vue components will be loaded dynamically...</p>';
+                break;
+            case '/risk':
+                content = '<h1 class="text-3xl font-bold text-white mb-6">Risk Management</h1><p class="text-slate-400">Vue components will be loaded dynamically...</p>';
+                break;
+            case '/trading':
+                content = '<h1 class="text-3xl font-bold text-white mb-6">Trading Interface</h1><p class="text-slate-400">Vue components will be loaded dynamically...</p>';
+                break;
+            default:
+                content = '<h1 class="text-3xl font-bold text-white mb-6">Not Found</h1><p class="text-slate-400">Page not found</p>';
+        }
+        routerView.innerHTML = content;
+    }
+};
+
+// Initialize active nav link
+updateActiveNavLink();
+
+// Trigger initial load
+window.dispatchEvent(new HashChangeEvent('hashchange'));
