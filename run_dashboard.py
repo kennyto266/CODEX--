@@ -40,9 +40,18 @@ except ImportError as e:
     setup_logging = None
     DashboardUI = None
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+
+# Import new API routes
+from src.dashboard.api_backtest import create_backtest_router
+from src.dashboard.api_agents import create_agents_router
+from src.dashboard.api_risk import create_risk_router
+from src.dashboard.api_strategies import create_strategies_router
+from src.dashboard.api_trading import create_trading_router
+from src.dashboard.websocket_manager import WebSocketManager
 
 
 # ==================== Data Service ====================
@@ -151,6 +160,64 @@ def create_app(data_service: DashboardDataService) -> FastAPI:
 
     logger = logging.getLogger("hk_quant_system.dashboard")
 
+    # ==================== CORS Middleware ====================
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # ==================== Initialize WebSocket Manager ====================
+    # ==================== Static File Service Configuration ====================
+    from fastapi.staticfiles import StaticFiles
+
+    # Create static directory structure
+    static_dir = project_root / "src" / "dashboard" / "static"
+    static_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create subdirectories
+    (static_dir / "js" / "components").mkdir(parents=True, exist_ok=True)
+    (static_dir / "js" / "stores").mkdir(parents=True, exist_ok=True)
+    (static_dir / "js" / "router").mkdir(parents=True, exist_ok=True)
+    (static_dir / "js" / "utils").mkdir(parents=True, exist_ok=True)
+    (static_dir / "css").mkdir(parents=True, exist_ok=True)
+    (static_dir / "assets").mkdir(parents=True, exist_ok=True)
+
+    logger.info(f"Created static directory structure at {static_dir}")
+
+    # Mount static files at /static
+    app.mount(
+        "/static",
+        StaticFiles(directory=str(static_dir)),
+        name="static"
+    )
+
+    # Mount JavaScript files at /static/js
+    app.mount(
+        "/static/js",
+        StaticFiles(directory=str(static_dir / "js")),
+        name="static-js"
+    )
+
+    # Mount CSS files at /static/css
+    app.mount(
+        "/static/css",
+        StaticFiles(directory=str(static_dir / "css")),
+        name="static-css"
+    )
+
+    # Mount assets at /static/assets
+    app.mount(
+        "/static/assets",
+        StaticFiles(directory=str(static_dir / "assets")),
+        name="static-assets"
+    )
+
+    logger.info("✅ Static file services mounted at /static/*")
+    ws_manager = WebSocketManager()
+
     # ==================== HTML Routes ====================
 
     @app.get("/", response_class=HTMLResponse)
@@ -227,6 +294,108 @@ def create_app(data_service: DashboardDataService) -> FastAPI:
         """系統刷新端點"""
         logger.debug(f"API 調用: POST /api/system/refresh (hard_refresh={hard_refresh})")
         return await data_service.refresh_system(hard_refresh)
+
+    # ==================== Register New API Routes ====================
+    logger.info("註冊新的 API 路由...")
+
+    # Register all new routers
+    app.include_router(create_backtest_router())
+    app.include_router(create_agents_router())
+    app.include_router(create_risk_router())
+    app.include_router(create_strategies_router())
+    app.include_router(create_trading_router())
+
+    logger.info("✅ 所有 API 路由已註冊")
+
+    # ==================== WebSocket Endpoints ====================
+
+    @app.websocket("/ws/portfolio")
+    async def websocket_portfolio(websocket: WebSocket):
+        """
+        WebSocket 端點：投資組合實時更新
+
+        客戶端可以訂閱投資組合變化：
+        - 頭寸更新
+        - 資產淨值變化
+        - 性能指標更新
+        """
+        await ws_manager.connect(websocket)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                await ws_manager.handle_client_message(websocket, data)
+        except WebSocketDisconnect:
+            await ws_manager.disconnect(websocket)
+            logger.info("客戶端斷開連接: /ws/portfolio")
+
+    @app.websocket("/ws/orders")
+    async def websocket_orders(websocket: WebSocket):
+        """
+        WebSocket 端點：訂單實時推送
+
+        推送事件：
+        - 訂單已提交
+        - 訂單已成交
+        - 訂單已取消
+        - 成交通知
+        """
+        await ws_manager.connect(websocket)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                await ws_manager.handle_client_message(websocket, data)
+        except WebSocketDisconnect:
+            await ws_manager.disconnect(websocket)
+            logger.info("客戶端斷開連接: /ws/orders")
+
+    @app.websocket("/ws/risk")
+    async def websocket_risk(websocket: WebSocket):
+        """
+        WebSocket 端點：風險告警推送
+
+        推送事件：
+        - 新告警
+        - 告警確認
+        - 風險指標更新
+        - 壓力測試結果
+        """
+        await ws_manager.connect(websocket)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                await ws_manager.handle_client_message(websocket, data)
+        except WebSocketDisconnect:
+            await ws_manager.disconnect(websocket)
+            logger.info("客戶端斷開連接: /ws/risk")
+
+    @app.websocket("/ws/system")
+    async def websocket_system(websocket: WebSocket):
+        """
+        WebSocket 端點：系統監控數據
+
+        推送事件：
+        - CPU/內存使用率
+        - 回測進度
+        - Agent 狀態
+        - 交易統計
+        """
+        await ws_manager.connect(websocket)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                await ws_manager.handle_client_message(websocket, data)
+        except WebSocketDisconnect:
+            await ws_manager.disconnect(websocket)
+            logger.info("客戶端斷開連接: /ws/system")
+
+    @app.get("/ws/status")
+    async def get_websocket_status():
+        """獲取 WebSocket 連接狀態"""
+        return {
+            "active_connections": ws_manager.get_connection_count(),
+            "connection_info": ws_manager.get_connection_info(),
+            "timestamp": datetime.now().isoformat()
+        }
 
     # ==================== Favicon ====================
 
@@ -379,7 +548,7 @@ def create_app(data_service: DashboardDataService) -> FastAPI:
                 "error": str(e)
             }
 
-    logger.info("FastAPI 應用已創建，共註冊 9 條路由")
+    logger.info("✅ FastAPI 應用已創建，共註冊 25+ 條 API 路由 + 4 個 WebSocket 端點")
     return app
 
 

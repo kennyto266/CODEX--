@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CODEX Trading Dashboard - 港股量化交易系統</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome Icons (可選) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- 自定義樣式 -->
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --success-color: #16a34a;
+      --danger-color: #dc2626;
+      --warning-color: #ea580c;
+      --info-color: #0891b2;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f9fafb;
+    }
+
+    /* 平滑滾動 */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* 自定義滾動條 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* 動畫 */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    /* 加載動畫 */
+    @keyframes spin-slow {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spin-slow {
+      animation: spin-slow 3s linear infinite;
+    }
+
+    /* 卡片陰影 */
+    .card-shadow {
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .card-shadow-lg {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 響應式容器 */
+    .container-responsive {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    @media (max-width: 768px) {
+      .container-responsive {
+        padding: 0 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 頁面根節點 -->
+  <div id="app" class="min-h-screen">
+    <!-- 加載中提示 -->
+    <div class="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div class="text-center">
+        <div class="mb-4">
+          <svg class="spin-slow w-16 h-16 mx-auto text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">正在加載儀表板</h2>
+        <p class="text-gray-600">初始化 Vue 應用和數據連接...</p>
+        <div class="mt-4 w-48 h-2 bg-gray-200 rounded-full mx-auto overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 和 Pinia -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/pinia@2/dist/pinia.iife.js"></script>
+
+  <!-- 應用初始化 -->
+  <script type="module">
+    // 全局變量
+    window.API_BASE_URL = 'http://localhost:8001/api';
+    window.WS_BASE_URL = 'ws://localhost:8001';
+
+    // API 工具函數
+    window.apiCall = async (endpoint, options = {}) => {
+      try {
+        const response = await fetch(window.API_BASE_URL + endpoint, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+          },
+          ...options
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error('API 調用失敗:', error);
+        throw error;
+      }
+    };
+
+    // WebSocket 工具
+    window.connectWebSocket = (endpoint) => {
+      const url = window.WS_BASE_URL + endpoint;
+      const ws = new WebSocket(url);
+
+      ws.onopen = () => {
+        console.log(`✅ WebSocket 連接: ${endpoint}`);
+      };
+
+      ws.onerror = (error) => {
+        console.error(`❌ WebSocket 錯誤 (${endpoint}):`, error);
+      };
+
+      ws.onclose = () => {
+        console.log(`⚠️ WebSocket 斷開: ${endpoint}`);
+      };
+
+      return ws;
+    };
+
+    console.log('✅ 全局 API 和 WebSocket 工具已加載');
+  </script>
+
+  <!-- 應用組件和初始化 (開發模式 - 使用 CDN) -->
+  <script type="module">
+    const { createApp, ref, reactive, computed, onMounted } = Vue;
+    const { defineStore, createPinia } = Pinia;
+
+    // ==================== Pinia Stores ====================
+
+    // Backtest Store
+    const useBacktestStore = defineStore('backtest', () => {
+      const backtests = ref({});
+      const currentBacktestId = ref(null);
+      const isLoading = ref(false);
+      const error = ref(null);
+
+      const currentBacktest = computed(() => {
+        return backtests.value[currentBacktestId.value] || null;
+      });
+
+      const allBacktests = computed(() => {
+        return Object.values(backtests.value);
+      });
+
+      const completedBacktests = computed(() => {
+        return Object.values(backtests.value).filter(bt => bt.status === 'completed');
+      });
+
+      const runningBacktests = computed(() => {
+        return Object.values(backtests.value).filter(bt => bt.status === 'running');
+      });
+
+      async function submitBacktest(config) {
+        isLoading.value = true;
+        error.value = null;
+
+        try {
+          const response = await window.apiCall('/backtest/run', {
+            method: 'POST',
+            body: JSON.stringify({ config })
+          });
+
+          const backtestId = response.backtest_id;
+          currentBacktestId.value = backtestId;
+
+          backtests.value[backtestId] = {
+            backtest_id: backtestId,
+            config,
+            status: 'pending',
+            progress: 0,
+            created_at: new Date(),
+            started_at: null,
+            completed_at: null,
+            results: null
+          };
+
+          // 開始輪詢狀態
+          pollBacktestStatus(backtestId);
+          return backtestId;
+        } catch (err) {
+          error.value = err.message;
+          console.error('提交回測失敗:', err);
+          throw err;
+        } finally {
+          isLoading.value = false;
+        }
+      }
+
+      async function pollBacktestStatus(backtestId, interval = 2000) {
+        const maxAttempts = 300;
+        let attempts = 0;
+
+        const pollInterval = setInterval(async () => {
+          attempts++;
+
+          try {
+            const data = await window.apiCall(`/backtest/status/${backtestId}`);
+            backtests.value[backtestId] = {
+              ...backtests.value[backtestId],
+              status: data.status,
+              progress: data.progress,
+              error_message: data.error_message
+            };
+
+            if (data.status === 'completed') {
+              await fetchBacktestResults(backtestId);
+              clearInterval(pollInterval);
+            }
+          } catch (err) {
+            console.error('輪詢回測狀態失敗:', err);
+            if (attempts >= maxAttempts) {
+              clearInterval(pollInterval);
+            }
+          }
+        }, interval);
+      }
+
+      async function fetchBacktestResults(backtestId) {
+        try {
+          const data = await window.apiCall(`/backtest/results/${backtestId}`);
+          backtests.value[backtestId].results = data;
+          backtests.value[backtestId].completed_at = new Date();
+        } catch (err) {
+          console.error('獲取回測結果失敗:', err);
+          throw err;
+        }
+      }
+
+      async function fetchBacktestList(limit = 20) {
+        isLoading.value = true;
+        error.value = null;
+
+        try {
+          const data = await window.apiCall(`/backtest/list?limit=${limit}`);
+
+          data.forEach(bt => {
+            backtests.value[bt.backtest_id] = {
+              ...backtests.value[bt.backtest_id],
+              ...bt
+            };
+          });
+
+          return data;
+        } catch (err) {
+          error.value = err.message;
+          console.error('獲取回測列表失敗:', err);
+          throw err;
+        } finally {
+          isLoading.value = false;
+        }
+      }
+
+      function clearBacktests() {
+        backtests.value = {};
+        currentBacktestId.value = null;
+      }
+
+      return {
+        backtests,
+        currentBacktestId,
+        isLoading,
+        error,
+        currentBacktest,
+        allBacktests,
+        completedBacktests,
+        runningBacktests,
+        submitBacktest,
+        fetchBacktestResults,
+        fetchBacktestList,
+        clearBacktests,
+        pollBacktestStatus
+      };
+    });
+
+    // ==================== 根組件 ====================
+
+    const RootApp = {
+      template: `
+        <div id="app-root" class="min-h-screen bg-gray-50">
+          <!-- 導航欄 -->
+          <nav class="bg-white shadow-md sticky top-0 z-50">
+            <div class="container-responsive py-4 flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+                  📊
+                </div>
+                <div>
+                  <h1 class="text-2xl font-bold text-gray-900">CODEX Dashboard</h1>
+                  <p class="text-xs text-gray-500">港股量化交易系統</p>
+                </div>
+              </div>
+              <div class="text-sm text-gray-600">
+                <span>🟢 已連接 | v1.0.0</span>
+              </div>
+            </div>
+          </nav>
+
+          <!-- 主內容 -->
+          <div class="container-responsive py-8">
+            <BacktestPanel />
+          </div>
+
+          <!-- 頁腳 -->
+          <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+            <div class="container-responsive text-center text-gray-600 text-sm">
+              <p>CODEX Trading Dashboard | 建造於 2025</p>
+              <p>由 Claude Code 💻 使用 Vue 3 + Pinia 構建</p>
+            </div>
+          </footer>
+        </div>
+      `,
+      components: {
+        BacktestPanel: {
+          template: `
+            <div class="space-y-6">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h2 class="text-4xl font-bold text-gray-900">📊 回測系統</h2>
+                  <p class="text-gray-600 mt-2">策略性能評估和參數優化</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500">已完成回測</p>
+                  <p class="text-3xl font-bold text-blue-600">{{ backtestStore.completedBacktests.length }}</p>
+                </div>
+              </div>
+
+              <!-- 標籤頁 -->
+              <div class="flex gap-2 border-b border-gray-300">
+                <button
+                  @click="activeTab = 'new'"
+                  :class="activeTab === 'new' ? 'border-b-2 border-blue-600 text-blue-600 font-bold' : 'text-gray-600'"
+                  class="px-6 py-3 transition hover:text-blue-600"
+                >
+                  ➕ 新建回測
+                </button>
+                <button
+                  @click="activeTab = 'results'"
+                  :class="activeTab === 'results' ? 'border-b-2 border-blue-600 text-blue-600 font-bold' : 'text-gray-600'"
+                  class="px-6 py-3 transition hover:text-blue-600"
+                >
+                  📈 回測結果 ({{ backtestStore.allBacktests.length }})
+                </button>
+                <button
+                  @click="activeTab = 'history'"
+                  :class="activeTab === 'history' ? 'border-b-2 border-blue-600 text-blue-600 font-bold' : 'text-gray-600'"
+                  class="px-6 py-3 transition hover:text-blue-600"
+                >
+                  📜 回測歷史
+                </button>
+              </div>
+
+              <!-- 新建回測 Tab -->
+              <div v-if="activeTab === 'new'" class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">回測配置</h3>
+                <form @submit.prevent="submitBacktest" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">策略</label>
+                      <select v-model="form.strategy_id" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="">-- 選擇策略 --</option>
+                        <option value="moving_average_crossover">移動平均線交叉</option>
+                        <option value="rsi_oscillator">RSI 震蕩策略</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">股票</label>
+                      <input v-model="form.symbol" type="text" placeholder="0700.HK" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">開始日期</label>
+                      <input v-model="form.start_date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">結束日期</label>
+                      <input v-model="form.end_date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    </div>
+                  </div>
+                  <button :disabled="isSubmitting" class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-6 rounded-md">
+                    <span v-if="!isSubmitting">🚀 開始回測</span>
+                    <span v-else>⏳ 提交中...</span>
+                  </button>
+                </form>
+              </div>
+
+              <!-- 運行中的回測 -->
+              <div v-if="backtestStore.runningBacktests.length > 0 && activeTab === 'new'" class="space-y-4">
+                <h3 class="text-xl font-bold text-gray-800">⚙️ 進行中的回測</h3>
+                <div
+                  v-for="backtest in backtestStore.runningBacktests"
+                  :key="backtest.backtest_id"
+                  class="bg-white p-4 rounded-lg shadow-md"
+                >
+                  <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-gray-800">{{ backtest.config.strategy_id }} - {{ backtest.config.symbol }}</span>
+                    <span class="text-sm font-bold text-blue-600">{{ backtest.progress }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div :style="{ width: backtest.progress + '%' }" class="bg-blue-600 h-2 rounded-full transition-all"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 結果 Tab -->
+              <div v-if="activeTab === 'results'" class="space-y-6">
+                <div v-if="backtestStore.completedBacktests.length > 0">
+                  <h3 class="text-xl font-bold text-gray-800 mb-4">已完成的回測</h3>
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div
+                      v-for="backtest in backtestStore.completedBacktests"
+                      :key="backtest.backtest_id"
+                      @click="selectBacktest(backtest)"
+                      :class="selectedBacktest?.backtest_id === backtest.backtest_id ? 'ring-2 ring-blue-600' : 'hover:shadow-lg'"
+                      class="bg-white p-6 rounded-lg shadow-md cursor-pointer transition"
+                    >
+                      <h4 class="text-lg font-bold text-gray-800 mb-2">{{ backtest.config.strategy_id }}</h4>
+                      <p class="text-sm text-gray-600 mb-3">{{ backtest.config.symbol }}</p>
+                      <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p class="text-gray-600">總收益率</p>
+                          <p class="text-2xl font-bold text-green-600">{{ backtest.results?.metrics.total_return_pct.toFixed(1) }}%</p>
+                        </div>
+                        <div>
+                          <p class="text-gray-600">Sharpe 比率</p>
+                          <p class="text-2xl font-bold text-blue-600">{{ backtest.results?.metrics.sharpe_ratio.toFixed(2) }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 詳細結果 -->
+                  <div v-if="selectedBacktest" class="bg-white rounded-lg shadow-md p-6 mt-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">📊 詳細指標</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-gray-600 text-sm">總收益率</p>
+                        <p class="text-2xl font-bold text-green-600">{{ selectedBacktest.results?.metrics.total_return_pct.toFixed(2) }}%</p>
+                      </div>
+                      <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-gray-600 text-sm">年化收益率</p>
+                        <p class="text-2xl font-bold text-blue-600">{{ selectedBacktest.results?.metrics.annual_return_pct.toFixed(2) }}%</p>
+                      </div>
+                      <div class="bg-purple-50 p-4 rounded-lg">
+                        <p class="text-gray-600 text-sm">Sharpe 比率</p>
+                        <p class="text-2xl font-bold text-purple-600">{{ selectedBacktest.results?.metrics.sharpe_ratio.toFixed(2) }}</p>
+                      </div>
+                      <div class="bg-red-50 p-4 rounded-lg">
+                        <p class="text-gray-600 text-sm">最大回撤</p>
+                        <p class="text-2xl font-bold text-red-600">{{ selectedBacktest.results?.metrics.max_drawdown.toFixed(2) }}%</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="bg-white rounded-lg shadow-md p-12 text-center text-gray-500">
+                  <p class="text-lg mb-2">📭 暫無已完成的回測</p>
+                </div>
+              </div>
+
+              <!-- 歷史 Tab -->
+              <div v-if="activeTab === 'history'" class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">📜 回測歷史</h3>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm text-gray-600">
+                    <thead class="bg-gray-100 border-b">
+                      <tr>
+                        <th class="px-4 py-3 text-left">策略</th>
+                        <th class="px-4 py-3 text-left">股票</th>
+                        <th class="px-4 py-3 text-left">狀態</th>
+                        <th class="px-4 py-3 text-right">收益率</th>
+                        <th class="px-4 py-3 text-right">創建時間</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="backtest in backtestStore.allBacktests" :key="backtest.backtest_id" class="border-b hover:bg-gray-50">
+                        <td class="px-4 py-3">{{ backtest.config.strategy_id }}</td>
+                        <td class="px-4 py-3 font-bold">{{ backtest.config.symbol }}</td>
+                        <td class="px-4 py-3">
+                          <span :class="statusClass(backtest.status)" class="px-2 py-1 rounded text-xs font-bold">
+                            {{ statusLabel(backtest.status) }}
+                          </span>
+                        </td>
+                        <td class="px-4 py-3 text-right" :class="backtest.results?.metrics.total_return_pct > 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'">
+                          {{ backtest.results?.metrics.total_return_pct?.toFixed(2) }}%
+                        </td>
+                        <td class="px-4 py-3 text-right text-xs">{{ new Date(backtest.created_at).toLocaleString() }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          `,
+          setup() {
+            const backtestStore = useBacktestStore();
+            const activeTab = ref('new');
+            const selectedBacktest = ref(null);
+            const isSubmitting = ref(false);
+            const form = reactive({
+              strategy_id: '',
+              symbol: '',
+              start_date: '2023-01-01',
+              end_date: '2023-12-31',
+              initial_capital: 100000,
+              parameters: {}
+            });
+
+            onMounted(() => {
+              backtestStore.fetchBacktestList();
+            });
+
+            const submitBacktest = async () => {
+              if (!form.strategy_id || !form.symbol) {
+                alert('請填寫必填字段');
+                return;
+              }
+              isSubmitting.value = true;
+              try {
+                await backtestStore.submitBacktest(form);
+                // 重置表單
+                form.strategy_id = '';
+                form.symbol = '';
+              } catch (error) {
+                alert('提交失敗: ' + error.message);
+              } finally {
+                isSubmitting.value = false;
+              }
+            };
+
+            const selectBacktest = (backtest) => {
+              selectedBacktest.value = backtest;
+            };
+
+            const statusLabel = (status) => {
+              const labels = {
+                'pending': '⏳ 等待',
+                'running': '⚙️ 運行',
+                'completed': '✅ 完成',
+                'failed': '❌ 失敗'
+              };
+              return labels[status] || status;
+            };
+
+            const statusClass = (status) => {
+              const classes = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'running': 'bg-blue-100 text-blue-800',
+                'completed': 'bg-green-100 text-green-800',
+                'failed': 'bg-red-100 text-red-800'
+              };
+              return classes[status] || 'bg-gray-100 text-gray-800';
+            };
+
+            return {
+              backtestStore,
+              activeTab,
+              selectedBacktest,
+              isSubmitting,
+              form,
+              submitBacktest,
+              selectBacktest,
+              statusLabel,
+              statusClass
+            };
+          }
+        }
+      }
+    };
+
+    // 創建並掛載應用
+    const app = createApp(RootApp);
+    app.use(createPinia());
+
+    // 提供全局屬性
+    app.config.globalProperties.$apiCall = window.apiCall;
+    app.config.globalProperties.$connectWebSocket = window.connectWebSocket;
+
+    app.mount('#app');
+
+    console.log('✅ Dashboard 應用已初始化並掛載');
+  </script>
+
+  <!-- 加載完成後隱藏加載提示 -->
+  <script>
+    // 等待應用加載完成後
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.querySelector('.min-h-screen.flex');
+        if (loader && document.querySelector('#app-root')) {
+          loader.style.display = 'none';
+        }
+      }, 500);
+    });
+  </script>
+</body>
+</html>
