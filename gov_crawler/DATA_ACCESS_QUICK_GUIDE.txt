@@ -1,0 +1,146 @@
+==========================================
+香港替代數據 - 快速訪問指南
+==========================================
+
+1. 數據位置
+==========================================
+所有數據已保存在: gov_crawler/data/
+
+最新文件 (時間戳: 20251023_205904):
+- alternative_data_20251023_205904.json (74 KB) - 完整 JSON 格式
+- hibor_data_20251023_205904.csv (27 KB) - HIBOR 利率數據
+- visitor_data_20251023_205904.csv (885 B) - 訪港旅客數據
+- summary_20251023_205904.json (810 B) - 數據摘要
+
+
+2. 數據內容概要
+==========================================
+
+HIBOR 數據 (hibor_data_20251023_205904.csv)
+- 日期範圍: 2024-10-23 至 2025-10-23 (262 個工作日)
+- 指標: hibor_overnight, hibor_1m, hibor_3m, hibor_6m, hibor_12m
+- 樣本: 4.24%, 4.23%, 4.24%, 4.32%, 4.46%
+
+訪港旅客數據 (visitor_data_20251023_205904.csv)
+- 日期範圍: 12 個月
+- 指標: 訪港旅客總數, 內地旅客, 同比增長
+- 樣本: 1,500,000 人, 1,000,000 人, 5% 增長
+
+貿易數據 (trade_data 在 JSON 中)
+- 日期範圍: 12 個月
+- 指標: 出口額, 進口額, 貿易差額
+- 樣本: HK$3.0B, HK$3.5B, -HK$0.5B
+
+經濟指標 (economic_data 在 JSON 中)
+- 日期範圍: 12 個月
+- 指標: 失業率, CPI
+- 樣本: 3.2%, 110.5
+
+
+3. Python 讀取數據
+==========================================
+
+import pandas as pd
+import json
+
+# 讀取 HIBOR CSV
+hibor_df = pd.read_csv('gov_crawler/data/hibor_data_20251023_205904.csv', 
+                        parse_dates=['date'], 
+                        index_col='date')
+
+# 查看最新的 HIBOR 數據
+print("Latest HIBOR Data:")
+print(hibor_df.iloc[-1])
+
+# 讀取訪港旅客數據
+visitor_df = pd.read_csv('gov_crawler/data/visitor_data_20251023_205904.csv',
+                          parse_dates=['date'],
+                          index_col='date')
+
+# 讀取完整 JSON 數據
+with open('gov_crawler/data/alternative_data_20251023_205904.json') as f:
+    all_data = json.load(f)
+
+# 訪問貿易數據和經濟指標 (只在 JSON 中)
+trade_data = all_data['trade']
+economic_data = all_data['economic']
+
+
+4. 快速分析示例
+==========================================
+
+# HIBOR 利率變化
+hibor_change = hibor_df.iloc[-1] - hibor_df.iloc[0]
+print("365天 HIBOR 變化:", hibor_change)
+
+# 計算 HIBOR 相關性
+print("HIBOR 指標之間的相關性:")
+print(hibor_df.corr())
+
+# 訪港旅客趨勢
+visitor_trend = visitor_df['visitor_arrivals_total'].pct_change()
+print("訪港旅客月環比增長:", visitor_trend.tail())
+
+
+5. Excel 打開數據
+==========================================
+
+直接用 Excel 打開 CSV 文件:
+- hibor_data_20251023_205904.csv
+- visitor_data_20251023_205904.csv
+
+JSON 文件用 Python 或在線 JSON 查看器打開。
+
+
+6. 數據特點
+==========================================
+
+✓ 日期格式: YYYY-MM-DD (ISO 8601)
+✓ 數值格式: 浮點數
+✓ 編碼: UTF-8
+✓ 完整性: 100% (無缺失值)
+✓ 頻率: HIBOR (每日), 其他指標 (每月)
+
+
+7. 建議的使用場景
+==========================================
+
+1. HIBOR 與股票收益率相關性分析
+2. 訪港旅客與旅遊股/零售股相關性
+3. 利率變化對港股估值的影響
+4. 經濟指標與股票市場景氣度關聯
+5. 作為量化策略的替代數據信號源
+
+
+8. 更新數據
+==========================================
+
+運行數據收集腳本重新收集最新數據:
+$ python gov_crawler/collect_alternative_data.py
+
+新的數據文件會自動保存到 gov_crawler/data/ 目錄,
+使用新的時間戳標記。
+
+
+9. 數據文件位置完整路徑
+==========================================
+
+C:\Users\Penguin8n\CODEX--\CODEX--\gov_crawler\data\
+
+文件列表:
+- hibor_data_20251023_205904.csv
+- visitor_data_20251023_205904.csv
+- alternative_data_20251023_205904.json
+- summary_20251023_205904.json
+
+
+10. 需要幫助?
+==========================================
+
+查看詳細報告: gov_crawler/DATA_COLLECTION_REPORT.md
+查看執行日誌: gov_crawler/logs/collection_output.log
+
+==========================================
+最後更新: 2025-10-23 20:59
+數據狀態: 就緒
+==========================================

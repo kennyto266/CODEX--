@@ -51,13 +51,10 @@ class DashboardUI:
     
     def _setup_routes(self):
         """设置前端路由"""
-        
-        # 主仪表板页面
-        @self.app.get("/")
-        async def dashboard_home(request: Request):
-            """仪表板主页"""
-            return await self.route_handler.dashboard_home(request)
-        
+
+        # 主仪表板页面已在主应用中处理 (src/application.py)
+        # 避免路由冲突，根路径由主应用的HTMLResponse处理
+
         # Agent详情页面
         @self.app.get("/agent/{agent_id}")
         async def agent_detail(request: Request, agent_id: str):

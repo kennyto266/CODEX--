@@ -1,0 +1,228 @@
+# Kubernetes持久化存储卷声明
+# 为数据库、日志和配置文件提供持久化存储
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-postgres
+    app.kubernetes.io/component: database
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd  # 高性能SSD存储类
+  # 数据保留策略
+  volumeMode: Filesystem
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-redis
+    app.kubernetes.io/component: cache
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-grafana
+    app.kubernetes.io/component: monitoring
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-prometheus
+    app.kubernetes.io/component: monitoring
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-alertmanager
+    app.kubernetes.io/component: monitoring
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+
+---
+
+# 应用日志存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-logs-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: logs
+spec:
+  accessModes:
+  - ReadWriteMany  # 支持多实例同时读写
+  resources:
+    requests:
+      storage: 30Gi
+  storageClassName: network-storage  # 网络存储
+
+---
+
+# 应用数据存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-data-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: data
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: network-storage
+
+---
+
+# 开发环境存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc-dev
+  namespace: codex-trading-dev
+  labels:
+    app.kubernetes.io/name: codex-postgres
+    app.kubernetes.io/component: database
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard
+
+---
+
+# 测试环境存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc-test
+  namespace: codex-trading-test
+  labels:
+    app.kubernetes.io/name: codex-postgres
+    app.kubernetes.io/component: database
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+
+# 备份存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-backup
+    app.kubernetes.io/component: backup
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: backup-storage  # 低成本存储
+  # 备份数据保留30天
+  # 可配置删除策略
+
+---
+
+# 静态文件存储（Nginx）
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-static-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-nginx
+    app.kubernetes.io/component: load-balancer
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+
+---
+
+# 证书存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ssl-cert-pvc
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-ssl
+    app.kubernetes.io/component: security
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: secure-storage  # 加密存储
+  # 证书文件访问权限限制

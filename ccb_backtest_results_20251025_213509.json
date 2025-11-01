@@ -1,0 +1,95 @@
+{
+  "timestamp": "2025-10-25T21:35:09.256935",
+  "stock": "0939.HK (CCB)",
+  "data_points": 736,
+  "strategies": [
+    {
+      "rank": 2,
+      "strategy": "RSI",
+      "type": "基础",
+      "total_return": 8.91,
+      "annual_return": 4.3,
+      "sharpe_ratio": 0.726,
+      "max_drawdown": -3.94,
+      "win_rate": 41.3,
+      "execution_time": 0.16367435455322266
+    },
+    {
+      "rank": 5,
+      "strategy": "KDJ",
+      "type": "新增",
+      "total_return": 1.02,
+      "annual_return": 0.5,
+      "sharpe_ratio": 0.064,
+      "max_drawdown": -16.11,
+      "win_rate": 51.06,
+      "execution_time": 0.16895127296447754
+    },
+    {
+      "rank": 6,
+      "strategy": "CCI",
+      "type": "新增",
+      "total_return": 10.22,
+      "annual_return": 4.92,
+      "sharpe_ratio": 0.786,
+      "max_drawdown": -4.01,
+      "win_rate": 55.93,
+      "execution_time": 0.19278764724731445
+    },
+    {
+      "rank": 7,
+      "strategy": "ADX",
+      "type": "新增",
+      "total_return": -4.57,
+      "annual_return": -2.28,
+      "sharpe_ratio": -0.428,
+      "max_drawdown": -9.92,
+      "win_rate": 46.88,
+      "execution_time": 0.1899864673614502
+    },
+    {
+      "rank": 8,
+      "strategy": "ATR",
+      "type": "新增",
+      "total_return": 0.0,
+      "annual_return": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0.0,
+      "win_rate": 0.0,
+      "execution_time": 0.16515803337097168
+    },
+    {
+      "rank": 9,
+      "strategy": "OBV",
+      "type": "新增",
+      "total_return": -4.21,
+      "annual_return": -2.1,
+      "sharpe_ratio": -0.266,
+      "max_drawdown": -11.32,
+      "win_rate": 50.62,
+      "execution_time": 0.21845293045043945
+    },
+    {
+      "rank": 10,
+      "strategy": "Ichimoku",
+      "type": "新增",
+      "total_return": -10.94,
+      "annual_return": -5.55,
+      "sharpe_ratio": -0.955,
+      "max_drawdown": -14.59,
+      "win_rate": 40.0,
+      "execution_time": 0.19184088706970215
+    },
+    {
+      "rank": 11,
+      "strategy": "Parabolic SAR",
+      "type": "新增",
+      "total_return": 2.82,
+      "annual_return": 1.38,
+      "sharpe_ratio": 0.266,
+      "max_drawdown": -6.0,
+      "win_rate": 50.0,
+      "execution_time": 0.23833274841308594
+    }
+  ]
+}

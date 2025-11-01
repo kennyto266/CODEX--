@@ -1,0 +1,33 @@
+{
+    "name": "my-crawler",
+    "version": "0.0.1",
+    "type": "module",
+    "description": "This is an example of a Crawlee project.",
+    "dependencies": {
+        "crawlee": "^3.0.0",
+        "playwright": "*"
+    },
+    "devDependencies": {
+        "@apify/tsconfig": "^0.1.0",
+        "tsx": "^4.4.0",
+        "typescript": "~5.9.0",
+        "@types/node": "^22.0.0"
+    },
+    "scripts": {
+        "start": "npm run start:dev",
+        "start:prod": "node dist/main.js",
+        "start:dev": "tsx src/main.ts",
+        "start:csv": "tsx src/main_csv.ts",
+        "start:csv:v2": "tsx src/main_csv_v2.ts",
+        "start:csv:independent": "tsx src/main_csv_independent.ts",
+        "start:csv:direct": "tsx src/main_csv_direct_urls.ts",
+        "start:hkex": "tsx src/main_hkex_multi_month.ts",
+        "start:top-stocks": "tsx src/main_top_stocks.ts",
+        "inspect:hkex": "tsx src/inspect_month_page.ts",
+        "build": "tsc",
+        "test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1",
+        "postinstall": "npx crawlee install-playwright-browsers"
+    },
+    "author": "It's not you it's me",
+    "license": "ISC"
+}

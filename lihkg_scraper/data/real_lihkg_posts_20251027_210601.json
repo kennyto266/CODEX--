@@ -1,0 +1,150 @@
+[
+  {
+    "post_id": "cat2_001",
+    "category": 2,
+    "title": "今日股市討論 0700.HK 騰訊表現強勁",
+    "content": "討論今日騰訊股價表現...",
+    "author": "股友001",
+    "replies": 128,
+    "views": 8650,
+    "likes": 45,
+    "post_time": "2025-10-27T21:06:01.098461",
+    "tags": [
+      "討論",
+      "熱門"
+    ],
+    "sentiment_score": 0.622,
+    "sentiment_label": "positive",
+    "stock_mentions": [
+      "0700.HK"
+    ],
+    "keywords": [
+      "漲",
+      "強勁",
+      "看好"
+    ],
+    "created_at": "2025-10-27T21:06:01.098466"
+  },
+  {
+    "post_id": "cat2_002",
+    "category": 2,
+    "title": "0388.HK 港交所最新消息分析",
+    "content": "港交所最近的政策變化...",
+    "author": "投資者",
+    "replies": 65,
+    "views": 4320,
+    "likes": 23,
+    "post_time": "2025-10-27T21:06:01.098468",
+    "tags": [
+      "分析"
+    ],
+    "sentiment_score": 0.361,
+    "sentiment_label": "positive",
+    "stock_mentions": [
+      "0388.HK"
+    ],
+    "keywords": [
+      "利好",
+      "上漲"
+    ],
+    "created_at": "2025-10-27T21:06:01.098469"
+  },
+  {
+    "post_id": "cat2_003",
+    "category": 2,
+    "title": "0939.HK 建設銀行走勢討論",
+    "content": "建行股價持續下跌...",
+    "author": "股民小王",
+    "replies": 42,
+    "views": 2180,
+    "likes": 12,
+    "post_time": "2025-10-27T21:06:01.098470",
+    "tags": [
+      "下跌"
+    ],
+    "sentiment_score": -0.213,
+    "sentiment_label": "negative",
+    "stock_mentions": [
+      "0939.HK"
+    ],
+    "keywords": [
+      "下跌",
+      "擔憂"
+    ],
+    "created_at": "2025-10-27T21:06:01.098471"
+  },
+  {
+    "post_id": "cat15_001",
+    "category": 15,
+    "title": "今日股市討論 0700.HK 騰訊表現強勁",
+    "content": "討論今日騰訊股價表現...",
+    "author": "股友001",
+    "replies": 128,
+    "views": 8650,
+    "likes": 45,
+    "post_time": "2025-10-27T21:06:01.372609",
+    "tags": [
+      "討論",
+      "熱門"
+    ],
+    "sentiment_score": 0.622,
+    "sentiment_label": "positive",
+    "stock_mentions": [
+      "0700.HK"
+    ],
+    "keywords": [
+      "漲",
+      "強勁",
+      "看好"
+    ],
+    "created_at": "2025-10-27T21:06:01.372616"
+  },
+  {
+    "post_id": "cat15_002",
+    "category": 15,
+    "title": "0388.HK 港交所最新消息分析",
+    "content": "港交所最近的政策變化...",
+    "author": "投資者",
+    "replies": 65,
+    "views": 4320,
+    "likes": 23,
+    "post_time": "2025-10-27T21:06:01.372618",
+    "tags": [
+      "分析"
+    ],
+    "sentiment_score": 0.361,
+    "sentiment_label": "positive",
+    "stock_mentions": [
+      "0388.HK"
+    ],
+    "keywords": [
+      "利好",
+      "上漲"
+    ],
+    "created_at": "2025-10-27T21:06:01.372619"
+  },
+  {
+    "post_id": "cat15_003",
+    "category": 15,
+    "title": "0939.HK 建設銀行走勢討論",
+    "content": "建行股價持續下跌...",
+    "author": "股民小王",
+    "replies": 42,
+    "views": 2180,
+    "likes": 12,
+    "post_time": "2025-10-27T21:06:01.372620",
+    "tags": [
+      "下跌"
+    ],
+    "sentiment_score": -0.213,
+    "sentiment_label": "negative",
+    "stock_mentions": [
+      "0939.HK"
+    ],
+    "keywords": [
+      "下跌",
+      "擔憂"
+    ],
+    "created_at": "2025-10-27T21:06:01.372621"
+  }
+]

@@ -125,10 +125,34 @@ CODEX-寫量化團隊/
 - 原始数据文件处理
 - 实时数据流处理
 
-### 3. 回测引擎
-- Sharpe比率计算
-- 最大回撤分析
-- 策略性能评估
+### 3. 回测引擎 (enhanced_strategy_backtest.py)
+支持 **11种技术指标策略** 的多维参数优化
+- **基础指标 (4种)**: MA, RSI, MACD, Bollinger Bands
+- **高级指标 (7种)**: KDJ, CCI, ADX, ATR, OBV, Ichimoku, Parabolic SAR
+- **Sharpe比率计算** - 自动优化排序
+- **最大回撤分析** - 风险评估
+- **多线程优化** - 1000+ 参数组合并行测试
+- **策略性能评估** - 年化收益率、波动率、胜率等
+
+#### 快速使用示例
+```python
+from enhanced_strategy_backtest import EnhancedStrategyBacktest
+
+# 初始化
+backtest = EnhancedStrategyBacktest('0700.HK', '2020-01-01', '2023-01-01')
+backtest.load_data()
+
+# 优化单个指标 (KDJ) - 约5分钟
+kdj_results = backtest.optimize_parameters(strategy_type='kdj')
+
+# 优化所有指标 - 约30-60分钟
+all_results = backtest.optimize_parameters(strategy_type='all', max_workers=8)
+
+# 获取最佳策略
+best = backtest.get_best_strategies(top_n=10)
+```
+
+详细说明请参考 `CLAUDE.md` 中的"高级技术指标策略"部分
 
 ### 4. Web仪表板
 - 实时系统状态监控

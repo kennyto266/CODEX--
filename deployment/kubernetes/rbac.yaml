@@ -1,0 +1,451 @@
+# Kubernetes RBAC (Role-Based Access Control)
+# 定义服务账户、角色和权限绑定
+
+# ServiceAccount - 应用程序服务账户
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: codex-trading
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: service-account
+  # 自动挂载API令牌
+  automountServiceAccountToken: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/codex-trading-role
+
+---
+
+# ServiceAccount - 开发环境
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: codex-trading-dev
+  namespace: codex-trading-dev
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: service-account
+  automountServiceAccountToken: true
+
+---
+
+# ServiceAccount - 数据库服务
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: codex-postgres
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-postgres
+    app.kubernetes.io/component: service-account
+
+---
+
+# ServiceAccount - Redis服务
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: codex-redis
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-redis
+    app.kubernetes.io/component: service-account
+
+---
+
+# ServiceAccount - 监控服务
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: codex-monitoring
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-monitoring
+    app.kubernetes.io/component: service-account
+
+---
+
+# Role - 命名空间级别权限
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: codex-trading-role
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: rbac
+rules:
+# 允许读取和写入应用相关的资源
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets", "endpoints"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# 允许读取和写入应用部署
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# 允许读取和写入持久化存储
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+
+# 允许读取和写入事件
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+# 允许读取和写入水平自动缩放器
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# 允许读取和写入入口
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+
+# Role - 数据库服务权限
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: codex-postgres-role
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-postgres
+    app.kubernetes.io/component: rbac
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+
+---
+
+# Role - Redis服务权限
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: codex-redis-role
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-redis
+    app.kubernetes.io/component: rbac
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "create", "update", "patch", "delete"]
+
+---
+
+# ClusterRole - 集群级别权限
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: codex-trading-cluster-role
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: rbac
+rules:
+# 允许读取节点信息
+- apiGroups: [""]
+  resources: ["nodes", "namespaces"]
+  verbs: ["get", "list", "watch"]
+
+# 允许读取和写入入口类
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingressclasses"]
+  verbs: ["get", "list", "watch"]
+
+# 允许读取和写入Certificate
+- apiGroups: ["cert-manager.io"]
+  resources: ["certificates", "clusterissuers", "issuers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# 允许读取指标
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]
+
+# 允许读取水平自动缩放器
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch"]
+
+---
+
+# ClusterRole - 只读权限
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: codex-trading-read-only-role
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: rbac
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch"]
+
+---
+
+# RoleBinding - 绑定应用服务账户到应用角色
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: codex-trading-rolebinding
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: codex-trading
+  namespace: codex-trading
+roleRef:
+  kind: Role
+  name: codex-trading-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# RoleBinding - 绑定数据库服务账户到数据库角色
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: codex-postgres-rolebinding
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-postgres
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: codex-postgres
+  namespace: codex-trading
+roleRef:
+  kind: Role
+  name: codex-postgres-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# RoleBinding - 绑定Redis服务账户到Redis角色
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: codex-redis-rolebinding
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-redis
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: codex-redis
+  namespace: codex-trading
+roleRef:
+  kind: Role
+  name: codex-redis-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# RoleBinding - 开发环境服务账户
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: codex-trading-rolebinding-dev
+  namespace: codex-trading-dev
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: codex-trading-dev
+  namespace: codex-trading-dev
+roleRef:
+  kind: Role
+  name: codex-trading-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# ClusterRoleBinding - 绑定应用服务账户到集群角色
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: codex-trading-cluster-rolebinding
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: codex-trading
+  namespace: codex-trading
+roleRef:
+  kind: ClusterRole
+  name: codex-trading-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# ClusterRoleBinding - 只读权限绑定
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: codex-trading-read-only-rolebinding
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: rbac
+subjects:
+# 可以绑定到多个服务账户
+- kind: ServiceAccount
+  name: codex-trading
+  namespace: codex-trading
+- kind: ServiceAccount
+  name: codex-trading-dev
+  namespace: codex-trading-dev
+- kind: ServiceAccount
+  name: codex-monitoring
+  namespace: codex-trading
+roleRef:
+  kind: ClusterRole
+  name: codex-trading-read-only-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# NetworkPolicy - 网络策略
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: codex-trading-network-policy
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: codex-trading
+  policyTypes:
+  - Ingress
+  - Egress
+
+  ingress:
+  # 允许来自Ingress的流量
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: codex-nginx
+    ports:
+    - protocol: TCP
+      port: 8001
+
+  # 允许来自其他Pod的流量
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: codex-trading
+    ports:
+    - protocol: TCP
+      port: 8001
+
+  # 允许来自监控服务的流量
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: codex-prometheus
+    ports:
+    - protocol: TCP
+      port: 8001
+
+  egress:
+  # 允许访问数据库
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: codex-postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+
+  # 允许访问Redis
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: codex-redis
+    ports:
+    - protocol: TCP
+      port: 6379
+
+  # 允许访问外部API
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 80   # HTTP
+
+---
+
+# Pod Security Policy (在Kubernetes 1.21+中被弃用，使用Pod Security Admission)
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: codex-trading-psp
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: security
+spec:
+  privileged: false  # 不允许特权容器
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+  - ALL
+  volumes:
+  - 'configMap'
+  - 'emptyDir'
+  - 'projected'
+  - 'secret'
+  - 'persistentVolumeClaim'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+  readOnlyRootFilesystem: true  # 根文件系统只读

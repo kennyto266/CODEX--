@@ -72,13 +72,17 @@ class PerformanceCalculator:
                 # 计算Alpha和Beta
                 excess_strategy = returns - risk_free_rate / 252
                 excess_benchmark = benchmark_returns - risk_free_rate / 252
-                
-                beta = Decimal(str(np.cov(excess_strategy, excess_benchmark)[0, 1] / np.var(excess_benchmark)))
-                alpha = Decimal(str(excess_strategy.mean() - beta * excess_benchmark.mean()))
+
+                beta_value = np.cov(excess_strategy, excess_benchmark)[0, 1] / np.var(excess_benchmark)
+                beta = Decimal(str(beta_value))
+                alpha_value = excess_strategy.mean() - beta_value * excess_benchmark.mean()
+                alpha = Decimal(str(alpha_value))
                 
                 # 信息比率
-                tracking_error = Decimal(str((returns - benchmark_returns).std() * np.sqrt(252)))
-                information_ratio = Decimal(str((returns.mean() - benchmark_returns.mean()) * 252 / tracking_error)) if tracking_error != 0 else Decimal("0")
+                tracking_error_value = (returns - benchmark_returns).std() * np.sqrt(252)
+                tracking_error = Decimal(str(tracking_error_value))
+                information_ratio_value = (returns.mean() - benchmark_returns.mean()) * 252 / tracking_error_value if tracking_error_value != 0 else 0
+                information_ratio = Decimal(str(information_ratio_value))
                 
                 # 超额收益
                 excess_return = Decimal(str((returns.mean() - benchmark_returns.mean()) * 252))

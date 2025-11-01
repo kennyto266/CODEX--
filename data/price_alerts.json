@@ -1,0 +1,14 @@
+{
+  "423e4516": {
+    "id": "423e4516",
+    "user_id": 12345,
+    "chat_id": 12345,
+    "stock_code": "0700.HK",
+    "alert_type": "above",
+    "threshold": 400.0,
+    "created_at": "2025-10-27T20:32:08.870584",
+    "last_checked": "2025-10-28T19:13:25.431665",
+    "status": "triggered",
+    "cooldown_until": "2025-10-28T19:43:25.431612"
+  }
+}

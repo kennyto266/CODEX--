@@ -3,3 +3,13 @@
 
 包含Agent集成测试、端到端流程测试和系统集成验证。
 """
+
+from .test_database_integration import *
+from .test_api_integration import *
+from .test_external_services import *
+
+__all__ = [
+    "test_database_integration",
+    "test_api_integration",
+    "test_external_services",
+]

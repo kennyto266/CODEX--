@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-10-27T19:46:55.434318",
+  "total_posts": 3,
+  "sentiment_distribution": {
+    "positive": 1,
+    "negative": 2,
+    "neutral": 0
+  },
+  "average_sentiment_score": 0.133,
+  "trending_stocks": {
+    "0700.HK": 1,
+    "0388.HK": 1,
+    "0939.HK": 1
+  }
+}

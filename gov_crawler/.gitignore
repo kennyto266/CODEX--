@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.venv/
+.env
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# 日誌和數據
+logs/*.log
+data/raw/
+data/processed/
+data/archive/
+*.csv
+*.json
+
+# 系統
+.DS_Store
+Thumbs.db
+*.bak
+
+# 其他
+.pytest_cache/
+.coverage
+htmlcov/
+*.tmp
+*.temp

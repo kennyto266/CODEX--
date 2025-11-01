@@ -1,0 +1,13 @@
+{
+  "totalDatesProcessed": 1,
+  "datesWithData": 1,
+  "dates": [
+    {
+      "date": "1",
+      "marketDataTables": 5,
+      "totalRows": 68
+    }
+  ],
+  "generatedAt": "2025-10-20T04:57:07.640Z",
+  "sourceUrl": "https://www.hkex.com.hk/chi/stat/smstat/dayquot/qtn_c.asp"
+}

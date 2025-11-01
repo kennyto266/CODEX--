@@ -1,0 +1,28 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.minimax.io/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiLpmL_pgZQiLCJVc2VyTmFtZSI6IumYv-mBlCIsIkFjY291bnQiOiIiLCJTdWJqZWN0SUQiOiIxOTgyNzAzNjI1MDIwOTA3OTUzIiwiUGhvbmUiOiIiLCJHcm91cElEIjoiMTk4MjcwMzYyNTAxNjcwOTQ0NiIsIlBhZ2VOYW1lIjoiIiwiTWFpbCI6Imtlbm55dG8yNkBnbWFpbC5jb20iLCJDcmVhdGVUaW1lIjoiMjAyNS0xMC0yOSAxMjo1OToxMiIsIlRva2VuVHlwZSI6MSwiaXNzIjoibWluaW1heCJ9.vtP87epeHBO-lWtY0Sio-H2ayY5WkOkl2yKwYoRTCj3I7ID4vLy9qQq4AO-DvFUD5q4Q755st0eiukyEhblekPdx142pX9KLk3AL4WfvWrCqT9NMmvoMdTw3z8pUNykXgw0sUr_lIuemVOi-W2o8YTPprFxCcdzZoSj7WcdO8l985ZX2Weiuoi_9c6tmopTOfNO1GKhMSzI_VNjq9lovvyhvmJd9RSU8TlURUv2FfiJFUOJ05SiIkZ34hUCylijBW1i8-KIJ4w22OKnT21CPCC9hX0Ld3q8Yfb9oEXints94DiWDbuJxtYbmpazY3k7op6n3p3lsb0rONwrjGGVpkA",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "ANTHROPIC_MODEL": "MiniMax-M2",
+    "ANTHROPIC_SMALL_FAST_MODEL": "MiniMax-M2",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "MiniMax-M2",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "MiniMax-M2",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMax-M2"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python scripts/import_tasks.py analyze openspec/changes/optimize-project-plan/tasks.md)",
+      "Bash(python scripts/test_task_parser.py)",
+      "Bash(python scripts/run_task_import_tests.py --test-type parser --verbose)",
+      "Bash(python -m pytest tests/dashboard/test_task_parser.py -v --tb=short)",
+      "Bash(python -c \"from src.dashboard.services.task_import_service import TaskDataAnalyzer; print([m for m in dir(TaskDataAnalyzer) if not m.startswith(''_'')])\")",
+      "Bash(python -c \"from src.dashboard.services.task_import_service import TaskImportService; import inspect; print([m for m in dir(TaskImportService) if not m.startswith(''''_'''') and callable(getattr(TaskImportService, m))])\")",
+      "Bash(python -m pytest tests/dashboard/test_task_import_basic.py -v)",
+      "Bash(python verify_task_import.py)",
+      "Bash(python quick_start_task_system.py)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

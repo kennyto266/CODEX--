@@ -1,0 +1,791 @@
+================================================================================
+LOADING HKEX MARKET DATA
+================================================================================
+Loaded 45 rows, 33 valid trading days
+Date range: 2025-09-01 to 2025-10-17
+
+Data shape: (33, 35)
+Columns: ['Date', 'Trading_Volume', 'Advanced_Stocks', 'Declined_Stocks', 'Unchanged_Stocks', 'Turnover_HKD', 'Deals', 'Morning_Close', 'Afternoon_Close', 'Change', 'Change_Percent', 'Total_Active_Stocks', 'AD_Ratio', 'Market_Breadth', 'Pct_Advanced', 'Avg_Deal_Size', 'Daily_Return', 'Volatility_20D', 'MA_5', 'MA_10', 'MA_20', 'EMA_12', 'EMA_26', 'MACD', 'MACD_Signal', 'MACD_Histogram', 'RSI_14', 'BB_Middle', 'BB_Upper', 'BB_Lower', 'BB_Width', 'Volume_MA_5', 'Volume_Ratio', 'Turnover_MA_5', 'Turnover_Ratio']
+
+
+
+================================================================================
+HKEX MARKET DATA COMPREHENSIVE ANALYSIS REPORT
+Generated: 2025-10-21 09:08:16
+================================================================================
+================================================================================
+1. DATA ANALYSIS - STATISTICAL SUMMARY
+================================================================================
+
+KEY METRICS STATISTICS:
+       Afternoon_Close  Trading_Volume    Turnover_HKD      Deals  Daily_Return  Advanced_Stocks  Declined_Stocks  Unchanged_Stocks  AD_Ratio  Market_Breadth
+count            33.00           33.00           33.00      33.00         32.00            33.00            33.00             33.00     33.00           33.00
+mean          26206.44         8683.42 307016297166.33 4616387.76         -0.04          5280.73          6160.79           2869.45      1.16           -0.06
+std             578.43          391.55  72645644227.94  958234.80          1.19          2303.57          2347.36            938.68      0.92            0.32
+min           25058.51         8174.00 121257258911.00 1938351.00         -2.48          2832.00          2855.00           1591.00      0.29           -0.49
+25%           25888.51         8348.00 288772440047.00 4476851.00         -0.72          3265.00          4047.00           2276.00      0.39           -0.35
+50%           26290.32         8622.00 309096141408.00 4796904.00         -0.21          4242.00          5551.00           2626.00      0.72           -0.11
+75%           26545.10         8939.00 328118569834.00 4966304.00          1.05          7500.00          8399.00           3069.00      1.84            0.24
+max           27287.12         9661.00 490365531322.00 6363258.00          1.89          9282.00         10065.00           5402.00      3.07            0.44
+
+================================================================================
+TREND ANALYSIS (Sept - Oct 2025)
+================================================================================
+
+Index Performance:
+  Starting Index (Sept 1): 25,617.42
+  Ending Index (Oct 17): 25,247.10
+  Absolute Change: -370.32
+  Total Return: -1.45%
+  Period High: 27,287.12
+  Period Low: 25,058.51
+  Volatility (std of returns): 1.19%
+
+--------------------------------------------------------------------------------
+MARKET SENTIMENT INDICATORS:
+--------------------------------------------------------------------------------
+
+Average Advance-Decline Ratio: 1.16
+Average Market Breadth: -0.0601 (Bearish)
+Average % of Advanced Stocks: 36.96%
+Bullish Days: 13 (39.4%)
+Bearish Days: 20 (60.6%)
+
+Overall Market Sentiment: MILDLY BEARISH
+
+--------------------------------------------------------------------------------
+CORRELATION ANALYSIS:
+--------------------------------------------------------------------------------
+
+Turnover vs Daily Return: -0.1746
+Volume vs Daily Return: -0.2715
+Market Breadth vs Daily Return: 0.9575
+
+--------------------------------------------------------------------------------
+TRADING ACTIVITY ANALYSIS:
+--------------------------------------------------------------------------------
+
+Average Daily Volume: 8,683 stocks
+Average Daily Turnover: HKD 307,016,297,166
+Average Daily Deals: 4,616,388
+Average Deal Size: HKD 66,231
+
+High Volume Days (>20% above average): 0
+
+================================================================================
+2. MARKET SIGNALS IDENTIFICATION
+================================================================================
+
+LATEST MARKET DATA (2025-10-17):
+  Index Close: 25,247.10
+  Daily Return: -2.48%
+  RSI(14): 36.40
+  Market Breadth: -0.4860
+  A/D Ratio: 0.29
+
+--------------------------------------------------------------------------------
+RSI-BASED SIGNALS:
+--------------------------------------------------------------------------------
+[>] WEAK: RSI = 36.40 (< 40) - Moderate BUY signal
+
+--------------------------------------------------------------------------------
+MACD SIGNALS:
+--------------------------------------------------------------------------------
+MACD: -100.39
+Signal: 80.23
+Histogram: -180.62
+[<] BEARISH: MACD below signal line
+
+--------------------------------------------------------------------------------
+MOVING AVERAGE SIGNALS:
+--------------------------------------------------------------------------------
+MA(5): 25,675.41
+MA(10): 26,234.81
+MA(20): 26,391.92
+Current Price: 25,247.10
+
+Trend: BEARISH
+[-] BEARISH: Price below falling moving averages
+
+--------------------------------------------------------------------------------
+BOLLINGER BANDS SIGNALS:
+--------------------------------------------------------------------------------
+Upper Band: 27,461.30
+Middle Band: 26,391.92
+Lower Band: 25,322.54
+Current Price: 25,247.10
+BB Width: 0.0810
+Position in Band: -3.5%
+[+] OVERSOLD: Price below lower Bollinger Band - BUY signal
+
+--------------------------------------------------------------------------------
+MARKET BREADTH SIGNALS:
+--------------------------------------------------------------------------------
+Market Breadth: -0.4860
+A/D Ratio: 0.29
+% Advanced: 20.3%
+[-] STRONG BEARISH: Market breadth < -0.3 - broad market decline
+
+--------------------------------------------------------------------------------
+VOLUME MOMENTUM SIGNALS:
+--------------------------------------------------------------------------------
+Volume Ratio: 1.03
+Turnover Ratio: 0.88
+
+--------------------------------------------------------------------------------
+MOMENTUM & VOLATILITY PATTERNS:
+--------------------------------------------------------------------------------
+5-Day Average Return: -0.79%
+5-Day Volatility: 1.71%
+20-Day Volatility: 1.27%
+[<] STRONG NEGATIVE MOMENTUM
+
+================================================================================
+SIGNAL SUMMARY:
+================================================================================
+
+Bullish Signals: 2
+  [+] RSI Weak: Moderate buy signal
+  [+] BB Oversold: Price below lower band - oversold
+
+Bearish Signals: 2
+  [-] MA Alignment: Price below falling MAs
+  [-] Weak Breadth: Broad market weakness
+
+================================================================================
+OVERALL SIGNAL: NEUTRAL / HOLD
+================================================================================
+
+================================================================================
+3. TRADING STRATEGY DEVELOPMENT
+================================================================================
+
+--------------------------------------------------------------------------------
+STRATEGY 1: BOLLINGER BAND MEAN REVERSION
+--------------------------------------------------------------------------------
+
+Concept: Buy when price touches lower Bollinger Band, sell when it reaches middle/upper band
+
+Entry Criteria:
+  ¡E BUY when: Price closes below Lower BB AND RSI < 40
+  ¡E SELL/SHORT when: Price closes above Upper BB AND RSI > 60
+
+Exit Criteria:
+  ¡E Take Profit (Long): Price reaches Middle BB or Upper BB
+  ¡E Stop Loss (Long): 2% below entry price
+  ¡E Take Profit (Short): Price reaches Middle BB or Lower BB
+  ¡E Stop Loss (Short): 2% above entry price
+
+Current Levels (as of 2025-10-17):
+  Current Price: 25,247.10
+  Lower BB: 25,322.54
+  Middle BB: 26,391.92
+  Upper BB: 27,461.30
+
+If entering LONG position now:
+  Entry: 25,247.10
+  Stop Loss: 24,742.16 (-2.0%)
+  Take Profit 1: 26,391.92 (+4.53%)
+  Take Profit 2: 27,461.30 (+8.77%)
+  Risk/Reward Ratio: 2.27:1
+
+Position Sizing (for HKD 1M account, 2% risk per trade):
+  Risk Amount: HKD 20,000
+  Position Size: 40 shares
+  Position Value: HKD 1,000,000
+  % of Account: 100.0%
+
+--------------------------------------------------------------------------------
+STRATEGY 2: MACD MOMENTUM BREAKOUT
+--------------------------------------------------------------------------------
+
+Concept: Follow strong momentum when MACD confirms trend reversal
+
+Entry Criteria:
+  ¡E BUY when:
+    - MACD crosses above Signal line
+    - Price > MA(20)
+    - Volume > 1.2x average volume
+  ¡E SELL when:
+    - MACD crosses below Signal line
+    - Price < MA(20)
+
+Exit Criteria:
+  ¡E Take Profit: +3% from entry OR MACD histogram turns negative
+  ¡E Stop Loss: -1.5% from entry OR price closes below MA(10)
+  ¡E Trailing Stop: Once +2% profit, trail stop at -1% from peak
+
+Current Levels:
+  Current Price: 25,247.10
+  MACD: -100.39
+  Signal: 80.23
+  MA(20): 26,391.92
+  Volume Ratio: 1.03
+
+If entering LONG position now:
+  Entry: 25,247.10
+  Stop Loss: 24,868.39 (-1.5%)
+  Take Profit: 26,004.51 (+3.0%)
+  Risk/Reward Ratio: 2.00:1
+
+Position Sizing (HKD 1M account, 2% risk):
+  Position Size: 53 shares
+  Position Value: HKD 1,333,333
+
+--------------------------------------------------------------------------------
+STRATEGY 3: MARKET BREADTH TREND FOLLOWING
+--------------------------------------------------------------------------------
+
+Concept: Trade with the crowd when market breadth confirms strong directional move
+
+Entry Criteria:
+  ¡E BUY when:
+    - Market Breadth > 0.2 for 3 consecutive days
+    - A/D Ratio > 1.5
+    - Price breaks above 10-day high
+  ¡E SELL when:
+    - Market Breadth < -0.2 for 3 consecutive days
+    - A/D Ratio < 0.7
+    - Price breaks below 10-day low
+
+Exit Criteria:
+  ¡E Take Profit: +4% from entry
+  ¡E Stop Loss: -2% from entry
+  ¡E Exit if Market Breadth reverses (crosses zero)
+
+Current Levels:
+  Current Price: 25,247.10
+  Market Breadth: -0.4860
+  A/D Ratio: 0.29
+  10-Day High: 27,140.92
+  10-Day Low: 25,247.10
+  [o] Breadth Condition: NEUTRAL
+
+If entering LONG position now:
+  Entry: 25,247.10
+  Stop Loss: 24,742.16 (-2.0%)
+  Take Profit: 26,256.98 (+4.0%)
+  Risk/Reward Ratio: 2.00:1
+
+Position Sizing (HKD 1M account, 2% risk):
+  Position Size: 40 shares
+  Position Value: HKD 1,000,000
+
+================================================================================
+STRATEGY COMPARISON SUMMARY
+================================================================================
+
+         Strategy  Risk/Reward  Stop Loss %  Take Profit %  Position Size Holding Period
+   Mean Reversion         2.27        -2.00           4.53          39.61       2-5 days
+Momentum Breakout         2.00        -1.50           3.00          52.81       3-7 days
+Breadth Following         2.00        -2.00           4.00          39.61      5-15 days
+
+Recommended Strategy Selection Criteria:
+  ¡E Use Mean Reversion when: High volatility, RSI extremes, clear BB violations
+  ¡E Use Momentum Breakout when: Strong trends, MACD crossovers, high volume
+  ¡E Use Breadth Following when: Broad market moves, sector rotation, trend acceleration
+
+================================================================================
+4. STRATEGY BACKTESTING RECOMMENDATIONS
+================================================================================
+
+OPTIMAL LOOKBACK PERIODS:
+--------------------------------------------------------------------------------
+
+1. Mean Reversion Strategy:
+   ¡E Bollinger Band Period: 20 days (standard)
+   ¡E RSI Period: 14 days (standard)
+   ¡E Minimum History Required: 60 days
+   ¡E Optimal Test Period: 6-12 months
+
+2. Momentum Breakout Strategy:
+   ¡E MACD Fast EMA: 12 days
+   ¡E MACD Slow EMA: 26 days
+   ¡E MACD Signal: 9 days
+   ¡E Moving Average: 20 days
+   ¡E Minimum History Required: 50 days
+   ¡E Optimal Test Period: 6-12 months
+
+3. Market Breadth Strategy:
+   ¡E Breadth Calculation: Rolling 3-day average
+   ¡E Price Breakout: 10-day high/low
+   ¡E Minimum History Required: 30 days
+   ¡E Optimal Test Period: 3-6 months
+
+
+POSITION SIZING MODELS:
+--------------------------------------------------------------------------------
+
+1. Fixed Fractional Risk Model (Recommended):
+   ¡E Risk per trade: 1-2% of account
+   ¡E Formula: Position Size = (Account ¡Ñ Risk%) / (Entry - Stop Loss)
+   ¡E Example: HKD 1M account, 2% risk, HKD 500 stop
+     Position = (1,000,000 ¡Ñ 0.02) / 500 = 40 shares
+
+2. Kelly Criterion (Advanced):
+   ¡E Formula: f = (bp - q) / b
+   ¡E f = fraction of capital to bet
+   ¡E b = odds received (reward/risk ratio)
+   ¡E p = probability of winning
+   ¡E q = probability of losing (1-p)
+   ¡E Recommendation: Use 25-50% of Kelly result for safety
+
+3. Volatility-Based Sizing:
+   ¡E Adjust position size based on ATR (Average True Range)
+   ¡E Formula: Position Size = Risk Amount / (ATR ¡Ñ Multiplier)
+   ¡E Lower volatility = larger position
+   ¡E Higher volatility = smaller position
+
+
+CURRENT POSITION SIZE RECOMMENDATIONS:
+--------------------------------------------------------------------------------
+Account Size: HKD 1,000,000
+Risk per Trade: 2.0%
+Current 20D Volatility: 1.27%
+Average 20D Volatility: 0.99%
+
+Volatility Adjustment Factor: 0.78x
+  [>] Decrease position size (market is more volatile than average)
+
+
+PERFORMANCE METRICS TO TRACK:
+--------------------------------------------------------------------------------
+
+Key Metrics:
+ 1. Total Return         - Overall % gain/loss from all trades
+ 2. Win Rate             - % of profitable trades (target: >50%)
+ 3. Profit Factor        - Gross profit / Gross loss (target: >1.5)
+ 4. Sharpe Ratio         - Risk-adjusted return (target: >1.0)
+ 5. Max Drawdown         - Largest peak-to-trough decline (target: <20%)
+ 6. Average R-Multiple   - Average profit/loss in R units (target: >0.5R)
+ 7. Expectancy           - Average $ won per trade (must be positive)
+ 8. Recovery Factor      - Net profit / Max drawdown (target: >2.0)
+ 9. Calmar Ratio         - Annual return / Max drawdown (target: >0.5)
+10. Consecutive Losses   - Max losing streak (monitor risk of ruin)
+
+
+BACKTEST IMPLEMENTATION CHECKLIST:
+--------------------------------------------------------------------------------
+  [ ]  1. Load historical HKEX data (minimum 6 months)
+  [ ]  2. Calculate all technical indicators (BB, RSI, MACD, MA)
+  [ ]  3. Define entry rules for each strategy
+  [ ]  4. Define exit rules (TP, SL, trailing stop)
+  [ ]  5. Implement position sizing logic
+  [ ]  6. Account for transaction costs (0.1-0.3% per trade)
+  [ ]  7. Account for slippage (0.05-0.1% per trade)
+  [ ]  8. Track all trades with entry/exit prices and dates
+  [ ]  9. Calculate performance metrics after backtest
+  [ ] 10. Perform walk-forward analysis (in-sample vs out-of-sample)
+  [ ] 11. Test on different market conditions (bull, bear, sideways)
+  [ ] 12. Optimize parameters but avoid over-fitting
+  [ ] 13. Monte Carlo simulation for robustness testing
+  [ ] 14. Document results and refine strategies
+
+
+RECOMMENDED TESTING APPROACH:
+--------------------------------------------------------------------------------
+
+Phase 1: In-Sample Testing (60% of data)
+  ¡E Develop and optimize strategy parameters
+  ¡E Test different indicator settings
+  ¡E Refine entry/exit rules
+
+Phase 2: Out-of-Sample Testing (40% of data)
+  ¡E Test on unseen data with fixed parameters
+  ¡E Validate strategy robustness
+  ¡E Compare in-sample vs out-of-sample results
+
+Phase 3: Walk-Forward Analysis
+  ¡E Rolling window optimization
+  ¡E Periodic re-optimization (monthly/quarterly)
+  ¡E Adapt to changing market conditions
+
+Phase 4: Monte Carlo Simulation
+  ¡E Randomize trade sequence 1000+ times
+  ¡E Calculate probability of drawdown scenarios
+  ¡E Assess risk of ruin
+
+
+EXAMPLE METRICS FROM CURRENT DATA:
+--------------------------------------------------------------------------------
+
+Market Win Rate (up days): 39.4%
+Average Up Day: +1.17%
+Average Down Day: -0.87%
+Win/Loss Ratio: 1.35:1
+
+Annualized Sharpe Ratio (buy & hold): -0.51
+Maximum Drawdown: -7.48%
+Current Drawdown: -7.48%
+
+================================================================================
+5. IMPLEMENTATION GUIDE
+================================================================================
+
+--------------------------------------------------------------------------------
+PYTHON IMPLEMENTATION - SIGNAL AUTOMATION
+--------------------------------------------------------------------------------
+
+Step 1: Create Signal Detection Module
+```python
+
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+
+class HKEXSignalGenerator:
+    '''Generate trading signals for HKEX index'''
+
+    def __init__(self, data_path):
+        self.df = pd.read_csv(data_path)
+        self.df['Date'] = pd.to_datetime(self.df['Date'])
+        self.calculate_indicators()
+
+    def calculate_indicators(self):
+        '''Calculate all technical indicators'''
+        # RSI
+        delta = self.df['Afternoon_Close'].diff()
+        gain = delta.where(delta > 0, 0).rolling(14).mean()
+        loss = -delta.where(delta < 0, 0).rolling(14).mean()
+        rs = gain / loss
+        self.df['RSI'] = 100 - (100 / (1 + rs))
+
+        # MACD
+        ema12 = self.df['Afternoon_Close'].ewm(span=12).mean()
+        ema26 = self.df['Afternoon_Close'].ewm(span=26).mean()
+        self.df['MACD'] = ema12 - ema26
+        self.df['MACD_Signal'] = self.df['MACD'].ewm(span=9).mean()
+
+        # Bollinger Bands
+        self.df['BB_Middle'] = self.df['Afternoon_Close'].rolling(20).mean()
+        bb_std = self.df['Afternoon_Close'].rolling(20).std()
+        self.df['BB_Upper'] = self.df['BB_Middle'] + (2 * bb_std)
+        self.df['BB_Lower'] = self.df['BB_Middle'] - (2 * bb_std)
+
+        # Market Breadth
+        self.df['Market_Breadth'] = (
+            (self.df['Advanced_Stocks'] - self.df['Declined_Stocks']) /
+            (self.df['Advanced_Stocks'] + self.df['Declined_Stocks'] +
+             self.df['Unchanged_Stocks'])
+        )
+
+    def get_signals(self):
+        '''Generate trading signals'''
+        latest = self.df.iloc[-1]
+        signals = []
+
+        # Strategy 1: Mean Reversion
+        if latest['Afternoon_Close'] < latest['BB_Lower'] and latest['RSI'] < 40:
+            signals.append({
+                'strategy': 'Mean Reversion',
+                'action': 'BUY',
+                'confidence': 'HIGH',
+                'entry': latest['Afternoon_Close'],
+                'stop_loss': latest['Afternoon_Close'] * 0.98,
+                'take_profit': latest['BB_Middle']
+            })
+
+        # Strategy 2: Momentum
+        prev = self.df.iloc[-2]
+        macd_crossover = (latest['MACD'] > latest['MACD_Signal'] and
+                         prev['MACD'] <= prev['MACD_Signal'])
+        if macd_crossover and latest['Afternoon_Close'] > latest['BB_Middle']:
+            signals.append({
+                'strategy': 'Momentum Breakout',
+                'action': 'BUY',
+                'confidence': 'MEDIUM',
+                'entry': latest['Afternoon_Close'],
+                'stop_loss': latest['Afternoon_Close'] * 0.985,
+                'take_profit': latest['Afternoon_Close'] * 1.03
+            })
+
+        # Strategy 3: Market Breadth
+        if latest['Market_Breadth'] > 0.2 and latest['RSI'] < 70:
+            signals.append({
+                'strategy': 'Breadth Following',
+                'action': 'BUY',
+                'confidence': 'MEDIUM',
+                'entry': latest['Afternoon_Close'],
+                'stop_loss': latest['Afternoon_Close'] * 0.98,
+                'take_profit': latest['Afternoon_Close'] * 1.04
+            })
+
+        return signals
+
+# Usage
+generator = HKEXSignalGenerator('hkex_market_data.csv')
+signals = generator.get_signals()
+for signal in signals:
+    print(f"Signal: {signal}")
+
+```
+
+
+Step 2: Integration with Existing Quantitative System
+```python
+
+# In your existing CODEX-- system, integrate as follows:
+
+# 1. Add to src/data_adapters/hkex_market_adapter.py
+class HKEXMarketDataAdapter(BaseAdapter):
+    '''Adapter for HKEX market-wide data'''
+
+    def __init__(self, csv_path):
+        self.csv_path = csv_path
+        self.signal_generator = HKEXSignalGenerator(csv_path)
+
+    def fetch_data(self):
+        '''Fetch latest market data'''
+        return pd.read_csv(self.csv_path)
+
+    def get_signals(self):
+        '''Get trading signals'''
+        return self.signal_generator.get_signals()
+
+# 2. Add to src/strategies/hkex_market_strategy.py
+class HKEXMarketStrategy(BaseStrategy):
+    '''Trading strategy based on HKEX market indicators'''
+
+    def __init__(self, adapter):
+        self.adapter = adapter
+
+    def generate_signals(self, data):
+        '''Generate trading signals'''
+        signals = self.adapter.get_signals()
+
+        # Convert to format compatible with backtest engine
+        formatted_signals = []
+        for signal in signals:
+            formatted_signals.append({
+                'timestamp': datetime.now(),
+                'action': signal['action'],
+                'price': signal['entry'],
+                'stop_loss': signal['stop_loss'],
+                'take_profit': signal['take_profit'],
+                'strategy': signal['strategy']
+            })
+
+        return formatted_signals
+
+# 3. Add to complete_project_system.py
+from src.data_adapters.hkex_market_adapter import HKEXMarketDataAdapter
+from src.strategies.hkex_market_strategy import HKEXMarketStrategy
+
+# Initialize in system startup
+hkex_adapter = HKEXMarketDataAdapter('hkexª¦ÂÎ/data/hkex_all_market_data.csv')
+hkex_strategy = HKEXMarketStrategy(hkex_adapter)
+
+# Register with backtest engine
+backtest_engine.add_strategy('HKEX_Market', hkex_strategy)
+
+```
+
+
+Step 3: Real-Time Monitoring Setup
+```python
+
+import schedule
+import time
+from datetime import datetime
+
+class HKEXMonitor:
+    '''Real-time monitoring of HKEX market signals'''
+
+    def __init__(self, csv_path, alert_threshold):
+        self.signal_gen = HKEXSignalGenerator(csv_path)
+        self.alert_threshold = alert_threshold
+
+    def check_signals(self):
+        '''Check for new signals and send alerts'''
+        signals = self.signal_gen.get_signals()
+
+        for signal in signals:
+            if signal['confidence'] == 'HIGH':
+                self.send_alert(signal)
+
+    def send_alert(self, signal):
+        '''Send alert via Telegram or email'''
+        message = f'''
+        [ALERT] HKEX Trading Signal Alert
+
+        Strategy: {signal['strategy']}
+        Action: {signal['action']}
+        Confidence: {signal['confidence']}
+
+        Entry Price: {signal['entry']:.2f}
+        Stop Loss: {signal['stop_loss']:.2f}
+        Take Profit: {signal['take_profit']:.2f}
+
+        Risk/Reward: {(signal['take_profit']-signal['entry'])/(signal['entry']-signal['stop_loss']):.2f}:1
+
+        Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        '''
+
+        # Send via Telegram
+        self.send_telegram(message)
+
+    def send_telegram(self, message):
+        '''Send message via Telegram bot'''
+        import requests
+
+        bot_token = 'YOUR_BOT_TOKEN'
+        chat_id = 'YOUR_CHAT_ID'
+
+        url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+        data = {'chat_id': chat_id, 'text': message}
+
+        requests.post(url, data=data)
+
+# Schedule monitoring
+monitor = HKEXMonitor('hkex_market_data.csv', alert_threshold={'HIGH'})
+
+# Run every hour during market hours (9:30 AM - 4:00 PM HKT)
+schedule.every().hour.at(":00").do(monitor.check_signals)
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+
+```
+
+
+--------------------------------------------------------------------------------
+ALERT THRESHOLDS FOR REAL-TIME MONITORING
+--------------------------------------------------------------------------------
+
+HIGH PRIORITY ALERTS (Immediate Action Required):
+  ¡E RSI < 25 or RSI > 75 (extreme oversold/overbought)
+  ¡E Price breaks below BB Lower by >2%
+  ¡E MACD crossover with volume >1.5x average
+  ¡E Market Breadth >0.3 or <-0.3 with A/D Ratio extreme
+  ¡E Volatility spike >3 standard deviations
+
+MEDIUM PRIORITY ALERTS (Monitor Closely):
+  ¡E RSI 30-40 or 60-70 (approaching extremes)
+  ¡E Price within 1% of BB bands
+  ¡E MACD crossover with normal volume
+  ¡E Market Breadth 0.2-0.3 or -0.2 to -0.3
+  ¡E 3 consecutive days same direction
+
+LOW PRIORITY ALERTS (Informational):
+  ¡E RSI 40-60 (neutral zone)
+  ¡E Price between BB middle and outer bands
+  ¡E Normal volume and turnover
+  ¡E Market Breadth -0.2 to 0.2
+
+
+RECOMMENDED ALERT CONFIGURATION:
+--------------------------------------------------------------------------------
+
+      Indicator          Alert Condition Priority                   Action
+            RSI         RSI < 30 or > 70     HIGH         Review for entry
+Bollinger Bands     Price outside BB ¡Ó2£m     HIGH         Prepare position
+           MACD Crossover with histogram   MEDIUM Monitor for confirmation
+ Market Breadth         Breadth > |0.25|   MEDIUM    Check sector strength
+         Volume      Volume > 1.5x MA(5)      LOW       Confirm with price
+     Volatility        Vol > 1.5x MA(20)     HIGH     Reduce position size
+
+
+SYSTEM INTEGRATION CHECKLIST:
+--------------------------------------------------------------------------------
+  [ ]  1. Create HKEXMarketDataAdapter in src/data_adapters/
+  [ ]  2. Implement HKEXSignalGenerator with all indicators
+  [ ]  3. Add HKEXMarketStrategy to src/strategies/
+  [ ]  4. Register strategy with backtest engine
+  [ ]  5. Set up scheduled data updates (daily after market close)
+  [ ]  6. Configure Telegram bot for alerts
+  [ ]  7. Define alert threshold rules
+  [ ]  8. Test signal generation with historical data
+  [ ]  9. Validate integration with existing system
+  [ ] 10. Set up logging and error handling
+  [ ] 11. Create dashboard widget for HKEX signals
+  [ ] 12. Document API endpoints for signal access
+  [ ] 13. Implement position sizing calculator
+  [ ] 14. Add risk management rules
+  [ ] 15. Deploy to production environment
+
+
+API ENDPOINT DESIGN:
+--------------------------------------------------------------------------------
+
+# Add to src/dashboard/api_routes.py
+
+@app.get("/api/hkex/signals")
+async def get_hkex_signals():
+    '''Get current HKEX market signals'''
+    try:
+        adapter = HKEXMarketDataAdapter('hkexª¦ÂÎ/data/hkex_all_market_data.csv')
+        signals = adapter.get_signals()
+
+        return {
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'signals': signals,
+            'count': len(signals)
+        }
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}
+
+@app.get("/api/hkex/indicators")
+async def get_hkex_indicators():
+    '''Get current HKEX market indicators'''
+    try:
+        adapter = HKEXMarketDataAdapter('hkexª¦ÂÎ/data/hkex_all_market_data.csv')
+        df = adapter.fetch_data()
+        latest = df.iloc[-1]
+
+        return {
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'indicators': {
+                'rsi': latest['RSI'],
+                'macd': latest['MACD'],
+                'bb_upper': latest['BB_Upper'],
+                'bb_lower': latest['BB_Lower'],
+                'market_breadth': latest['Market_Breadth'],
+                'volatility': latest['Volatility_20D']
+            }
+        }
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}
+
+@app.post("/api/hkex/backtest")
+async def run_hkex_backtest(strategy: str, start_date: str, end_date: str):
+    '''Run backtest for HKEX strategy'''
+    try:
+        # Implementation here
+        return {
+            'status': 'success',
+            'results': backtest_results
+        }
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}
+
+
+
+FINAL RECOMMENDATIONS:
+================================================================================
+
+1. Start with paper trading to validate signals
+2. Monitor all three strategies simultaneously
+3. Keep position sizes small initially (0.5-1% risk)
+4. Log all signals and outcomes for analysis
+5. Review performance weekly and adjust parameters
+6. Use multiple timeframes for confirmation
+7. Combine HKEX market signals with individual stock analysis
+8. Set up automated data collection for continuous updates
+9. Implement fail-safe mechanisms for system errors
+10. Regularly backtest on new data to ensure robustness
+
+================================================================================
+END OF ANALYSIS REPORT
+================================================================================
+
+Report saved to: hkex_analysis_report_20251021_090816.txt
+
+Next Steps:
+1. Review all trading signals and strategies
+2. Implement chosen strategy in backtesting framework
+3. Paper trade for 2-4 weeks to validate
+4. Gradually scale up position sizes
+5. Monitor and refine continuously

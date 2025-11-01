@@ -1,0 +1,252 @@
+================================================================================
+HKEX MARKET CORRELATION ANALYSIS - NUMERICAL SUMMARY
+================================================================================
+
+Sample Size: 32 trading days (2025-09-01 to 2025-10-17)
+
+================================================================================
+CORRELATION MATRIX - ALL METRICS vs DAILY_RETURN
+================================================================================
+
+Rank | Metric                | Correlation | P-value    | 95% CI Lower | 95% CI Upper | Sig
+-----|----------------------|-------------|------------|--------------|--------------|------
+1    | Market_Breadth       |  0.9469     | 0.000000   |  0.8930      |  0.9740      | ***
+2    | Advanced_Stocks      |  0.9236     | 0.000000   |  0.8481      |  0.9624      | ***
+3    | AD_Ratio             |  0.9180     | 0.000000   |  0.8373      |  0.9595      | ***
+4    | RSI_14               |  0.3742     | 0.034879   |  0.0293      |  0.6394      | *
+5    | Afternoon_Close      |  0.3228     | 0.071566   | -0.0292      |  0.6036      | NS
+6    | MACD                 |  0.0149     | 0.935570   | -0.3356      |  0.3617      | NS
+7    | Turnover_Per_Deal    | -0.0110     | 0.952668   | -0.3584      |  0.3390      | NS
+8    | Volatility_20D       | -0.1275     | 0.487823   | -0.4560      |  0.2314      | NS
+9    | Deals                | -0.1697     | 0.360027   | -0.4895      |  0.1902      | NS
+10   | Turnover_HKD         | -0.1739     | 0.347844   | -0.4927      |  0.1860      | NS
+11   | Volume_Ratio         | -0.1886     | 0.305136   | -0.5059      |  0.1738      | NS
+12   | Trading_Volume       | -0.2699     | 0.137884   | -0.5611      |  0.0940      | NS
+13   | Declined_Stocks      | -0.9505     | 0.000000   | -0.9754      | -0.9001      | ***
+
+*** p < 0.001, ** p < 0.01, * p < 0.05, NS = Not Significant
+
+================================================================================
+LAGGED CORRELATION ANALYSIS - LEADING vs LAGGING INDICATORS
+================================================================================
+
+                        |  Lag -2  |  Lag -1  |  Lag 0   |  Lag +1  |  Lag +2
+                        | (2d ago) | (1d ago) | (same)   | (1d fwd) | (2d fwd)
+------------------------|----------|----------|----------|----------|----------
+Market_Breadth          |  0.9555  |  0.9551  |  0.9469  |  0.1065  |  0.0182
+Advanced_Stocks         |  0.9386  |  0.9380  |  0.9236  |  0.1151  |  0.0069
+Declined_Stocks         | -0.9523  | -0.9474  | -0.9505  | -0.0822  | -0.0116
+AD_Ratio                |  0.9347  |  0.9341  |  0.9180  |  0.1349  | -0.0082
+RSI_14                  |  0.3479  |  0.3481  |  0.3742  |  0.0602  | -0.0685
+Afternoon_Close         |  0.2358  |  0.2363  |  0.3228  | -0.2417  | -0.2937
+Trading_Volume          | -0.1477  | -0.1488  | -0.2699  | -0.2959  | -0.1588
+MACD                    | -0.1304  | -0.1215  |  0.0149  | -0.2145  | -0.2641
+Volume_Ratio            | -0.0900  | -0.0883  | -0.1886  | -0.2030  | -0.0354
+Turnover_Per_Deal       | -0.0605  | -0.0555  | -0.0110  | -0.2304  |  0.0081
+Volatility_20D          | -0.0842  | -0.0858  | -0.1275  | -0.0328  |  0.0524
+Deals                   | -0.1576  | -0.1570  | -0.1697  |  0.0570  |  0.1270
+Turnover_HKD            | -0.1792  | -0.1773  | -0.1739  | -0.0238  |  0.1246
+
+Interpretation:
+- Lag -1: Yesterday's metric value vs today's return (PREDICTIVE if significant)
+- Lag 0:  Today's metric value vs today's return (CONTEMPORANEOUS)
+- Lag +1: Today's metric value vs tomorrow's return (FORWARD-LOOKING)
+
+KEY FINDING: Strongest correlations at Lag 0, weak at Lag +1 → NO PREDICTIVE POWER
+
+================================================================================
+1-DAY AHEAD PREDICTIVE POWER RANKING
+================================================================================
+
+Testing: Can today's metric value predict tomorrow's return?
+
+Rank | Metric                | 1D Correlation | P-value  | Significant?
+-----|----------------------|----------------|----------|-------------
+1    | Trading_Volume       | -0.2959        | 0.1060   | NO (p>0.05)
+2    | Afternoon_Close      | -0.2417        | 0.1902   | NO
+3    | Turnover_Per_Deal    | -0.2304        | 0.2124   | NO
+4    | MACD                 | -0.2145        | 0.2465   | NO
+5    | Volume_Ratio         | -0.2030        | 0.2734   | NO
+6    | AD_Ratio             |  0.1349        | 0.4693   | NO
+7    | Advanced_Stocks      |  0.1151        | 0.5376   | NO
+8    | Market_Breadth       |  0.1065        | 0.5685   | NO
+9    | Declined_Stocks      | -0.0822        | 0.6602   | NO
+10   | RSI_14               |  0.0602        | 0.7476   | NO
+11   | Deals                |  0.0570        | 0.7608   | NO
+12   | Volatility_20D       | -0.0328        | 0.8611   | NO
+13   | Turnover_HKD         | -0.0238        | 0.8989   | NO
+
+CRITICAL: ALL P-VALUES > 0.05 → NO STATISTICALLY SIGNIFICANT PREDICTORS
+
+================================================================================
+STRONG CORRELATION PAIRS (|r| > 0.7)
+================================================================================
+
+Type: RETURN-RELATED (Direct trading signals)
+------------------------------------------------------
+Metric 1            | Metric 2          | Corr    | P-value
+--------------------|-------------------|---------|----------
+Daily_Return        | Declined_Stocks   | -0.9505 | < 0.001
+Daily_Return        | Market_Breadth    |  0.9469 | < 0.001
+Daily_Return        | Advanced_Stocks   |  0.9236 | < 0.001
+Daily_Return        | AD_Ratio          |  0.9180 | < 0.001
+
+Type: MARKET BREADTH INDICATORS (Highly intercorrelated - use only ONE)
+------------------------------------------------------
+Advanced_Stocks     | AD_Ratio          |  0.9848 | < 0.001
+Advanced_Stocks     | Market_Breadth    |  0.9835 | < 0.001
+AD_Ratio            | Market_Breadth    |  0.9720 | < 0.001
+Advanced_Stocks     | Declined_Stocks   | -0.9067 | < 0.001
+Declined_Stocks     | Market_Breadth    | -0.9673 | < 0.001
+Declined_Stocks     | AD_Ratio          | -0.9052 | < 0.001
+
+Type: PRICE-BASED INDICATORS
+------------------------------------------------------
+Afternoon_Close     | MACD              |  0.8994 | < 0.001
+Afternoon_Close     | RSI_14            |  0.7370 | < 0.001
+Volatility_20D      | RSI_14            | -0.8882 | < 0.001
+Volatility_20D      | Afternoon_Close   | -0.7425 | < 0.001
+Volatility_20D      | MACD              | -0.7267 | < 0.001
+
+Type: VOLUME/TURNOVER INDICATORS (Multicollinearity warning)
+------------------------------------------------------
+Turnover_HKD        | Deals             |  0.9633 | < 0.001
+Trading_Volume      | Volume_Ratio      |  0.9402 | < 0.001
+Volume_Ratio        | Turnover_HKD      |  0.6350 | < 0.001
+Volume_Ratio        | Deals             |  0.6053 | < 0.001
+
+================================================================================
+ROLLING CORRELATION STATISTICS (Stability Analysis)
+================================================================================
+
+5-Day Rolling Window:
+------------------------------------------------------
+Metric               | Mean   | StdDev | Min     | Max    | Range
+---------------------|--------|--------|---------|--------|-------
+Trading_Volume       | 0.1258 | 0.6267 | -0.9519 | 0.9659 | 1.9178
+Afternoon_Close      | 0.5121 | 0.3719 | -0.4796 | 0.9150 | 1.3946
+Turnover_Per_Deal    | 0.1251 | 0.4135 | -0.6134 | 0.9088 | 1.5222
+
+10-Day Rolling Window:
+------------------------------------------------------
+Metric               | Mean   | StdDev | Min     | Max    | Range
+---------------------|--------|--------|---------|--------|-------
+Trading_Volume       | 0.1609 | 0.3174 | -0.4608 | 0.6421 | 1.1029
+Afternoon_Close      | 0.4261 | 0.2402 | -0.1908 | 0.7299 | 0.9207
+Turnover_Per_Deal    | 0.0767 | 0.2634 | -0.2492 | 0.5940 | 0.8432
+
+WARNING: High standard deviations indicate correlation INSTABILITY over time
+
+================================================================================
+MULTICOLLINEARITY WARNINGS
+================================================================================
+
+Avoid using these pairs together in regression models (|r| > 0.7):
+
+Group 1: BREADTH INDICATORS (Choose ONE only)
+- Advanced_Stocks, Declined_Stocks, AD_Ratio, Market_Breadth
+
+Group 2: VOLUME INDICATORS (Choose ONE only)
+- Trading_Volume, Volume_Ratio
+
+Group 3: TURNOVER INDICATORS (Choose ONE only)
+- Turnover_HKD, Deals
+
+Group 4: PRICE/VOLATILITY (Can use together, but watch for issues)
+- Afternoon_Close, MACD, RSI_14, Volatility_20D
+
+================================================================================
+BEST SINGLE METRIC FOR PREDICTION
+================================================================================
+
+CONTEMPORANEOUS (Same-day):
+  Winner: Market_Breadth (r = 0.9469, p < 0.001)
+  Interpretation: Perfectly captures today's return, but not predictive
+
+1-DAY AHEAD PREDICTION:
+  Winner: Trading_Volume (r = -0.2959, p = 0.1060)
+  Interpretation: NOT statistically significant (p > 0.05)
+  Conclusion: NO reliable single metric predictor found
+
+================================================================================
+BEST METRIC COMBINATIONS (Linear Regression Results)
+================================================================================
+
+Model: Predict Daily_Return using [AD_Ratio, Market_Breadth, Volume_Ratio, RSI_14, MACD]
+(1-day lagged to avoid look-ahead bias)
+
+Training R²:   [Unable to calculate due to encoding error in script]
+Testing R²:    [Unable to calculate due to encoding error in script]
+
+Note: High multicollinearity between predictors (AD_Ratio + Market_Breadth corr = 0.972)
+      May cause overfitting and poor out-of-sample performance
+
+================================================================================
+ACTIONABLE TRADING INSIGHTS
+================================================================================
+
+✓ CONFIRMED RELATIONSHIPS (for monitoring, not prediction):
+  1. Market_Breadth perfectly tracks daily returns (r = 0.95)
+     → Use as real-time sentiment indicator
+  2. RSI shows moderate positive correlation (r = 0.37)
+     → Weak signal, but statistically significant (p = 0.035)
+
+✗ REJECTED HYPOTHESES:
+  1. Trading volume predicts next-day returns (p = 0.106, NS)
+  2. Price momentum (MACD) predicts returns (p = 0.247, NS)
+  3. Turnover predicts returns (p = 0.348, NS)
+
+⚠ RELIABILITY WARNINGS:
+  1. Sample size = 32 days (need 100+ for robust conclusions)
+  2. Rolling correlations highly unstable (σ = 0.37 to 0.63)
+  3. Time period may be unrepresentative (single market regime)
+
+📊 RECOMMENDED STRATEGY APPROACHES:
+
+Since NO predictive metrics found:
+  A) Mean reversion after breadth extremes (AD_Ratio > 3.0 or < 0.33)
+  B) Regime detection (high vol vs low vol periods)
+  C) Multi-day prediction windows (3-5 days instead of 1-day)
+  D) Alternative data (sentiment, options, news)
+  E) Machine learning for non-linear patterns
+
+DO NOT USE:
+  - Simple lagged correlation models (no predictive power)
+  - Multiple breadth indicators together (multicollinearity)
+  - Strategies based on this 32-day sample without validation
+
+================================================================================
+STATISTICAL RIGOR NOTES
+================================================================================
+
+Assumptions:
+- Pearson correlation (assumes linear relationships)
+- 95% confidence intervals (Fisher's Z transformation)
+- Two-tailed significance tests
+
+Limitations:
+- Small sample (n=32) reduces power
+- Time series autocorrelation violates independence
+- Multiple testing (91 pairs) increases false positive risk
+- Non-linear patterns not explored
+- Single market regime (may not generalize)
+
+Required for Production Use:
+- Minimum 100 trading days
+- Out-of-sample validation
+- Multiple market regimes
+- Robustness tests (bootstrap, cross-validation)
+- Transaction cost modeling
+
+================================================================================
+END OF NUMERICAL SUMMARY
+================================================================================
+
+Output Files Generated:
+1. HKEX_CORRELATION_ANALYSIS_REPORT.md - Full detailed report
+2. CORRELATION_SUMMARY_TABLE.txt - This numerical summary (you are here)
+3. correlation_matrix.csv - Raw correlation matrix
+4. scatter_data_*.csv - Scatter plot data for top correlations
+5. rolling_corr_*.csv - Time series of rolling correlations
+
+================================================================================

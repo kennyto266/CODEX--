@@ -1,0 +1,22 @@
+================================================================================
+6-MONTH HIBOR PREDICTION STRATEGY - BACKTEST REPORT
+================================================================================
+
+Report Date: 2025-10-24 03:53:08
+
+STRATEGY PARAMETERS:
+- HIBOR Threshold: 0.0500%
+- Holding Period: 3 days
+- Position Size: 30.0%
+
+BACKTEST RESULTS:
+- initial_capital: 100000
+- final_capital: 99250.9270
+- total_return: -0.75%
+- max_drawdown: -1.88%
+- sharpe_ratio: -1.6673
+- num_trades: 20
+- win_rate: 50.00%
+- profit_factor: 1.3730
+- avg_win: 443.1237
+- avg_loss: -322.7521

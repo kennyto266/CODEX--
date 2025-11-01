@@ -1,0 +1,112 @@
+# GOV 爬蟲系統配置文件
+
+crawler:
+  # 基礎配置
+  base_url: "https://data.gov.hk/tc-data/dataset"
+  timeout: 30
+  retry_count: 3
+  retry_delay: 5
+  user_agent: "GOV-Crawler/1.0 (Mozilla/5.0)"
+
+  # 日誌配置
+  log_level: "INFO"
+  log_file: "logs/crawler.log"
+  log_format: "[%(asctime)s] %(name)s - %(levelname)s - %(message)s"
+
+# 數據源配置 - 使用直接下載URL（CKAN API datastore_search不可用）
+datasets:
+  # 財經數據
+  finance:
+    enabled: true
+    update_interval: 86400  # 24小時
+    resources:
+      # 使用政府統計處提供的API端點
+      -  name: "foreign_direct_investment"
+         url: "https://www.censtatd.gov.hk/api/get.php?id=315-38032&lang=en&full_series=1"
+         format: "json"
+
+      # HKMA銀行統計
+      - name: "hkma_banking_data"
+        url: "https://api.hkma.gov.hk/public/market-data-and-statistics/monthly-statistical-bulletin/banking/elc-pos-v-mc?segment=new"
+        format: "json"
+
+  # 地產數據
+  real_estate:
+    enabled: true
+    update_interval: 604800  # 7天
+    resources:
+      # 物業市場統計資料 - CSV格式
+      - name: "property_market_rent"
+        url: "http://www.rvd.gov.hk/datagovhk/1.1Q(82-98).csv"
+        format: "csv"
+
+      - name: "property_market_price"
+        url: "http://www.rvd.gov.hk/datagovhk/1.2Q(82-98).csv"
+        format: "csv"
+
+  # 工商業數據
+  business:
+    enabled: true
+    update_interval: 604800  # 7天
+    resources:
+      # 商品貿易統計
+      - name: "merchandise_trade"
+        url: "https://www.censtatd.gov.hk/api/get.php?id=340-45022&lang=en&full_series=1"
+        format: "json"
+
+  # 地理數據
+  geography:
+    enabled: true
+    update_interval: 2592000  # 30天
+    resources:
+      - name: "placeholder_geography"
+        url: "https://data.gov.hk/tc-data/api/3/action/package_search?rows=1"
+        format: "json"
+
+  # 運輸數據
+  transport:
+    enabled: true
+    update_interval: 3600  # 1小時
+    resources:
+      - name: "placeholder_transport"
+        url: "https://data.gov.hk/tc-data/api/3/action/package_search?rows=1"
+        format: "json"
+
+# 存儲配置
+storage:
+  raw_data_dir: "data/raw"
+  processed_data_dir: "data/processed"
+  metadata_dir: "data/metadata"
+  archive_dir: "data/archive"
+
+  # 文件格式
+  formats:
+    - "csv"
+    - "json"
+    - "parquet"
+
+  # 保留天數
+  retention_days: 90
+
+# 代理配置 (可選)
+proxy:
+  enabled: false
+  http: ""
+  https: ""
+
+# 錯誤處理
+error_handling:
+  max_retries: 3
+  retry_backoff_factor: 1.5
+  timeout: 30
+  failed_log_file: "logs/failed_datasets.log"
+
+# 通知配置 (可選)
+notifications:
+  enabled: false
+  email:
+    enabled: false
+    recipients: []
+  slack:
+    enabled: false
+    webhook_url: ""

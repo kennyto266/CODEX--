@@ -18,6 +18,103 @@ try:
 except ImportError:
     from pydantic import BaseSettings
 
+# Phase 2: Import base interfaces and implementations for calculation layer
+try:
+    from .base_strategy import (
+        IStrategy,
+        IVariableManager,
+        IParameterManager,
+        IExecutionEngine,
+        Signal,
+        SignalType,
+        Variable,
+    )
+except ImportError:
+    # Interfaces may not be available during initialization
+    pass
+
+# Phase 2.3: Import unified backtest engine
+try:
+    from .backtest_interface import (
+        IBacktestEngine,
+        UnifiedBacktestEngine,
+        BacktestConfig,
+        BacktestMetrics,
+        Trade,
+    )
+except ImportError:
+    pass
+
+# Phase 2.3: Import strategy executor
+try:
+    from .strategy_executor import (
+        StrategyExecutor,
+        StrategyFactory,
+    )
+except ImportError:
+    pass
+
+# Phase 2.3.4: Import parameter manager
+try:
+    from .parameter_manager import (
+        UnifiedParameterManager,
+        ParameterBounds,
+    )
+except ImportError:
+    pass
+
+# Phase 2.3.5: Import risk calculator
+try:
+    from .risk_calculator import (
+        UnifiedRiskCalculator,
+        Position,
+        PortfolioRisk,
+    )
+except ImportError:
+    pass
+
+# Phase 2.3.6: Import unified agent system
+try:
+    from .unified_agent import (
+        UnifiedAgent,
+        BaseRole,
+        Message,
+        AgentConfig,
+        AgentStatus,
+        SimpleMessageQueue,
+    )
+    from .role_provider import (
+        RoleProvider,
+        # Core roles
+        CoordinatorRole,
+        DataScientistRole,
+        QuantitativeAnalystRole,
+        PortfolioManagerRole,
+        QuantitativeEngineerRole,
+        QuantitativeTraderRole,
+        ResearchAnalystRole,
+        RiskAnalystRole,
+        # Real roles
+        RealDataScientistRole,
+        RealQuantitativeAnalystRole,
+        RealPortfolioManagerRole,
+        RealQuantitativeEngineerRole,
+        RealQuantitativeTraderRole,
+        RealResearchAnalystRole,
+        RealRiskAnalystRole,
+        RealDataAnalyzerRole,
+        # HK Prompt roles
+        HKDataScientistRole,
+        HKQuantitativeAnalystRole,
+        HKPortfolioManagerRole,
+        HKQuantitativeEngineerRole,
+        HKQuantitativeTraderRole,
+        HKResearchAnalystRole,
+        HKRiskAnalystRole,
+    )
+except ImportError:
+    pass
+
 
 class SystemConfig(BaseSettings):
     """系统配置类"""
@@ -151,10 +248,69 @@ def get_logs_path() -> Path:
 
 # 导出主要类和函数
 __all__ = [
+    # System configuration
     "SystemConfig",
-    "SystemConstants", 
+    "SystemConstants",
     "setup_logging",
     "get_project_root",
     "get_config_path",
-    "get_logs_path"
+    "get_logs_path",
+    # Phase 2 base interfaces
+    "IStrategy",
+    "IVariableManager",
+    "IParameterManager",
+    "IExecutionEngine",
+    "Signal",
+    "SignalType",
+    "Variable",
+    # Phase 2.3 backtest engine
+    "IBacktestEngine",
+    "UnifiedBacktestEngine",
+    "BacktestConfig",
+    "BacktestMetrics",
+    "Trade",
+    # Phase 2.3 strategy executor
+    "StrategyExecutor",
+    "StrategyFactory",
+    # Phase 2.3.4 parameter manager
+    "UnifiedParameterManager",
+    "ParameterBounds",
+    # Phase 2.3.5 risk calculator
+    "UnifiedRiskCalculator",
+    "Position",
+    "PortfolioRisk",
+    # Phase 2.3.6 unified agent system
+    "UnifiedAgent",
+    "BaseRole",
+    "Message",
+    "AgentConfig",
+    "AgentStatus",
+    "SimpleMessageQueue",
+    "RoleProvider",
+    # Core roles
+    "CoordinatorRole",
+    "DataScientistRole",
+    "QuantitativeAnalystRole",
+    "PortfolioManagerRole",
+    "QuantitativeEngineerRole",
+    "QuantitativeTraderRole",
+    "ResearchAnalystRole",
+    "RiskAnalystRole",
+    # Real roles
+    "RealDataScientistRole",
+    "RealQuantitativeAnalystRole",
+    "RealPortfolioManagerRole",
+    "RealQuantitativeEngineerRole",
+    "RealQuantitativeTraderRole",
+    "RealResearchAnalystRole",
+    "RealRiskAnalystRole",
+    "RealDataAnalyzerRole",
+    # HK Prompt roles
+    "HKDataScientistRole",
+    "HKQuantitativeAnalystRole",
+    "HKPortfolioManagerRole",
+    "HKQuantitativeEngineerRole",
+    "HKQuantitativeTraderRole",
+    "HKResearchAnalystRole",
+    "HKRiskAnalystRole",
 ]

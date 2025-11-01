@@ -28,6 +28,7 @@ from ..models.agent_dashboard import (
     AgentControlAction,
     ControlActionType
 )
+from ..backtest.result_service import get_result_service  # Phase 4.7
 
 
 class DashboardAPI:
@@ -49,6 +50,7 @@ class DashboardAPI:
         self.strategy_data_service = StrategyDataService(coordinator, message_queue)
         self.performance_service = PerformanceService(coordinator, message_queue)
         self.agent_control_service = AgentControlService(coordinator, message_queue)
+        self.result_service = get_result_service()  # Phase 4.7: Backtest result service
         self.realtime_service = RealtimeService(
             self.agent_data_service,
             self.strategy_data_service,
@@ -428,7 +430,85 @@ class DashboardAPI:
             except Exception as e:
                 self.logger.error(f"获取最新信号失败: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-    
+
+        # Phase 4.7: Backtest alternative data analysis endpoints
+        @self.router.get("/backtest/{result_id}")
+        async def get_backtest_result(result_id: str):
+            """获取回测结果 - Phase 4.7"""
+            try:
+                result = await self.result_service.get_result(result_id)
+                if not result:
+                    raise HTTPException(status_code=404, detail=f"Result {result_id} not found")
+                return {
+                    "id": result.metadata.result_id,
+                    "symbol": result.metadata.symbol,
+                    "strategy_name": result.metadata.strategy_name,
+                    "use_alt_data": result.metadata.use_alt_data,
+                    "metrics": {
+                        "total_return": result.total_return,
+                        "sharpe_ratio": result.sharpe_ratio,
+                        "max_drawdown": result.max_drawdown,
+                        "win_rate": result.win_rate,
+                    }
+                }
+            except Exception as e:
+                self.logger.error(f"获取回测结果失败: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.router.get("/backtest/{result_id}/alt-data-analysis")
+        async def get_alt_data_analysis(result_id: str):
+            """获取替代数据分析 - Phase 4.7"""
+            try:
+                result = await self.result_service.get_result(result_id)
+                if not result:
+                    raise HTTPException(status_code=404, detail=f"Result {result_id} not found")
+                signal_viz = await self.result_service.get_signal_visualization_data(result_id)
+                return {
+                    "result_id": result.metadata.result_id,
+                    "symbol": result.metadata.symbol,
+                    "use_alt_data": result.metadata.use_alt_data,
+                    "alt_data_indicators": result.metadata.alt_data_indicators,
+                    "metrics": {
+                        "sharpe_ratio": result.sharpe_ratio,
+                        "max_drawdown": result.max_drawdown,
+                        "win_rate": result.win_rate,
+                        "alt_data_contribution_pct": result.alt_data_contribution_pct,
+                    },
+                    "signals": signal_viz,
+                }
+            except Exception as e:
+                self.logger.error(f"获取替代数据分析失败: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.router.get("/backtest/list")
+        async def list_backtest_results(
+            symbol: Optional[str] = None,
+            strategy_name: Optional[str] = None,
+            limit: int = 50
+        ):
+            """列出回测结果 - Phase 4.7"""
+            try:
+                results = await self.result_service.list_results(
+                    symbol=symbol,
+                    strategy_name=strategy_name,
+                    limit=limit
+                )
+                return {
+                    "total": len(results),
+                    "results": [
+                        {
+                            "id": r.result_id,
+                            "symbol": r.symbol,
+                            "strategy_name": r.strategy_name,
+                            "created_at": r.created_at.isoformat(),
+                        }
+                        for r in results
+                    ]
+                }
+            except Exception as e:
+                self.logger.error(f"列出回测结果失败: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
     async def cleanup(self):
         """清理资源"""
         try:
@@ -442,131 +522,9 @@ class DashboardAPI:
             await self.realtime_service.cleanup()
             
             # 清理组件
-            if hasattr(self.agent_card_component, "cleanup"):        except Exception as e:
-            self.logger.error(f"清理仪表板API服务失败: {e}")
-    
-    async def get_all_agents(self) -> List[Any]:
-        """获取所有Agent信息"""
-        try:
-            # 创建模拟的Agent信息
-            agents = []
-            agent_types = [
-                "quant_analyst", "quant_trader", "portfolio_manager", 
-                "risk_analyst", "data_scientist", "quant_engineer", "research_analyst"
-            ]
-            
-            for i, agent_type in enumerate(agent_types):
-                agent_id = f"{agent_type}_001"
-                agent_info = {
-                    "agent_id": agent_id,
-                    "agent_type": agent_type,
-                    "status": "running",
-                    "last_heartbeat": datetime.now(),
-                    "cpu_usage": 25.0 + i * 5,
-                    "memory_usage": 30.0 + i * 3,
-                    "messages_processed": 100 + i * 50,
-                    "error_count": 0,
-                    "uptime": 3600 + i * 100,
-                    "version": "1.0.0",
-                    "configuration": {}
-                }
-                agents.append(type('AgentInfo', (), agent_info)())
-            
-            return agents
-        except Exception as e:
-            self.logger.error(f"获取所有Agent信息失败: {e}")
-            return []
-    
-    async def get_agent_info(self, agent_id: str) -> Optional[Any]:
-        """获取特定Agent信息"""
-        try:
-            agents = await self.get_all_agents()
-            for agent in agents:
-                if agent.agent_id == agent_id:
-                    return agent
-            return None
-        except Exception as e:
-            self.logger.error(f"获取Agent信息失败: {e}")
-            return None
-    
-    async def get_strategy_info(self, agent_id: str) -> Dict[str, Any]:
-        """获取策略信息"""
-        try:
-            return {
-                "agent_id": agent_id,
-                "strategy_name": "技术分析策略",
-                "parameters": {
-                    "period": 20,
-                    "threshold": 0.02
-                },
-                "metrics": {
-                    "sharpe_ratio": 1.85,
-                    "total_return": 0.12,
-                    "max_drawdown": 0.05
-                }
-            }
-        except Exception as e:
-            self.logger.error(f"获取策略信息失败: {e}")
-            return {}
-    
-    async def get_performance_data(self) -> Dict[str, Any]:
-        """获取性能数据"""
-        try:
-            return {
-                "total_return": 0.1286,
-                "sharpe_ratio": 1.92,
-                "max_drawdown": 0.0386,
-                "win_rate": 0.65,
-                "avg_trade_duration": 5.2
-            }
-        except Exception as e:
-            self.logger.error(f"获取性能数据失败: {e}")
-            return {}
-    
-    async def get_system_status(self) -> Dict[str, Any]:
-        """获取系统状态"""
-        try:
-            return {
-                "status": "running",
-                "uptime": 3600,
-                "memory_usage": 45.2,
-                "cpu_usage": 25.8,
-                "active_agents": 7,
-                "total_trades": 150
-            }
-        except Exception as e:
-            self.logger.error(f"获取系统状态失败: {e}")
-            return {}
-    
-    async def start_agent(self, agent_id: str) -> bool:
-        """启动Agent"""
-        try:
-            self.logger.info(f"启动Agent: {agent_id}")
-            return True
-        except Exception as e:
-            self.logger.error(f"启动Agent失败: {e}")
-            return False
-    
-    async def stop_agent(self, agent_id: str) -> bool:
-        """停止Agent"""
-        try:
-            self.logger.info(f"停止Agent: {agent_id}")
-            return True
-        except Exception as e:
-            self.logger.error(f"停止Agent失败: {e}")
-            return False
-    
-    async def restart_agent(self, agent_id: str) -> bool:
-        """重启Agent"""
-        try:
-            self.logger.info(f"重启Agent: {agent_id}")
-            return True
-        except Exception as e:
-            self.logger.error(f"重启Agent失败: {e}")
-            return False
-
-
-# 请求/响应模型gy_display_component, "cleanup"):
+            if hasattr(self.agent_card_component, "cleanup"):
+                await self.agent_card_component.cleanup()
+            if hasattr(self.strategy_display_component, "cleanup"):
                 await self.strategy_display_component.cleanup()
             if hasattr(self.performance_charts_component, "cleanup"):
                 await self.performance_charts_component.cleanup()

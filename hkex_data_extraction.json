@@ -1,0 +1,18 @@
+{
+  "url": "https://www.hkex.com.hk/?sc_lang=zh-HK",
+  "data_elements_found": 0,
+  "unique_classes": 0,
+  "unique_ids": 0,
+  "analysis": {
+    "data_elements": [],
+    "class_names": {},
+    "id_names": {},
+    "parent_hierarchy": {}
+  },
+  "selectors": {
+    "by_class": [],
+    "by_id": [],
+    "xpath_patterns": [],
+    "combined_selectors": []
+  }
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CODEX Trading System - Vue Dashboard</title>
+
+    <!-- External Dependencies -->
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4.2.5/dist/vue-router.global.js"></script>
+    <script src="https://unpkg.com/pinia@2.1.6/dist/pinia.iife.js"></script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Global Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-link {
+            @apply relative text-gray-300 hover:text-white px-3 py-2 rounded-lg transition-colors;
+        }
+
+        .nav-link:hover {
+            @apply bg-gray-800 bg-opacity-50;
+        }
+
+        .nav-link.active {
+            @apply text-blue-400;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            @apply absolute left-0 top-0 bottom-0 w-1 bg-blue-400 rounded-r-full;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <p style="text-align: center; padding: 50px; color: white;">Loading CODEX Dashboard...</p>
+    </div>
+
+    <!-- Main Vue Application Script -->
+    <script type="module" src="/static/js/main-vue.js?v=2024103101"></script>
+</body>
+</html>

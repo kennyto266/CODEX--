@@ -1,0 +1,309 @@
+# Docker Compose - 生产环境
+# 用于生产部署，支持高可用、负载均衡和监控
+
+version: '3.8'
+
+services:
+  # 主应用服务 - 多实例
+  app:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
+      target: runtime
+      args:
+        - BUILD_DATE=${BUILD_DATE}
+        - VCS_REF=${VCS_REF}
+        - VERSION=${VERSION}
+    image: codex/trading-system:${VERSION}
+    container_name: codex-app
+    restart: always
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres-cluster:5432/codex_prod
+      - REDIS_URL=redis://redis-cluster:6379/0
+      - SENTRY_DSN=${SENTRY_DSN}
+    volumes:
+      - app_logs:/app/logs
+      - app_data:/app/data
+    networks:
+      - codex-prod
+    depends_on:
+      postgres-cluster:
+        condition: service_healthy
+      redis-cluster:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # PostgreSQL主从集群
+  postgres-master:
+    image: postgres:15-alpine
+    container_name: codex-postgres-master
+    restart: always
+    environment:
+      - POSTGRES_DB=codex_prod
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_REPLICATION_USER=replicator
+      - POSTGRES_REPLICATION_PASSWORD=${REPLICATION_PASSWORD}
+    volumes:
+      - postgres_master_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    networks:
+      - codex-prod
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d codex_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres-slave:
+    image: postgres:15-alpine
+    container_name: codex-postgres-slave
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_slave_data:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+    networks:
+      - codex-prod
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    depends_on:
+      - postgres-master
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d codex_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres-cluster:
+    image: postgres:15-alpine
+    container_name: codex-postgres-cluster
+    restart: always
+    environment:
+      - POSTGRES_DB=codex_prod
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_cluster_data:/var/lib/postgresql/data
+    networks:
+      - codex-prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d codex_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis集群
+  redis-cluster:
+    image: redis:7-alpine
+    container_name: codex-redis-cluster
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - codex-prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx负载均衡
+  nginx:
+    image: nginx:alpine
+    container_name: codex-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    networks:
+      - codex-prod
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+
+  # 监控服务
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: codex-prometheus
+    restart: always
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+    volumes:
+      - ./prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - codex-prod
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: codex-grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - codex-prod
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # 告警管理器
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: codex-alertmanager
+    restart: always
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    networks:
+      - codex-prod
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # 日志收集
+  fluentd:
+    image: fluent/fluentd:latest
+    container_name: codex-fluentd
+    restart: always
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+      - app_logs:/logs
+    networks:
+      - codex-prod
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # 备份服务
+  backup:
+    image: postgres:15-alpine
+    container_name: codex-backup
+    restart: "no"
+    environment:
+      - POSTGRES_DB=codex_prod
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh
+    networks:
+      - codex-prod
+    depends_on:
+      - postgres-cluster
+    command: >
+      sh -c "
+        while true; do
+          echo 'Starting backup...'
+          /backup.sh
+          echo 'Backup completed. Sleeping for 6 hours...'
+          sleep 21600
+        done
+      "
+
+  # 安全扫描
+  security-scanner:
+    image: aquasec/trivy:latest
+    container_name: codex-security-scanner
+    restart: "no"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./security:/security
+    networks:
+      - codex-prod
+    command: >
+      sh -c "
+        trivy image --security-checks vuln,config codex/trading-system:${VERSION}
+        trivy fs --security-checks vuln,config /
+      "
+
+volumes:
+  postgres_master_data:
+  postgres_slave_data:
+  postgres_cluster_data:
+  redis_data:
+  app_logs:
+  app_data:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
+  nginx_logs:
+
+networks:
+  codex-prod:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1450

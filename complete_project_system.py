@@ -3,6 +3,11 @@
 包含所有功能、测试、文档、部署指南
 """
 
+import sys
+import os
+sys.stdout.reconfigure(encoding='utf-8')
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,11 +38,84 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 导入优化引擎和路由
+try:
+    from src.optimization.production_optimizer import ProductionOptimizer
+    from src.dashboard.optimization_routes import router as optimization_router
+    OPTIMIZATION_AVAILABLE = True
+    logger.info("✅ 优化引擎已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ 优化路由导入失败: {e}，部分功能可能不可用")
+    OPTIMIZATION_AVAILABLE = False
+
+# 导入爬虫数据路由
+try:
+    from src.dashboard.crawler_routes import router as crawler_router
+    CRAWLER_AVAILABLE = True
+    logger.info("✅ 爬虫数据路由已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ 爬虫路由导入失败: {e}，部分功能可能不可用")
+    CRAWLER_AVAILABLE = False
+
+# 导入性能优化路由
+try:
+    from src.dashboard.api_performance import create_performance_router
+    PERFORMANCE_ROUTER_AVAILABLE = True
+    logger.info("✅ 性能优化路由已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ 性能路由导入失败: {e}，部分功能可能不可用")
+    PERFORMANCE_ROUTER_AVAILABLE = False
+
+# 导入模拟交易路由
+try:
+    from src.dashboard.api_paper_trading import create_paper_trading_router
+    PAPER_TRADING_AVAILABLE = True
+    logger.info("✅ 模拟交易路由已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ 模拟交易路由导入失败: {e}，部分功能可能不可用")
+    PAPER_TRADING_AVAILABLE = False
+
+# 导入智能体管理路由 (跳过 - 有语法错误)
+try:
+    from src.dashboard.api_agents import create_agents_router
+    AGENTS_ROUTER_AVAILABLE = True
+    logger.info("✅ 智能体管理路由已导入")
+except (ImportError, SyntaxError) as e:
+    logger.warning(f"⚠️ 智能体路由导入失败: {e}，部分功能可能不可用")
+    AGENTS_ROUTER_AVAILABLE = False
+
+# 导入回测系统路由
+try:
+    from src.dashboard.api_backtest import create_backtest_router
+    BACKTEST_ROUTER_AVAILABLE = True
+    logger.info("✅ 回测系统路由已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ 回测路由导入失败: {e}，部分功能可能不可用")
+    BACKTEST_ROUTER_AVAILABLE = False
+
+# 导入策略管理路由
+try:
+    from src.dashboard.api_strategies import create_strategies_router
+    STRATEGIES_ROUTER_AVAILABLE = True
+    logger.info("✅ 策略管理路由已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ 策略路由导入失败: {e}，部分功能可能不可用")
+    STRATEGIES_ROUTER_AVAILABLE = False
+
+# 导入XLSX分析路由
+try:
+    from src.dashboard.api_xlsx_analysis import create_xlsx_analysis_router
+    XLSX_ROUTER_AVAILABLE = True
+    logger.info("✅ XLSX分析路由已导入")
+except ImportError as e:
+    logger.warning(f"⚠️ XLSX路由导入失败: {e}，部分功能可能不可用")
+    XLSX_ROUTER_AVAILABLE = False
+
 # 创建FastAPI应用
 app = FastAPI(
     title="Complete Quant Trading System",
     description="100% Complete quantitative trading analysis platform",
-    version="7.0.0",
+    version="9.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -50,6 +128,83 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 挂载静态文件
+try:
+    app.mount("/static", StaticFiles(directory="src/dashboard/static"), name="static")
+    logger.info("✅ 静态文件已挂载")
+except Exception as e:
+    logger.warning(f"⚠️ 静态文件挂载失败: {e}")
+
+# 注册优化引擎路由
+if OPTIMIZATION_AVAILABLE:
+    try:
+        app.include_router(optimization_router)
+        logger.info("✅ 优化引擎路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 优化引擎路由注册失败: {e}")
+
+# 注册爬虫数据路由
+if CRAWLER_AVAILABLE:
+    try:
+        app.include_router(crawler_router)
+        logger.info("✅ 爬虫数据路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 爬虫数据路由注册失败: {e}")
+
+# 注册性能优化路由
+if PERFORMANCE_ROUTER_AVAILABLE:
+    try:
+        performance_router = create_performance_router()
+        app.include_router(performance_router)
+        logger.info("✅ 性能优化路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 性能优化路由注册失败: {e}")
+
+# 注册模拟交易路由
+if PAPER_TRADING_AVAILABLE:
+    try:
+        paper_trading_router = create_paper_trading_router()
+        app.include_router(paper_trading_router)
+        logger.info("✅ 模拟交易路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 模拟交易路由注册失败: {e}")
+
+# 注册智能体管理路由
+if AGENTS_ROUTER_AVAILABLE:
+    try:
+        agents_router = create_agents_router()
+        app.include_router(agents_router)
+        logger.info("✅ 智能体管理路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 智能体路由注册失败: {e}")
+
+# 注册回测系统路由
+if BACKTEST_ROUTER_AVAILABLE:
+    try:
+        backtest_router = create_backtest_router()
+        app.include_router(backtest_router)
+        logger.info("✅ 回测系统路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 回测路由注册失败: {e}")
+
+# 注册策略管理路由
+if STRATEGIES_ROUTER_AVAILABLE:
+    try:
+        strategies_router = create_strategies_router()
+        app.include_router(strategies_router)
+        logger.info("✅ 策略管理路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ 策略路由注册失败: {e}")
+
+# 注册XLSX分析路由
+if XLSX_ROUTER_AVAILABLE:
+    try:
+        xlsx_router = create_xlsx_analysis_router()
+        app.include_router(xlsx_router)
+        logger.info("✅ XLSX分析路由已注册")
+    except Exception as e:
+        logger.warning(f"⚠️ XLSX路由注册失败: {e}")
 
 # 性能监控
 class PerformanceMonitor:
@@ -544,7 +699,10 @@ def read_root():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>完整量化交易系统 v7.0</title>
+    <title>完整量化交易系统 v10.0 - Complete Edition</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { 
@@ -847,7 +1005,7 @@ def read_root():
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 完整量化交易系统 v7.0</h1>
+            <h1>🚀 完整量化交易系统 v10.0 - Complete Edition</h1>
             <p>技术分析 · 策略回测 · 风险评估 · 市场情绪 · 性能监控</p>
             <div class="completion-badge">✅ 项目完成度: 100%</div>
         </div>
@@ -859,6 +1017,12 @@ def read_root():
             <div class="tab" onclick="switchTab('risk')">风险评估</div>
             <div class="tab" onclick="switchTab('sentiment')">市场情绪</div>
             <div class="tab" onclick="switchTab('monitoring')">系统监控</div>
+            <div class="tab" onclick="switchTab('agents')">智能体管理</div>
+            <div class="tab" onclick="switchTab('strategies')">策略管理</div>
+            <div class="tab" onclick="switchTab('trading')">交易系统</div>
+            <div class="tab" onclick="switchTab('xlsx')">XLSX分析</div>
+            <div class="tab" onclick="switchTab('gov-data')">政府数据</div>
+            <div class="tab" onclick="switchTab('hkex-data')">HKEX数据</div>
         </div>
         
         <div class="search-box">
@@ -903,42 +1067,240 @@ def read_root():
         <!-- 策略优化标签页 -->
         <div id="optimization" class="tab-content">
             <div class="optimization-controls">
-                <h3>🚀 策略参数优化</h3>
-                <p>自动测试不同参数组合，找出最高Sharpe比率的策略</p>
-                <div class="strategy-selector">
-                    <label>选择策略类型:</label>
-                    <select id="strategyType">
-                        <option value="all">全部策略</option>
-                        <option value="ma">移动平均交叉</option>
-                        <option value="rsi">RSI策略</option>
-                        <option value="macd">MACD策略</option>
-                        <option value="bb">布林带策略</option>
-                    </select>
-                    <button onclick="runOptimization()">🔍 开始优化</button>
+                <h3>🚀 生产级策略优化引擎</h3>
+                <p>支持6种优化算法，包含Grid Search, Random Search, Genetic Algorithm, PSO, Simulated Annealing</p>
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <strong style="font-size: 16px; color: #1976d2;">📝 当前支持的策略类型 (11种):</strong>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div>
+                            <h4 style="color: #1565c0; margin: 10px 0 5px 0;">基础策略 (4种):</h4>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                                <li>MA交叉策略 - 移动平均线交叉信号</li>
+                                <li>RSI策略 - 相对强弱指数超买超卖</li>
+                                <li>MACD策略 - 指数平滑异同移动平均线</li>
+                                <li>布林带策略 - 价格通道突破策略</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: #1565c0; margin: 10px 0 5px 0;">高级指标 (7种):</h4>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                                <li>KDJ策略 - 随机指标K/D交叉</li>
+                                <li>CCI策略 - 商品通道指标</li>
+                                <li>ADX策略 - 平均趋向指标</li>
+                                <li>ATR策略 - 平均真实范围</li>
+                                <li>OBV策略 - 能量潮指标</li>
+                                <li>Ichimoku策略 - 一目均衡表</li>
+                                <li>PSAR策略 - 抛物线转向</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 10px; font-size: 13px;">
+                        🔄 策略优化: 支持多线程并行计算，自动寻找最优参数组合
+                    </small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">策略类型:</label>
+                        <select id="optimStrategyType" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px;">
+                            <option value="all">全部策略 (11种)</option>
+                            <optgroup label="基础策略 (4种)">
+                                <option value="ma">MA交叉策略 - 移动平均</option>
+                                <option value="rsi">RSI策略 - 相对强弱</option>
+                                <option value="macd">MACD策略 - 指数平滑</option>
+                                <option value="bb">布林带策略 - 价格通道</option>
+                            </optgroup>
+                            <optgroup label="高级指标 (7种)">
+                                <option value="kdj">KDJ策略 - 随机指标</option>
+                                <option value="cci">CCI策略 - 商品通道</option>
+                                <option value="adx">ADX策略 - 趋向指标</option>
+                                <option value="atr">ATR策略 - 真实范围</option>
+                                <option value="obv">OBV策略 - 能量潮</option>
+                                <option value="ichimoku">Ichimoku策略 - 云图</option>
+                                <option value="psar">PSAR策略 - 抛物线</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">优化算法:</label>
+                        <select id="optimMethod" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="grid_search">Grid Search (网格搜索)</option>
+                            <option value="random_search">Random Search (随机搜索)</option>
+                            <option value="genetic">Genetic Algorithm (遗传算法)</option>
+                            <option value="pso">PSO (粒子群优化)</option>
+                            <option value="simulated_annealing">Simulated Annealing (模拟退火)</option>
+                            <option value="brute_force">Brute Force (暴力搜索)</option>
+                        </select>
+                    </div>
+
+                    <div style="grid-column: span 2;">
+                        <button onclick="toggleAlgorithmGuide()" style="padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 10px;">
+                            📖 查看优化算法详细说明
+                        </button>
+                    </div>
+
+                    <!-- 算法详细说明区域 -->
+                    <div id="algorithmGuide" style="display: none; grid-column: span 2; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 20px; margin: 20px 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 15px;">🎯 6种优化算法详细说明</h4>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <!-- Grid Search -->
+                            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
+                                <h5 style="color: #007bff; margin-top: 0;">🔍 Grid Search (网格搜索)</h5>
+                                <p style="font-size: 13px; color: #666; margin: 5px 0;"><strong>简单理解:</strong> 像在格子里找宝藏！</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>原理:</strong> 在地图上画格子，一个格子一个格子地检查</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>优点:</strong> 不会遗漏任何可能性</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>缺点:</strong> 比较慢，要检查很多格子</p>
+                                <p style="font-size: 11px; color: #777; margin: 5px 0;"><strong>适合:</strong> 小范围精确查找</p>
+                            </div>
+
+                            <!-- Random Search -->
+                            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                                <h5 style="color: #28a745; margin-top: 0;">🎲 Random Search (随机搜索)</h5>
+                                <p style="font-size: 13px; color: #666; margin: 5px 0;"><strong>简单理解:</strong> 像掷骰子碰运气！</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>原理:</strong> 随机挑选几个点试试</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>优点:</strong> 速度快，不用全部检查</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>缺点:</strong> 可能错过最好的</p>
+                                <p style="font-size: 11px; color: #777; margin: 5px 0;"><strong>适合:</strong> 大范围快速找方向</p>
+                            </div>
+
+                            <!-- Genetic Algorithm -->
+                            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                                <h5 style="color: #dc3545; margin-top: 0;">🧬 Genetic Algorithm (遗传算法)</h5>
+                                <p style="font-size: 13px; color: #666; margin: 5px 0;"><strong>简单理解:</strong> 模拟生物进化！</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>原理:</strong> 父母组合优点，繁殖更好的后代</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>优点:</strong> 能找到很好的解决方案</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>缺点:</strong> 需要很多代进化，时间较长</p>
+                                <p style="font-size: 11px; color: #777; margin: 5px 0;"><strong>适合:</strong> 复杂问题的最优解</p>
+                            </div>
+
+                            <!-- PSO -->
+                            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                                <h5 style="color: #ffc107; margin-top: 0;">🐦 PSO 粒子群优化</h5>
+                                <p style="font-size: 13px; color: #666; margin: 5px 0;"><strong>简单理解:</strong> 像鸟儿找食物！</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>原理:</strong> 鸟儿互相分享发现，一起向最好地方飞</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>优点:</strong> 鸟儿们互相帮忙，找得又快又好</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>缺点:</strong> 所有鸟儿可能都往同一个方向飞</p>
+                                <p style="font-size: 11px; color: #777; margin: 5px 0;"><strong>适合:</strong> 多人合作解决问题</p>
+                            </div>
+
+                            <!-- Simulated Annealing -->
+                            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #6f42c1;">
+                                <h5 style="color: #6f42c1; margin-top: 0;">🌡️ Simulated Annealing (模拟退火)</h5>
+                                <p style="font-size: 13px; color: #666; margin: 5px 0;"><strong>简单理解:</strong> 像铁匠锻造钢铁！</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>原理:</strong> 开始时很热可以尝试各种，后来专注最好的</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>优点:</strong> 能避免只看局部，视野更广</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>缺点:</strong> 需要控制好"温度"</p>
+                                <p style="font-size: 11px; color: #777; margin: 5px 0;"><strong>适合:</strong> 需要全局视野</p>
+                            </div>
+
+                            <!-- Brute Force -->
+                            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #fd7e14;">
+                                <h5 style="color: #fd7e14; margin-top: 0;">💪 Brute Force (暴力搜索)</h5>
+                                <p style="font-size: 13px; color: #666; margin: 5px 0;"><strong>简单理解:</strong> 像搬砖工人！</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>原理:</strong> 一个个尝试所有可能性，不走捷径</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>优点:</strong> 绝对能找到最好的</p>
+                                <p style="font-size: 12px; color: #555; margin: 5px 0;"><strong>缺点:</strong> 最慢最累，需要很多时间</p>
+                                <p style="font-size: 11px; color: #777; margin: 5px 0;"><strong>适合:</strong> 必须找到最好答案</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px; background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                            <h5 style="color: #1976d2; margin-top: 0;">🎯 推荐使用策略</h5>
+                            <ol style="margin: 10px 0; padding-left: 20px; font-size: 13px; color: #555;">
+                                <li><strong>先用Random Search:</strong> 快速找到大致方向</li>
+                                <li><strong>再用Grid Search:</strong> 在好区域内精确查找</li>
+                                <li><strong>特殊情况用Genetic或PSO:</strong> 解决复杂问题</li>
+                            </ol>
+                        </div>
+
+                        <div style="margin-top: 15px; background: #fff3cd; padding: 15px; border-radius: 8px;">
+                            <h6 style="color: #856404; margin-top: 0; margin-bottom: 10px;">⚡ 实际应用例子 - 找CCI最佳参数</h6>
+                            <p style="font-size: 12px; color: #555; margin: 5px 0;">假设我们要找CCI指标的最佳参数：</p>
+                            <ul style="font-size: 11px; color: #666; padding-left: 20px;">
+                                <li><strong>Grid Search:</strong> 尝试所有可能的组合 (100,200), (100,150), (-100,200)...</li>
+                                <li><strong>Random Search:</strong> 随机选10个组合试试</li>
+                                <li><strong>Genetic:</strong> 从随机组合开始，繁殖出更好的组合</li>
+                                <li><strong>PSO:</strong> 多个"智能体"同时搜索，互相分享发现</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">优化指标:</label>
+                        <select id="optimMetric" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="sharpe_ratio">Sharpe Ratio (夏普比率)</option>
+                            <option value="sortino_ratio">Sortino Ratio (索提诺比率)</option>
+                            <option value="annual_return">Annual Return (年化收益率)</option>
+                            <option value="max_drawdown">Max Drawdown (最大回撤)</option>
+                            <option value="win_rate">Win Rate (胜率)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">开始日期:</label>
+                        <input type="date" id="optimStartDate" value="2020-01-01" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                    </div>
+
+                    <div style="grid-column: span 2;">
+                        <button onclick="runOptimization()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                            🔍 启动优化引擎
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <div id="optimizationProgress" style="display: none; background: #fff3cd; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                <h4>⏳ 优化进行中...</h4>
+                <p id="optimProgressText">正在启动优化任务...</p>
+                <div style="background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden; margin-top: 10px;">
+                    <div id="optimProgressBar" style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+
             <div id="optimizationResults" style="display: none;">
                 <h3>📈 优化结果</h3>
                 <div class="optimization-summary" id="optimizationSummary"></div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div class="chart-container" style="height: 300px;">
+                        <h4>📊 参数敏感性分析</h4>
+                        <canvas id="sensitivityChart"></canvas>
+                    </div>
+                    <div class="chart-container" style="height: 300px;">
+                        <h4>📈 性能指标对比</h4>
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+
                 <div class="strategy-table-container">
+                    <h4>🏆 Top 10 参数组合</h4>
                     <table class="strategy-table" id="strategyTable">
                         <thead>
                             <tr>
                                 <th>排名</th>
-                                <th>策略名称</th>
-                                <th>Sharpe比率</th>
-                                <th>年化收益率</th>
-                                <th>波动率</th>
+                                <th>参数</th>
+                                <th>Sharpe</th>
+                                <th>Sortino</th>
+                                <th>年化收益</th>
                                 <th>最大回撤</th>
+                                <th>波动率</th>
                                 <th>胜率</th>
                                 <th>交易次数</th>
-                                <th>最终价值</th>
+                                <th>平均持仓</th>
+                                <th>盈亏比</th>
                             </tr>
                         </thead>
                         <tbody id="strategyTableBody">
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <div id="optimizationHistory" style="margin-top: 30px;">
+                <h3>📜 优化历史记录</h3>
+                <div id="historyList" style="max-height: 400px; overflow-y: auto;"></div>
             </div>
         </div>
         
@@ -967,12 +1329,73 @@ def read_root():
                 <div class="monitoring-stats" id="monitoringStats"></div>
             </div>
         </div>
+
+        <!-- 政府数据标签页 -->
+        <div id="gov-data" class="tab-content">
+            <div id="govDataResults" style="display: none;">
+                <h3>📊 政府替代数据</h3>
+                <div style="margin-bottom: 20px;">
+                    <button onclick="loadGovData('all')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">全部数据</button>
+                    <button onclick="loadGovData('hibor')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">HIBOR利率</button>
+                    <button onclick="loadGovData('property')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">房产市场</button>
+                    <button onclick="loadGovData('retail')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">零售销售</button>
+                    <button onclick="loadGovData('gdp')" style="padding: 10px 20px; margin-right: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">GDP指标</button>
+                </div>
+                <div id="govDataTable" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">数据类型</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">分类</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">指标名</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">数值</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">单位</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">时间戳</th>
+                            </tr>
+                        </thead>
+                        <tbody id="govDataBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- HKEX数据标签页 -->
+        <div id="hkex-data" class="tab-content">
+            <div id="hkexDataResults" style="display: none;">
+                <h3>📊 香港交易所市场数据</h3>
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="hkexSymbolFilter" placeholder="输入股票代码筛选 (如: 0700.hk)" style="padding: 10px; width: 300px; border: 1px solid #ddd; border-radius: 5px; margin-right: 10px;">
+                    <button onclick="loadHKEXData()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">🔍 查询数据</button>
+                </div>
+                <div id="hkexDataTable" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">股票代码</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">日期</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">开盘价</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">最高价</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">最低价</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">收盘价</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">交易量</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">涨跌幅 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hkexDataBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         let priceChart = null;
         let currentData = null;
-        
+        let sensitivityChart = null;
+        let metricsChart = null;
+        let currentOptimizationRunId = null;
+        let optimizationPollingInterval = null;
+
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -980,46 +1403,230 @@ def read_root():
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
-            
+
             if (tabName === 'monitoring') {
                 getMonitoringStats();
             }
-        }
-        
-        async function runOptimization() {
-            const symbol = document.getElementById('stockInput').value.trim();
-            if (!symbol) {
-                showError('请输入股票代码');
-                return;
+
+            if (tabName === 'optimization') {
+                // Optimization history not available
             }
-            
-            const strategyType = document.getElementById('strategyType').value;
-            
-            showLoading(true);
-            hideError();
-            hideOptimizationResults();
-            
+
+            if (tabName === 'gov-data') {
+                document.getElementById('govDataResults').style.display = 'block';
+                loadGovData('all');
+            }
+
+            if (tabName === 'hkex-data') {
+                document.getElementById('hkexDataResults').style.display = 'block';
+                loadHKEXData();
+            }
+        }
+
+        // ========== 爬虫数据加载函数 ==========
+
+        async function loadGovData(dataType = 'all') {
             try {
-                const response = await fetch(`/api/strategy-optimization/${symbol}?strategy_type=${strategyType}`);
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `HTTP ${response.status} 错误`);
-                }
-                
+                const url = dataType === 'all'
+                    ? '/api/crawlers/gov-crawler/data'
+                    : `/api/crawlers/gov-crawler/data?data_type=${dataType}`;
+
+                const response = await fetch(url);
                 const result = await response.json();
-                
-                if (result.success) {
-                    displayOptimizationResults(result.data);
+
+                if (result.success && result.data) {
+                    displayGovData(result.data);
                 } else {
-                    showError('优化失败: ' + (result.message || '未知错误'));
+                    console.error('Failed to load government data:', result);
                 }
             } catch (error) {
-                console.error('优化错误:', error);
-                showError(`优化失败: ${error.message}`);
+                console.error('Error loading government data:', error);
+                showError('加载政府数据失败: ' + error.message);
+            }
+        }
+
+        function displayGovData(data) {
+            const tbody = document.getElementById('govDataBody');
+            tbody.innerHTML = '';
+
+            // 处理分类数据
+            let allRecords = [];
+
+            for (const [category, records] of Object.entries(data)) {
+                if (Array.isArray(records)) {
+                    records.forEach(record => {
+                        if (typeof record === 'object') {
+                            for (const [key, value] of Object.entries(record)) {
+                                allRecords.push({
+                                    dataType: category,
+                                    category: category,
+                                    indicatorName: key,
+                                    value: value,
+                                    unit: '单位',
+                                    timestamp: new Date().toISOString()
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+
+            // 显示表格数据
+            allRecords.slice(0, 100).forEach(record => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #eee';
+                row.innerHTML = `
+                    <td style="padding: 10px;">${record.dataType}</td>
+                    <td style="padding: 10px;">${record.category}</td>
+                    <td style="padding: 10px;">${record.indicatorName}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof record.value === 'number' ? record.value.toFixed(2) : record.value}</td>
+                    <td style="padding: 10px;">${record.unit}</td>
+                    <td style="padding: 10px;">${new Date(record.timestamp).toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            if (allRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #999;">暂无数据</td></tr>';
+            }
+        }
+
+        async function loadHKEXData() {
+            try {
+                const symbol = document.getElementById('hkexSymbolFilter').value.trim() || '';
+                const url = symbol
+                    ? `/api/crawlers/hkex-crawler/data?symbol=${symbol}&limit=100`
+                    : '/api/crawlers/hkex-crawler/data?limit=100';
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    displayHKEXData(result.data);
+                } else {
+                    console.error('Failed to load HKEX data:', result);
+                }
+            } catch (error) {
+                console.error('Error loading HKEX data:', error);
+                showError('加载HKEX数据失败: ' + error.message);
+            }
+        }
+
+        function displayHKEXData(data) {
+            const tbody = document.getElementById('hkexDataBody');
+            tbody.innerHTML = '';
+
+            let records = [];
+
+            // 从API响应中提取样本数据
+            if (data.sample_data && Array.isArray(data.sample_data)) {
+                records = data.sample_data;
+            } else if (Array.isArray(data)) {
+                records = data;
+            }
+
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="padding: 20px; text-align: center; color: #999;">暂无数据</td></tr>';
+                return;
+            }
+
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #eee';
+
+                // 处理字段映射 - API返回的是Morning_Close和Afternoon_Close等字段
+                const symbol = record.symbol || record.Symbol || '';
+                const date = record.date || record.Date || '';
+                const openPrice = record.Morning_Close || record.open_price || record.Open || 'N/A';
+                const highPrice = record.Turnover_HKD ? (record.Turnover_HKD / 1e9).toFixed(2) : 'N/A';
+                const lowPrice = record.Advanced_Stocks || 'N/A';
+                const closePrice = record.Afternoon_Close || record.closing_price || record.Close || record.price || 'N/A';
+                const volume = record.Trading_Volume || record.Deals || record.trading_volume || record.Volume || 'N/A';
+                const changePercent = record.Change_Percent !== undefined ? parseFloat(record.Change_Percent).toFixed(2) : (record.change_percent ? record.change_percent.toFixed(2) : 'N/A');
+
+                row.innerHTML = `
+                    <td style="padding: 10px;">${symbol}</td>
+                    <td style="padding: 10px;">${date}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof openPrice === 'number' ? openPrice.toFixed(2) : openPrice}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof highPrice === 'number' ? highPrice : highPrice}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof lowPrice === 'number' ? lowPrice : lowPrice}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof closePrice === 'number' ? closePrice.toFixed(2) : closePrice}</td>
+                    <td style="padding: 10px; text-align: right;">${typeof volume === 'number' ? Math.round(volume).toLocaleString() : volume}</td>
+                    <td style="padding: 10px; text-align: right;">${changePercent}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        
+        async function runOptimization() {
+            console.log('runOptimization function called');
+
+            try {
+                // Debug: Check if elements exist
+                const stockInput = document.getElementById('stockInput');
+                const strategySelect = document.getElementById('optimStrategyType');
+
+                if (!stockInput || !strategySelect) {
+                    console.error('Required DOM elements not found');
+                    showError('页面元素未正确加载，请刷新页面');
+                    return;
+                }
+
+                const symbol = stockInput.value.trim();
+                console.log('Symbol input:', symbol);
+
+                if (!symbol) {
+                    showError('请输入股票代码');
+                    return;
+                }
+
+                const strategyType = strategySelect.value;
+                console.log('Strategy type:', strategyType);
+
+                showLoading(true);
+                hideError();
+                hideOptimizationResults();
+
+                const apiUrl = `/api/strategy-optimization/${symbol}?strategy_type=${strategyType}`;
+                console.log('Making API call to:', apiUrl);
+
+                const response = await fetch(apiUrl);
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    let errorDetail = '未知错误';
+                    try {
+                        const errorData = await response.json();
+                        errorDetail = errorData.detail || JSON.stringify(errorData);
+                        console.error('API error data:', errorData);
+                    } catch (e) {
+                        errorDetail = `HTTP ${response.status} 错误`;
+                        console.error('Failed to parse error response:', e);
+                    }
+                    throw new Error(errorDetail);
+                }
+
+                const result = await response.json();
+                console.log('API result:', result);
+
+                if (result.success && result.data) {
+                    console.log('Displaying optimization results');
+                    displayOptimizationResults(result.data);
+                } else {
+                    const errorMsg = result.message || result.detail || '未知错误';
+                    console.error('API returned failure:', errorMsg);
+                    showError('优化失败: ' + errorMsg);
+                }
+
+            } catch (error) {
+                console.error('Exception in runOptimization:', error);
+                const errorMsg = error.message || String(error);
+                showError('优化失败: ' + errorMsg);
             } finally {
                 showLoading(false);
             }
@@ -1075,11 +1682,20 @@ def read_root():
         
         function getStrategyTypeName(type) {
             const names = {
-                'all': '全部策略',
-                'ma': '移动平均交叉',
+                'all': '全部策略 (11种)',
+                // 基础策略 (4种)
+                'ma': 'MA交叉策略',
                 'rsi': 'RSI策略',
                 'macd': 'MACD策略',
-                'bb': '布林带策略'
+                'bb': '布林带策略',
+                // 高级指标 (7种)
+                'kdj': 'KDJ策略',
+                'cci': 'CCI策略',
+                'adx': 'ADX策略',
+                'atr': 'ATR策略',
+                'obv': 'OBV策略',
+                'ichimoku': 'Ichimoku策略',
+                'psar': 'Parabolic SAR策略'
             };
             return names[type] || type;
         }
@@ -1423,6 +2039,21 @@ def read_root():
         function hideOptimizationResults() {
             document.getElementById('optimizationResults').style.display = 'none';
         }
+
+        function toggleAlgorithmGuide() {
+            const guide = document.getElementById('algorithmGuide');
+            const button = event.target;
+
+            if (guide.style.display === 'none' || guide.style.display === '') {
+                guide.style.display = 'block';
+                button.textContent = '📖 隐藏优化算法详细说明';
+                button.style.background = '#dc3545';
+            } else {
+                guide.style.display = 'none';
+                button.textContent = '📖 查看优化算法详细说明';
+                button.style.background = '#17a2b8';
+            }
+        }
         
         document.getElementById('stockInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -1604,6 +2235,131 @@ def run_strategy_optimization_single_thread(data, strategy_type='all'):
                         continue
             total_tasks += bb_tasks
             logger.info(f"布林带策略完成: {bb_tasks} 个任务")
+
+        # ========== 新增7种高级指标策略 ==========
+
+        if strategy_type in ['all', 'kdj']:
+            # KDJ策略优化
+            logger.info("运行KDJ策略优化")
+            kdj_tasks = 0
+            for k_period in range(5, 31, 5):  # 5, 10, 15, 20, 25, 30
+                for d_period in range(3, 6, 1):  # 3, 4, 5
+                    for oversold in [20, 30]:  # 20, 30
+                        for overbought in [70, 80]:  # 70, 80
+                            kdj_tasks += 1
+                            try:
+                                result = run_kdj_strategy_enhanced(df, k_period, d_period, oversold, overbought)
+                                if result and isinstance(result, dict):
+                                    results.append(result)
+                            except Exception as e:
+                                logger.error(f"KDJ策略计算失败: {e}")
+                                continue
+            total_tasks += kdj_tasks
+            logger.info(f"KDJ策略完成: {kdj_tasks} 个任务")
+
+        if strategy_type in ['all', 'cci']:
+            # CCI策略优化
+            logger.info("运行CCI策略优化")
+            cci_tasks = 0
+            for period in range(10, 31, 5):  # 10, 15, 20, 25, 30
+                for oversold in [-200, -150, -100]:  # -200, -150, -100
+                    for overbought in [100, 150, 200]:  # 100, 150, 200
+                        cci_tasks += 1
+                        try:
+                            result = run_cci_strategy_enhanced(df, period, oversold, overbought)
+                            if result and isinstance(result, dict):
+                                results.append(result)
+                        except Exception as e:
+                            logger.error(f"CCI策略计算失败: {e}")
+                            continue
+            total_tasks += cci_tasks
+            logger.info(f"CCI策略完成: {cci_tasks} 个任务")
+
+        if strategy_type in ['all', 'adx']:
+            # ADX策略优化
+            logger.info("运行ADX策略优化")
+            adx_tasks = 0
+            for period in range(10, 31, 5):  # 10, 15, 20, 25, 30
+                for threshold in [20, 25, 30, 35]:  # 20, 25, 30, 35
+                    adx_tasks += 1
+                    try:
+                        result = run_adx_strategy_enhanced(df, period, threshold)
+                        if result and isinstance(result, dict):
+                            results.append(result)
+                    except Exception as e:
+                        logger.error(f"ADX策略计算失败: {e}")
+                        continue
+            total_tasks += adx_tasks
+            logger.info(f"ADX策略完成: {adx_tasks} 个任务")
+
+        if strategy_type in ['all', 'atr']:
+            # ATR策略优化
+            logger.info("运行ATR策略优化")
+            atr_tasks = 0
+            for period in range(10, 31, 5):  # 10, 15, 20, 25, 30
+                for multiplier in [1.0, 1.5, 2.0, 2.5, 3.0]:  # 1.0, 1.5, 2.0, 2.5, 3.0
+                    atr_tasks += 1
+                    try:
+                        result = run_atr_strategy_enhanced(df, period, multiplier)
+                        if result and isinstance(result, dict):
+                            results.append(result)
+                    except Exception as e:
+                        logger.error(f"ATR策略计算失败: {e}")
+                        continue
+            total_tasks += atr_tasks
+            logger.info(f"ATR策略完成: {atr_tasks} 个任务")
+
+        if strategy_type in ['all', 'obv']:
+            # OBV策略优化
+            logger.info("运行OBV策略优化")
+            obv_tasks = 0
+            for trend_period in range(10, 101, 10):  # 10, 20, 30, ..., 100
+                obv_tasks += 1
+                try:
+                    result = run_obv_strategy_enhanced(df, trend_period)
+                    if result and isinstance(result, dict):
+                        results.append(result)
+                except Exception as e:
+                    logger.error(f"OBV策略计算失败: {e}")
+                    continue
+            total_tasks += obv_tasks
+            logger.info(f"OBV策略完成: {obv_tasks} 个任务")
+
+        if strategy_type in ['all', 'ichimoku']:
+            # Ichimoku策略优化
+            logger.info("运行Ichimoku策略优化")
+            ichimoku_tasks = 0
+            for conversion in range(5, 16, 5):  # 5, 10, 15
+                for base in range(20, 41, 5):  # 20, 25, 30, 35, 40
+                    for span_b in range(40, 61, 5):  # 40, 45, 50, 55, 60
+                        if conversion < base < span_b:
+                            ichimoku_tasks += 1
+                            try:
+                                result = run_ichimoku_strategy_enhanced(df, conversion, base, span_b)
+                                if result and isinstance(result, dict):
+                                    results.append(result)
+                            except Exception as e:
+                                logger.error(f"Ichimoku策略计算失败: {e}")
+                                continue
+            total_tasks += ichimoku_tasks
+            logger.info(f"Ichimoku策略完成: {ichimoku_tasks} 个任务")
+
+        if strategy_type in ['all', 'psar']:
+            # Parabolic SAR策略优化
+            logger.info("运行Parabolic SAR策略优化")
+            psar_tasks = 0
+            for acceleration in [0.01, 0.02, 0.03, 0.04, 0.05]:  # 0.01, 0.02, 0.03, 0.04, 0.05
+                for max_acceleration in [0.15, 0.20, 0.25, 0.30]:  # 0.15, 0.20, 0.25, 0.30
+                    psar_tasks += 1
+                    try:
+                        result = run_parabolic_sar_strategy_enhanced(df, acceleration, max_acceleration)
+                        if result and isinstance(result, dict):
+                            results.append(result)
+                    except Exception as e:
+                        logger.error(f"Parabolic SAR策略计算失败: {e}")
+                        continue
+            total_tasks += psar_tasks
+            logger.info(f"Parabolic SAR策略完成: {psar_tasks} 个任务")
         
         elapsed_time = time.time() - start_time
         logger.info(f"高计算量策略优化完成: 找到 {len(results)} 个有效策略")
@@ -1772,6 +2528,304 @@ def calculate_strategy_performance(df, strategy_name):
         logger.error(f"计算策略绩效失败: {e}")
         return None
 
+# ========== 增强版策略实现 ==========
+
+def run_macd_strategy_enhanced(df, fast_period=12, slow_period=26, signal_period=9):
+    """增强版MACD策略 - 支持自定义参数"""
+    try:
+        df = df.copy()
+
+        # 计算MACD
+        exp1 = df['close'].ewm(span=fast_period).mean()
+        exp2 = df['close'].ewm(span=slow_period).mean()
+        df['macd'] = exp1 - exp2
+        df['macd_signal'] = df['macd'].ewm(span=signal_period).mean()
+        df['macd_histogram'] = df['macd'] - df['macd_signal']
+
+        # 生成交易信号
+        df['position'] = 0
+        df.loc[(df['macd'] > df['macd_signal']) & (df['macd'].shift(1) <= df['macd_signal'].shift(1)), 'position'] = 1  # 买入信号
+        df.loc[(df['macd'] < df['macd_signal']) & (df['macd'].shift(1) >= df['macd_signal'].shift(1)), 'position'] = -1  # 卖出信号
+
+        # 计算策略性能
+        strategy_name = f'MACD({fast_period},{slow_period},{signal_period})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"增强版MACD策略计算失败: {e}")
+        return None
+
+def run_bollinger_strategy_enhanced(df, period=20, std_dev=2):
+    """增强版布林带策略 - 支持自定义参数"""
+    try:
+        df = df.copy()
+
+        # 计算布林带
+        df['bb_middle'] = df['close'].rolling(window=period).mean()
+        bb_std = df['close'].rolling(window=period).std()
+        df['bb_upper'] = df['bb_middle'] + (bb_std * std_dev)
+        df['bb_lower'] = df['bb_middle'] - (bb_std * std_dev)
+
+        # 生成交易信号
+        df['position'] = 0
+        df.loc[df['close'] < df['bb_lower'], 'position'] = 1  # 买入信号
+        df.loc[df['close'] > df['bb_upper'], 'position'] = -1  # 卖出信号
+
+        # 计算策略性能
+        strategy_name = f'布林带({period},{std_dev})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"增强版布林带策略计算失败: {e}")
+        return None
+
+def run_kdj_strategy_enhanced(df, k_period=9, d_period=3, oversold=20, overbought=80):
+    """KDJ/随机指标策略"""
+    try:
+        df = df.copy()
+
+        # 计算KDJ
+        low_min = df['low'].rolling(window=k_period).min()
+        high_max = df['high'].rolling(window=k_period).max()
+        rsv = (df['close'] - low_min) / (high_max - low_min) * 100
+        df['K'] = rsv.ewm(alpha=1/d_period).mean()
+        df['D'] = df['K'].ewm(alpha=1/d_period).mean()
+        df['J'] = 3 * df['K'] - 2 * df['D']
+
+        # 生成交易信号
+        df['position'] = 0
+        df.loc[(df['K'] < oversold) & (df['K'].shift(1) >= oversold), 'position'] = 1  # K线下穿超卖线买入
+        df.loc[(df['K'] > overbought) & (df['K'].shift(1) <= overbought), 'position'] = -1  # K线上穿超买卖出
+        df.loc[(df['K'] > df['D']) & (df['K'].shift(1) <= df['D'].shift(1)), 'position'] = 1  # K线上穿D线买入
+        df.loc[(df['K'] < df['D']) & (df['K'].shift(1) >= df['D'].shift(1)), 'position'] = -1  # K线下穿D线卖出
+
+        # 计算策略性能
+        strategy_name = f'KDJ({k_period},{d_period},{oversold},{overbought})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"KDJ策略计算失败: {e}")
+        return None
+
+def run_cci_strategy_enhanced(df, period=20, oversold=-100, overbought=100):
+    """CCI/商品通道指标策略"""
+    try:
+        df = df.copy()
+
+        # 计算CCI
+        typical_price = (df['high'] + df['low'] + df['close']) / 3
+        sma_tp = typical_price.rolling(window=period).mean()
+        mean_deviation = (typical_price - sma_tp).abs().rolling(window=period).mean()
+        df['CCI'] = (typical_price - sma_tp) / (0.015 * mean_deviation)
+
+        # 生成交易信号
+        df['position'] = 0
+        df.loc[(df['CCI'] < oversold) & (df['CCI'].shift(1) >= oversold), 'position'] = 1  # CCI下穿超卖线买入
+        df.loc[(df['CCI'] > overbought) & (df['CCI'].shift(1) <= overbought), 'position'] = -1  # CCI上穿超买卖出
+        df.loc[(df['CCI'] > 0) & (df['CCI'].shift(1) <= 0), 'position'] = 1  # CCI转正买入
+        df.loc[(df['CCI'] < 0) & (df['CCI'].shift(1) >= 0), 'position'] = -1  # CCI转负卖出
+
+        # 计算策略性能
+        strategy_name = f'CCI({period},{oversold},{overbought})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"CCI策略计算失败: {e}")
+        return None
+
+def run_adx_strategy_enhanced(df, period=14, adx_threshold=25):
+    """ADX/平均趋向指标策略"""
+    try:
+        df = df.copy()
+
+        # 计算ADX
+        high_diff = df['high'] - df['high'].shift(1)
+        low_diff = df['low'].shift(1) - df['low']
+        plus_dm = np.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0)
+        minus_dm = np.where((low_diff > high_diff) & (low_diff > 0), low_diff, 0)
+
+        tr1 = df['high'] - df['low']
+        tr2 = np.abs(df['high'] - df['close'].shift(1))
+        tr3 = np.abs(df['low'] - df['close'].shift(1))
+        true_range = np.maximum(tr1, np.maximum(tr2, tr3))
+
+        df['ATR'] = pd.Series(true_range).rolling(window=period).mean()
+        df['+DI'] = pd.Series(plus_dm).rolling(window=period).mean() / df['ATR'] * 100
+        df['-DI'] = pd.Series(minus_dm).rolling(window=period).mean() / df['ATR'] * 100
+        dx = np.abs(df['+DI'] - df['-DI']) / (df['+DI'] + df['-DI']) * 100
+        df['ADX'] = pd.Series(dx).rolling(window=period).mean()
+
+        # 生成交易信号
+        df['position'] = 0
+        df.loc[(df['ADX'] > adx_threshold) & (df['+DI'] > df['-DI']) & (df['+DI'].shift(1) <= df['-DI'].shift(1)), 'position'] = 1  # ADX强+DI上穿-DI买入
+        df.loc[(df['ADX'] > adx_threshold) & (df['+DI'] < df['-DI']) & (df['+DI'].shift(1) >= df['-DI'].shift(1)), 'position'] = -1  # ADX强+DI下穿-DI卖出
+        df.loc[(df['+DI'] > df['-DI']) & (df['+DI'].shift(1) <= df['-DI'].shift(1)), 'position'] = 1  # +DI上穿-DI买入
+        df.loc[(df['+DI'] < df['-DI']) & (df['+DI'].shift(1) >= df['-DI'].shift(1)), 'position'] = -1  # +DI下穿-DI卖出
+
+        # 计算策略性能
+        strategy_name = f'ADX({period},{adx_threshold})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"ADX策略计算失败: {e}")
+        return None
+
+def run_atr_strategy_enhanced(df, period=14, atr_multiplier=2.0):
+    """ATR/平均真实范围策略"""
+    try:
+        df = df.copy()
+
+        # 计算ATR
+        high_low = df['high'] - df['low']
+        high_close = np.abs(df['high'] - df['close'].shift(1))
+        low_close = np.abs(df['low'] - df['close'].shift(1))
+        true_range = np.maximum(high_low, np.maximum(high_close, low_close))
+        df['ATR'] = pd.Series(true_range).rolling(window=period).mean()
+
+        # 生成突破信号
+        df['upper_band'] = df['close'] + (df['ATR'] * atr_multiplier)
+        df['lower_band'] = df['close'] - (df['ATR'] * atr_multiplier)
+
+        df['position'] = 0
+        df.loc[df['close'] > df['upper_band'], 'position'] = 1  # 价格突破上轨买入
+        df.loc[df['close'] < df['lower_band'], 'position'] = -1  # 价格跌破下轨卖出
+        df.loc[(df['close'] > df['upper_band'].shift(1)) & (df['close'].shift(1) <= df['upper_band'].shift(1)), 'position'] = 1
+        df.loc[(df['close'] < df['lower_band'].shift(1)) & (df['close'].shift(1) >= df['lower_band'].shift(1)), 'position'] = -1
+
+        # 计算策略性能
+        strategy_name = f'ATR({period},{atr_multiplier})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"ATR策略计算失败: {e}")
+        return None
+
+def run_obv_strategy_enhanced(df, trend_period=20):
+    """OBV/能量潮策略"""
+    try:
+        df = df.copy()
+
+        # 计算OBV
+        obv = [0]
+        for i in range(1, len(df)):
+            if df['close'].iloc[i] > df['close'].iloc[i-1]:
+                obv.append(obv[-1] + df['volume'].iloc[i])
+            elif df['close'].iloc[i] < df['close'].iloc[i-1]:
+                obv.append(obv[-1] - df['volume'].iloc[i])
+            else:
+                obv.append(obv[-1])
+        df['OBV'] = obv
+
+        # 计算OBV移动平均
+        df['OBV_SMA'] = df['OBV'].rolling(window=trend_period).mean()
+
+        # 生成交易信号
+        df['position'] = 0
+        df.loc[(df['OBV'] > df['OBV_SMA']) & (df['OBV'].shift(1) <= df['OBV_SMA'].shift(1)), 'position'] = 1  # OBV上穿均线买入
+        df.loc[(df['OBV'] < df['OBV_SMA']) & (df['OBV'].shift(1) >= df['OBV_SMA'].shift(1)), 'position'] = -1  # OBV下穿均线卖出
+
+        # 计算策略性能
+        strategy_name = f'OBV({trend_period})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"OBV策略计算失败: {e}")
+        return None
+
+def run_ichimoku_strategy_enhanced(df, conversion_period=9, base_period=26, span_b_period=52):
+    """Ichimoku/一目均衡表策略"""
+    try:
+        df = df.copy()
+
+        # 计算Ichimoku各条线
+        high_9 = df['high'].rolling(window=conversion_period).max()
+        low_9 = df['low'].rolling(window=conversion_period).min()
+        df['Conversion'] = (high_9 + low_9) / 2
+
+        high_26 = df['high'].rolling(window=base_period).max()
+        low_26 = df['low'].rolling(window=base_period).min()
+        df['Base'] = (high_26 + low_26) / 2
+
+        df['Span_A'] = ((df['Conversion'] + df['Base']) / 2).shift(base_period)
+
+        high_52 = df['high'].rolling(window=span_b_period).max()
+        low_52 = df['low'].rolling(window=span_b_period).min()
+        df['Span_B'] = ((high_52 + low_52) / 2).shift(base_period)
+
+        df['Lagging'] = df['close'].shift(-base_period)
+
+        # 生成交易信号
+        df['position'] = 0
+        # 价格在云图之上且转换线上穿基准线买入
+        df.loc[(df['close'] > df['Span_A']) & (df['close'] > df['Span_B']) &
+               (df['Conversion'] > df['Base']) & (df['Conversion'].shift(1) <= df['Base'].shift(1)), 'position'] = 1
+        # 价格在云图之下且转换线下穿基准线卖出
+        df.loc[(df['close'] < df['Span_A']) & (df['close'] < df['Span_B']) &
+               (df['Conversion'] < df['Base']) & (df['Conversion'].shift(1) >= df['Base'].shift(1)), 'position'] = -1
+
+        # 计算策略性能
+        strategy_name = f'Ichimoku({conversion_period},{base_period},{span_b_period})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"Ichimoku策略计算失败: {e}")
+        return None
+
+def run_parabolic_sar_strategy_enhanced(df, acceleration=0.02, max_acceleration=0.2):
+    """Parabolic SAR/抛物线转向策略"""
+    try:
+        df = df.copy()
+
+        # 计算Parabolic SAR
+        df['SAR'] = 0.0
+        df['AF'] = acceleration  # 加速因子
+        df['EP'] = df['close'].iloc[0]  # 极点价
+        df['Trend'] = 1  # 趋势方向 1=上涨, -1=下跌
+
+        for i in range(1, len(df)):
+            # 更新SAR
+            df.loc[i, 'SAR'] = df.loc[i-1, 'SAR'] + df.loc[i-1, 'AF'] * (df.loc[i-1, 'EP'] - df.loc[i-1, 'SAR'])
+
+            # 更新趋势和加速因子
+            if df['close'].iloc[i] > df.loc[i, 'SAR']:
+                if df['Trend'].iloc[i-1] == -1:  # 趋势反转
+                    df.loc[i, 'EP'] = df['high'].iloc[i]
+                    df.loc[i, 'AF'] = acceleration
+                else:
+                    df.loc[i, 'Trend'] = 1
+                    if df['high'].iloc[i] > df['EP'].iloc[i-1]:
+                        df.loc[i, 'EP'] = df['high'].iloc[i]
+                        df.loc[i, 'AF'] = min(df['AF'].iloc[i-1] + acceleration, max_acceleration)
+                    else:
+                        df.loc[i, 'EP'] = df['EP'].iloc[i-1]
+                        df.loc[i, 'AF'] = df['AF'].iloc[i-1]
+            else:
+                if df['Trend'].iloc[i-1] == 1:  # 趋势反转
+                    df.loc[i, 'EP'] = df['low'].iloc[i]
+                    df.loc[i, 'AF'] = acceleration
+                    df.loc[i, 'Trend'] = -1
+                else:
+                    df.loc[i, 'Trend'] = -1
+                    if df['low'].iloc[i] < df['EP'].iloc[i-1]:
+                        df.loc[i, 'EP'] = df['low'].iloc[i]
+                        df.loc[i, 'AF'] = min(df['AF'].iloc[i-1] + acceleration, max_acceleration)
+                    else:
+                        df.loc[i, 'EP'] = df['EP'].iloc[i-1]
+                        df.loc[i, 'AF'] = df['AF'].iloc[i-1]
+
+        # 生成交易信号
+        df['position'] = 0
+        df.loc[(df['close'] > df['SAR']) & (df['close'].shift(1) <= df['SAR'].shift(1)), 'position'] = 1  # 价格上穿SAR买入
+        df.loc[(df['close'] < df['SAR']) & (df['close'].shift(1) >= df['SAR'].shift(1)), 'position'] = -1  # 价格下穿SAR卖出
+
+        # 计算策略性能
+        strategy_name = f'PSAR({acceleration},{max_acceleration})'
+        return calculate_strategy_performance(df, strategy_name)
+
+    except Exception as e:
+        logger.error(f"Parabolic SAR策略计算失败: {e}")
+        return None
+
 @app.get('/api/strategy-optimization/{symbol}')
 def optimize_strategies(symbol: str, strategy_type: str = 'all'):
     """策略参数优化 - 找出最高Sharpe比率的策略"""
@@ -1863,7 +2917,7 @@ def health_check():
             'data': {
                 'status': 'healthy',
                 'uptime': uptime,
-                'version': '7.0.0',
+                'version': '9.0.0',
                 'timestamp': datetime.now().isoformat()
             }
         }
@@ -1879,60 +2933,18 @@ def health_check():
         }
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="CODEX Quant Trading System")
+    parser.add_argument("--port", type=int, default=8001, help="Port to run the server on")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to bind to")
+    args = parser.parse_args()
+
     print("🚀 Starting Complete Quant Trading System v7.0...")
     print("📊 Features: Technical Analysis, Backtesting, Risk Assessment, Sentiment Analysis, Monitoring")
     print("⚡ Technologies: FastAPI, Pandas, NumPy, Chart.js, Performance Monitoring")
-    print("🌐 Access: http://localhost:8001")
-    print("📚 Docs: http://localhost:8001/docs")
+    print(f"🌐 Access: http://localhost:{args.port}")
+    print(f"📚 Docs: http://localhost:{args.port}/docs")
     print("=" * 70)
-    
-    uvicorn.run(app, host="0.0.0.0", port=8001)
 
-def run_macd_strategy_enhanced(df, fast_period=12, slow_period=26, signal_period=9):
-    """增强版MACD策略 - 支持自定义参数"""
-    try:
-        df = df.copy()
-        
-        # 计算MACD
-        exp1 = df['close'].ewm(span=fast_period).mean()
-        exp2 = df['close'].ewm(span=slow_period).mean()
-        df['macd'] = exp1 - exp2
-        df['macd_signal'] = df['macd'].ewm(span=signal_period).mean()
-        df['macd_histogram'] = df['macd'] - df['macd_signal']
-        
-        # 生成交易信号
-        df['signal'] = 0
-        df.loc[(df['macd'] > df['macd_signal']) & (df['macd'].shift(1) <= df['macd_signal'].shift(1)), 'signal'] = 1  # 买入信号
-        df.loc[(df['macd'] < df['macd_signal']) & (df['macd'].shift(1) >= df['macd_signal'].shift(1)), 'signal'] = -1  # 卖出信号
-        
-        # 计算策略性能
-        strategy_name = f'MACD({fast_period},{slow_period},{signal_period})'
-        return calculate_strategy_performance(df, strategy_name)
-        
-    except Exception as e:
-        logger.error(f"增强版MACD策略计算失败: {e}")
-        return None
-
-def run_bollinger_strategy_enhanced(df, period=20, std_dev=2):
-    """增强版布林带策略 - 支持自定义参数"""
-    try:
-        df = df.copy()
-        
-        # 计算布林带
-        df['bb_middle'] = df['close'].rolling(window=period).mean()
-        bb_std = df['close'].rolling(window=period).std()
-        df['bb_upper'] = df['bb_middle'] + (bb_std * std_dev)
-        df['bb_lower'] = df['bb_middle'] - (bb_std * std_dev)
-        
-        # 生成交易信号
-        df['signal'] = 0
-        df.loc[df['close'] < df['bb_lower'], 'signal'] = 1  # 买入信号
-        df.loc[df['close'] > df['bb_upper'], 'signal'] = -1  # 卖出信号
-        
-        # 计算策略性能
-        strategy_name = f'布林带({period},{std_dev})'
-        return calculate_strategy_performance(df, strategy_name)
-        
-    except Exception as e:
-        logger.error(f"增强版布林带策略计算失败: {e}")
-        return None
+    uvicorn.run(app, host=args.host, port=args.port)

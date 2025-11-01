@@ -1,0 +1,19 @@
+{
+  "last_updated": "2025-10-23T21:59:53.877264",
+  "sessions": [
+    {
+      "session_id": "test_crawl",
+      "start_time": "2025-10-23T21:59:48.193168",
+      "end_time": "2025-10-23T21:59:53.877247",
+      "status": "success",
+      "category": "all_categories",
+      "total_records": 2,
+      "failed_records": 0,
+      "duration_seconds": 5.684079,
+      "error_message": "",
+      "resources_crawled": [
+        "finance_data"
+      ]
+    }
+  ]
+}

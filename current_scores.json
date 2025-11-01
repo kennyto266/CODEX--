@@ -1,0 +1,24 @@
+[
+  {
+    "league": "英超",
+    "home_team": "曼城",
+    "away_team": "利物浦",
+    "home_score": 1,
+    "away_score": 0,
+    "status": "live",
+    "minute": 21,
+    "date": "2025-10-27",
+    "start_time": "19:30"
+  },
+  {
+    "league": "英超",
+    "home_team": "阿仙奴",
+    "away_team": "車路士",
+    "home_score": 0,
+    "away_score": 0,
+    "status": "live",
+    "minute": 21,
+    "date": "2025-10-27",
+    "start_time": "19:00"
+  }
+]
