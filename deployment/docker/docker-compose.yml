@@ -1,0 +1,209 @@
+# Docker Compose - 本地开发环境
+# 用于本地开发、调试和测试
+
+version: '3.8'
+
+services:
+  # 主应用服务
+  app:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
+      target: development
+      args:
+        - BUILD_DATE=${BUILD_DATE:-}
+        - VCS_REF=${VCS_REF:-}
+        - VERSION=${VERSION:-dev}
+    container_name: codex-app-dev
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/codex_dev
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ../../src:/app/src
+      - ../../openspec:/app/openspec
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - codex-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: codex-postgres-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=codex_dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - codex-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d codex_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: codex-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - codex-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API文档服务
+  docs:
+    image: swaggerapi/swagger-ui:latest
+    container_name: codex-docs-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SWAGGER_JSON=/openapi.json
+    volumes:
+      - ./docs:/docs
+    networks:
+      - codex-dev
+    depends_on:
+      - app
+
+  # 数据库管理工具
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: codex-pgadmin-dev
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@codex.local
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    volumes:
+      - pgadmin_data_dev:/var/lib/pgadmin
+    networks:
+      - codex-dev
+    depends_on:
+      - postgres
+
+  # 监控仪表板
+  grafana:
+    image: grafana/grafana:latest
+    container_name: codex-grafana-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data_dev:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - codex-dev
+
+  # 指标收集
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: codex-prometheus-dev
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data_dev:/prometheus
+    networks:
+      - codex-dev
+
+  # Redis管理工具
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: codex-redis-commander-dev
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    networks:
+      - codex-dev
+    depends_on:
+      - redis
+
+  # 日志聚合
+  fluentd:
+    image: fluent/fluentd:latest
+    container_name: codex-fluentd-dev
+    restart: unless-stopped
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+      - ./logs:/logs
+    networks:
+      - codex-dev
+
+  # Nginx反向代理（开发环境）
+  nginx:
+    image: nginx:alpine
+    container_name: codex-nginx-dev
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    networks:
+      - codex-dev
+    depends_on:
+      - app
+      - docs
+
+volumes:
+  postgres_data_dev:
+  redis_data_dev:
+  pgadmin_data_dev:
+  grafana_data_dev:
+  prometheus_data_dev:
+
+networks:
+  codex-dev:
+    driver: bridge

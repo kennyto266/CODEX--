@@ -1,0 +1,64 @@
+# Base configuration - shared across all environments
+
+application:
+  name: "CODEX Trading System"
+  version: "7.0.0"
+  debug: false
+  environment: development
+
+database:
+  url: "postgresql://user:password@localhost:5432/codex_db"
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+  max_connections: 100
+
+api:
+  host: "0.0.0.0"
+  port: 8001
+  workers: 4
+  reload: false
+
+data_sources:
+  hkex:
+    endpoint: "http://18.180.162.113:9191"
+    timeout: 30
+    retry_attempts: 3
+  yahoo_finance:
+    timeout: 30
+    rate_limit: 2000
+
+trading:
+  enabled: false
+  initial_capital: 1000000.0
+  max_position_size: 100000.0
+  max_portfolio_heat: 500000.0
+  risk_limit: 0.02
+
+logging:
+  level: "INFO"
+  format: "json"
+  handlers:
+    - type: "console"
+      level: "INFO"
+    - type: "file"
+      level: "DEBUG"
+      path: "logs/codex.log"
+      max_size: "100MB"
+      backup_count: 5
+
+caching:
+  l1_size: 1000
+  l2_ttl: 300
+  l3_ttl: 3600
+
+monitoring:
+  enabled: true
+  metrics_port: 9090
+  health_check_interval: 30

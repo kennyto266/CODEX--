@@ -1,0 +1,9 @@
+CODEX项目数据存储位置总览
+生成日期: 2025-10-27
+
+主要数据目录:
+1. ./data/ - 核心数据 (84KB数据库 + JSON配置)
+2. ./src/data_adapters/ - 数据适配器 (20+个适配器)
+3. ./gov_crawler/data/ - 政府数据 (100KB+ 替代数据)
+4. ./lihkg_scraper/data/ - 情感数据 (6个SQLite数据库)
+5. ./src/database/ - 数据库模块

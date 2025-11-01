@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@pinia/testing": "^1.0.2",
+    "@vitest/coverage-v8": "^4.0.4",
+    "vite": "^7.1.12"
+  },
+  "dependencies": {
+    "vuedraggable": "^4.1.0"
+  }
+}

@@ -1,0 +1,983 @@
+[
+  {
+    "id": "TASK-H-001",
+    "title": "創建 `src/dashboard/unified_api_manager.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #1",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-002",
+    "title": "實現統一路由註冊機制",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #2",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-003",
+    "title": "配置中央中間件",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #3",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-004",
+    "title": "測試API管理器初始化",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #4",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-005",
+    "title": "創建 `src/dashboard/cache/cache_manager.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #5",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-006",
+    "title": "配置Redis連接",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #6",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-007",
+    "title": "實現LRU緩存策略",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #7",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-008",
+    "title": "創建緩存裝飾器",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #8",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-009",
+    "title": "實現緩存失效機制",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #9",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-010",
+    "title": "創建 `src/dashboard/repositories/base_repository.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #10",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-011",
+    "title": "定義通用CRUD操作",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #11",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-012",
+    "title": "實現分頁和排序支持",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #12",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-013",
+    "title": "創建具體Repository類",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #13",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-014",
+    "title": "統一所有API的響應格式",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #14",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-015",
+    "title": "創建 `src/dashboard/models/api_response.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #15",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-016",
+    "title": "更新所有Pydantic模型",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #16",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-017",
+    "title": "添加字段過濾支持",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #17",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-018",
+    "title": "重構 `api_agents.py` 使用Repository模式",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #18",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-019",
+    "title": "重構 `api_strategies.py` 使用Repository模式",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #19",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-020",
+    "title": "重構 `api_trading.py` 使用Repository模式",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #20",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-021",
+    "title": "重構 `api_risk.py` 使用Repository模式",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #21",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-022",
+    "title": "重構 `api_backtest.py` 使用Repository模式",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #22",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-023",
+    "title": "重構 `api_routes.py` 使用Repository模式",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #23",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-024",
+    "title": "為Agent列表API添加緩存",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #24",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-025",
+    "title": "為策略列表API添加緩存",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #25",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-026",
+    "title": "為風險數據API添加緩存",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #26",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-027",
+    "title": "為交易數據API添加緩存",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #27",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-028",
+    "title": "為回測結果API添加緩存",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #28",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-029",
+    "title": "為所有列表端點添加分頁",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #29",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-030",
+    "title": "實現排序參數支持",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #30",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-031",
+    "title": "添加字段過濾參數",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #31",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-032",
+    "title": "實現搜索功能",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #32",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-033",
+    "title": "將所有I/O操作改為async/await",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #33",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-034",
+    "title": "優化數據庫查詢為異步",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #34",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-035",
+    "title": "優化文件I/O為異步",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #35",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-036",
+    "title": "測試異步性能",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #36",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-037",
+    "title": "創建 `src/dashboard/dataloaders/agent_loader.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #37",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-038",
+    "title": "創建 `src/dashboard/dataloaders/strategy_loader.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #38",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-039",
+    "title": "創建 `src/dashboard/dataloaders/position_loader.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #39",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-040",
+    "title": "實現批量加載機制",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #40",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-041",
+    "title": "集成到API端點",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #41",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-042",
+    "title": "啟用GZIP壓縮",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #42",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-043",
+    "title": "實現字段選擇器",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #43",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-044",
+    "title": "優化JSON序列化",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #44",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-045",
+    "title": "添加響應緩存頭",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #45",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-046",
+    "title": "創建 `src/dashboard/auth/api_key_auth.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #46",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-047",
+    "title": "實現API密鑰驗證中間件",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #47",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-048",
+    "title": "添加用戶權限管理",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #48",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-049",
+    "title": "測試認證流程",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #49",
+    "priority": "P0",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-050",
+    "title": "安裝並配置 `slowapi`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #50",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-051",
+    "title": "為每個端點設置速率限制",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #51",
+    "priority": "P0",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-052",
+    "title": "實現自定義速率限制邏輯",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #52",
+    "priority": "P0",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-053",
+    "title": "添加限制突破日誌",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #53",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-054",
+    "title": "創建 `src/dashboard/middleware/logging_middleware.py`",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #54",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-055",
+    "title": "實現結構化日誌",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #55",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-056",
+    "title": "添加性能指標收集",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #56",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-057",
+    "title": "創建健康檢查增強版",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #57",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-058",
+    "title": "記錄所有API調用",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #58",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-059",
+    "title": "記錄敏感操作",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #59",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-060",
+    "title": "創建審計日誌查詢API",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #60",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-061",
+    "title": "測試緩存管理器",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #61",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-062",
+    "title": "測試Repository類",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #62",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-063",
+    "title": "測試API認證",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #63",
+    "priority": "P0",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-064",
+    "title": "測試速率限制",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #64",
+    "priority": "P0",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-065",
+    "title": "為所有API端點編寫集成測試",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #65",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-066",
+    "title": "測試緩存功能",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #66",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-067",
+    "title": "測試分頁和排序",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #67",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-068",
+    "title": "測試錯誤處理",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #68",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-069",
+    "title": "創建性能基準測試",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #69",
+    "priority": "P1",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-070",
+    "title": "測試並發性能",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #70",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-071",
+    "title": "測試緩存命中率",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #71",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-072",
+    "title": "生成性能報告",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #72",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-073",
+    "title": "更新API文檔",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #73",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-074",
+    "title": "創建API使用示例",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #74",
+    "priority": "P1",
+    "estimated_hours": 3,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-075",
+    "title": "編寫遷移指南",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #75",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-076",
+    "title": "更新README",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #76",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-077",
+    "title": "所有API端點正常工作",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #77",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-078",
+    "title": "緩存功能正常",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #78",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-079",
+    "title": "分頁和排序正常",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #79",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-080",
+    "title": "認證和授權正常",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #80",
+    "priority": "P0",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-081",
+    "title": "速率限制正常",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #81",
+    "priority": "P0",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-082",
+    "title": "API響應時間 < 200ms (P95)",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #82",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-083",
+    "title": "緩存命中率 > 80%",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #83",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-084",
+    "title": "吞吐量達到預期",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #84",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-085",
+    "title": "無內存洩漏",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #85",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-086",
+    "title": "向後兼容現有客戶端",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #86",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-087",
+    "title": "API版本兼容性",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #87",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-088",
+    "title": "數據格式兼容性",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #88",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-089",
+    "title": "API認證正常",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #89",
+    "priority": "P0",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-090",
+    "title": "速率限制有效",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #90",
+    "priority": "P0",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-091",
+    "title": "輸入驗證完整",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #91",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-092",
+    "title": "無SQL注入等漏洞",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #92",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-093",
+    "title": "運行完整測試套件",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #93",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-094",
+    "title": "性能基準測試",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #94",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-095",
+    "title": "代碼審查完成",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #95",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-096",
+    "title": "文檔更新完成",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #96",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-097",
+    "title": "啟用功能開關",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #97",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-098",
+    "title": "監控API指標",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #98",
+    "priority": "P0",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-099",
+    "title": "檢查錯誤日誌",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #99",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-100",
+    "title": "驗證緩存正常",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #100",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-101",
+    "title": "監控系統穩定運行24小時",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #101",
+    "priority": "P0",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-102",
+    "title": "收集性能數據",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #102",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-103",
+    "title": "收集用戶反饋",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #103",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-104",
+    "title": "準備回滾方案",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #104",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-105",
+    "title": "代碼已編寫並通過本地測試",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #105",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-106",
+    "title": "已添加必要的單元測試",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #106",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-107",
+    "title": "已更新相關文檔",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #107",
+    "priority": "P2",
+    "estimated_hours": 1,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-108",
+    "title": "已通過代碼審查",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #108",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  },
+  {
+    "id": "TASK-H-109",
+    "title": "已合併到主分支",
+    "description": "從optimize-api-architecture提案導入的歷史任務 #109",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO",
+    "source": "optimize-api-architecture"
+  }
+]

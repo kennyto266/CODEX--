@@ -1,0 +1,765 @@
+[
+  {
+    "id": "TASK-H-001",
+    "title": "創建 `src/dashboard/unified_api_manager.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-002",
+    "title": "實現統一路由註冊機制",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-003",
+    "title": "配置中央中間件",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-004",
+    "title": "測試API管理器初始化",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-005",
+    "title": "創建 `src/dashboard/cache/cache_manager.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-006",
+    "title": "配置Redis連接",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-007",
+    "title": "實現LRU緩存策略",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-008",
+    "title": "創建緩存裝飾器",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-009",
+    "title": "實現緩存失效機制",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-010",
+    "title": "創建 `src/dashboard/repositories/base_repository.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-011",
+    "title": "定義通用CRUD操作",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-012",
+    "title": "實現分頁和排序支持",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-013",
+    "title": "創建具體Repository類",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-014",
+    "title": "統一所有API的響應格式",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-015",
+    "title": "創建 `src/dashboard/models/api_response.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-016",
+    "title": "更新所有Pydantic模型",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-017",
+    "title": "添加字段過濾支持",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-018",
+    "title": "重構 `api_agents.py` 使用Repository模式",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-019",
+    "title": "重構 `api_strategies.py` 使用Repository模式",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-020",
+    "title": "重構 `api_trading.py` 使用Repository模式",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-021",
+    "title": "重構 `api_risk.py` 使用Repository模式",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-022",
+    "title": "重構 `api_backtest.py` 使用Repository模式",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-023",
+    "title": "重構 `api_routes.py` 使用Repository模式",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-024",
+    "title": "為Agent列表API添加緩存",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-025",
+    "title": "為策略列表API添加緩存",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-026",
+    "title": "為風險數據API添加緩存",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-027",
+    "title": "為交易數據API添加緩存",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-028",
+    "title": "為回測結果API添加緩存",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-029",
+    "title": "為所有列表端點添加分頁",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-030",
+    "title": "實現排序參數支持",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-031",
+    "title": "添加字段過濾參數",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-032",
+    "title": "實現搜索功能",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-033",
+    "title": "將所有I/O操作改為async/await",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-034",
+    "title": "優化數據庫查詢為異步",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-035",
+    "title": "優化文件I/O為異步",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-036",
+    "title": "測試異步性能",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-037",
+    "title": "創建 `src/dashboard/dataloaders/agent_loader.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-038",
+    "title": "創建 `src/dashboard/dataloaders/strategy_loader.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-039",
+    "title": "創建 `src/dashboard/dataloaders/position_loader.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-040",
+    "title": "實現批量加載機制",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-041",
+    "title": "集成到API端點",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-042",
+    "title": "啟用GZIP壓縮",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-043",
+    "title": "實現字段選擇器",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-044",
+    "title": "優化JSON序列化",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-045",
+    "title": "添加響應緩存頭",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-046",
+    "title": "創建 `src/dashboard/auth/api_key_auth.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-047",
+    "title": "實現API密鑰驗證中間件",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-048",
+    "title": "添加用戶權限管理",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-049",
+    "title": "測試認證流程",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-050",
+    "title": "安裝並配置 `slowapi`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-051",
+    "title": "為每個端點設置速率限制",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-052",
+    "title": "實現自定義速率限制邏輯",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-053",
+    "title": "添加限制突破日誌",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-054",
+    "title": "創建 `src/dashboard/middleware/logging_middleware.py`",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-055",
+    "title": "實現結構化日誌",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-056",
+    "title": "添加性能指標收集",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-057",
+    "title": "創建健康檢查增強版",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-058",
+    "title": "記錄所有API調用",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-059",
+    "title": "記錄敏感操作",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-060",
+    "title": "創建審計日誌查詢API",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-061",
+    "title": "測試緩存管理器",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-062",
+    "title": "測試Repository類",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-063",
+    "title": "測試API認證",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-064",
+    "title": "測試速率限制",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-065",
+    "title": "為所有API端點編寫集成測試",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-066",
+    "title": "測試緩存功能",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-067",
+    "title": "測試分頁和排序",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-068",
+    "title": "測試錯誤處理",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-069",
+    "title": "創建性能基準測試",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-070",
+    "title": "測試並發性能",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-071",
+    "title": "測試緩存命中率",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-072",
+    "title": "生成性能報告",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-073",
+    "title": "更新API文檔",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-074",
+    "title": "創建API使用示例",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-075",
+    "title": "編寫遷移指南",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-076",
+    "title": "更新README",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-077",
+    "title": "所有API端點正常工作",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-078",
+    "title": "緩存功能正常",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-079",
+    "title": "分頁和排序正常",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-080",
+    "title": "認證和授權正常",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-081",
+    "title": "速率限制正常",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-082",
+    "title": "API響應時間 < 200ms (P95)",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-083",
+    "title": "緩存命中率 > 80%",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-084",
+    "title": "吞吐量達到預期",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-085",
+    "title": "無內存洩漏",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-086",
+    "title": "向後兼容現有客戶端",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-087",
+    "title": "API版本兼容性",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-088",
+    "title": "數據格式兼容性",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-089",
+    "title": "API認證正常",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-090",
+    "title": "速率限制有效",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-091",
+    "title": "輸入驗證完整",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-092",
+    "title": "無SQL注入等漏洞",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-093",
+    "title": "運行完整測試套件",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-094",
+    "title": "性能基準測試",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-095",
+    "title": "代碼審查完成",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-096",
+    "title": "文檔更新完成",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-097",
+    "title": "啟用功能開關",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-098",
+    "title": "監控API指標",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-099",
+    "title": "檢查錯誤日誌",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-100",
+    "title": "驗證緩存正常",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-101",
+    "title": "監控系統穩定運行24小時",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-102",
+    "title": "收集性能數據",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-103",
+    "title": "收集用戶反饋",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-104",
+    "title": "準備回滾方案",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-105",
+    "title": "代碼已編寫並通過本地測試",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-106",
+    "title": "已添加必要的單元測試",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-107",
+    "title": "已更新相關文檔",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-108",
+    "title": "已通過代碼審查",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  },
+  {
+    "id": "TASK-H-109",
+    "title": "已合併到主分支",
+    "priority": "P2",
+    "estimated_hours": 2,
+    "status": "TODO"
+  }
+]

@@ -1,0 +1,21 @@
+# Development environment overrides
+
+application:
+  debug: true
+  environment: development
+
+api:
+  reload: true
+  workers: 1
+
+logging:
+  level: "DEBUG"
+
+database:
+  echo: true
+
+trading:
+  enabled: false
+
+monitoring:
+  enabled: false

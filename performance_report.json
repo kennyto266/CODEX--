@@ -1,0 +1,45 @@
+{
+  "start_time": "2025-10-31 16:08:41.103088",
+  "optimizations_applied": [
+    {
+      "success": true,
+      "memory_after": {
+        "percent": 32.4,
+        "used_gb": 40.72,
+        "available_gb": 84.88
+      }
+    },
+    {
+      "success": true,
+      "optimizations": [
+        "已分析数据库",
+        "已清理数据库",
+        "已优化表: tasks",
+        "已优化表: sprints",
+        "已优化表: sqlite_stat1"
+      ],
+      "tables_optimized": 3
+    },
+    {
+      "success": true,
+      "files_cleared": 0,
+      "size_mb": 0.0
+    }
+  ],
+  "performance_metrics": {
+    "timestamp": "2025-10-31T16:08:41.112387",
+    "memory": {
+      "total_gb": 125.6,
+      "used_gb": 40.74,
+      "available_gb": 84.86,
+      "percent": 32.4
+    },
+    "disk": {
+      "total_gb": 1862.02,
+      "used_gb": 1145.56,
+      "free_gb": 716.46,
+      "percent": 61.52
+    }
+  },
+  "recommendations": []
+}

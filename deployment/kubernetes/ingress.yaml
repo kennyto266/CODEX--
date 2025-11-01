@@ -1,0 +1,323 @@
+# Kubernetes Ingress清单
+# 配置外部访问、负载均衡和SSL终止
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: codex-trading-ingress
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: ingress
+  annotations:
+    # Ingress控制器配置
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+    # SSL配置
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+    # 负载均衡算法
+    nginx.ingress.kubernetes.io/load-balance: "round_robin"
+
+    # 超时配置
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+
+    # 客户端请求体大小限制
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+
+    # CORS配置
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+
+    # 会话保持
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "3600"
+
+    # WebSocket支持
+    nginx.ingress.kubernetes.io/websocket-services: "codex-trading-service"
+
+    # 速率限制
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+
+    # 安全标头
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Content-Security-Policy "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'" always;
+
+    # 错误页面配置
+    nginx.ingress.kubernetes.io/default-backend: "codex-trading-service"
+
+    # 重试配置
+    nginx.ingress.kubernetes.io/proxy-next-upstream: "error timeout invalid_header http_500 http_502 http_503"
+    nginx.ingress.kubernetes.io/proxy-next-upstream-tries: "3"
+    nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: "10s"
+
+    # 健康检查
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+
+spec:
+  # Ingress类
+  ingressClassName: nginx
+
+  # TLS配置
+  tls:
+  - hosts:
+    - codex.trading.com
+    - api.codex.trading.com
+    secretName: codex-trading-tls
+
+  # 路由规则
+  rules:
+  # HTTP规则 - 主域名
+  - host: codex.trading.com
+    http:
+      paths:
+      # API路径
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: codex-trading-service
+            port:
+              name: http
+
+      # WebSocket路径
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: codex-trading-service
+            port:
+              name: http
+
+      # 健康检查路径
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: codex-trading-service
+            port:
+              name: http
+
+      # 根路径 - Dashboard
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: codex-trading-service
+            port:
+              name: http
+
+  # API域名
+  - host: api.codex.trading.com
+    http:
+      paths:
+      # API路径
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: codex-trading-service
+            port:
+              name: http
+
+  # 监控服务
+  - host: prometheus.codex.trading.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              name: prometheus
+
+  # Grafana服务
+  - host: grafana.codex.trading.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              name: grafana
+
+---
+
+# 开发环境Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: codex-trading-ingress-dev
+  namespace: codex-trading-dev
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: dev.codex.trading.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: codex-trading-service-dev
+            port:
+              name: http
+
+---
+
+# 生产环境SSL证书管理（Cert-Manager）
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  namespace: codex-trading
+spec:
+  acme:
+    # Let's Encrypt服务器
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # 邮箱地址
+    email: admin@codex.trading.com
+    # 私钥存储
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    # HTTP01验证
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+          podTemplate:
+            spec:
+              nodeSelector:
+                "kubernetes.io/os": linux
+
+---
+
+# Staging环境证书
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  namespace: codex-trading
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: admin@codex.trading.com
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+
+# SSL证书
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: codex-trading-tls
+  namespace: codex-trading
+spec:
+  secretName: codex-trading-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: codex.trading.com
+  dnsNames:
+  - codex.trading.com
+  - api.codex.trading.com
+  - prometheus.codex.trading.com
+  - grafana.codex.trading.com
+  duration: 2160h # 90天
+  renewBefore: 720h # 30天前续期
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+
+---
+
+# API认证中间件 Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: codex-trading-auth-ingress
+  namespace: codex-trading
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: codex-auth-secret
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - CODEX Trading API"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: admin.codex.trading.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: codex-trading-service
+            port:
+              name: http
+
+---
+
+# Basic Auth 密钥（通过kubectl create secret生成）
+# kubectl create secret generic codex-auth-secret --from-file=auth=/path/to/.htpasswd -n codex-trading
+
+---
+
+# 流量管理 Ingress（支持蓝绿部署）
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: codex-trading-canary-ingress
+  namespace: codex-trading
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "10"  # 10%流量到金丝雀
+    nginx.ingress.kubernetes.io/canary-by-header: "X-Canary"
+    nginx.ingress.kubernetes.io/canary-by-header-value: "always"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: codex.trading.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: codex-trading-service-canary
+            port:
+              name: http

@@ -175,3 +175,48 @@ The `calculate_technical_indicators()` method SHALL compute all necessary values
 - **THEN** use Pandas vectorized operations instead of loops
 - **AND** complete calculation in reasonable time (< 5 seconds for 3 years of daily data)
 
+### Requirement: Fixed Holding Period Management
+The backtest engine SHALL support fixed holding periods for strategy execution.
+
+#### Scenario: 14-day holding period (阿程 Strategy)
+- **WHEN** Signal triggered on day 1
+- **AND** Running backtest with holding_period=14
+- **THEN** Position holds for exactly 14 days
+- **AND** automatically exit position on day 15 regardless of signal
+
+#### Scenario: Configurable holding periods
+- **WHEN** User sets custom holding_period parameter
+- **THEN** System SHALL enforce the specified number of days
+- **AND** Track position for performance calculation during holding period
+
+### Requirement: Multi-Asset Portfolio Backtesting
+The backtest engine SHALL support multiple assets in portfolio backtesting with cross-market strategies.
+
+#### Scenario: Multi-asset backtest execution
+- **GIVEN** 3 assets (HSI, Gold, USD/CNH)
+- **WHEN** Running MultiAssetBacktest
+- **THEN** Return portfolio returns with asset contributions
+- **AND** Calculate correlation between assets
+- **AND** Generate combined performance metrics
+
+#### Scenario: Cross-market strategy with multiple assets
+- **GIVEN** FX signal from USD/CNH and corresponding HSI position
+- **WHEN** Both assets generate signals in the same period
+- **THEN** Execute both trades with proper position sizing
+- **AND** Track combined portfolio exposure
+
+### Requirement: Comprehensive Transaction Cost Model
+The backtest engine SHALL include comprehensive transaction costs in performance calculations.
+
+#### Scenario: Calculate total transaction cost
+- **GIVEN** Trade amount = 1M, commission = 0.02%, slippage = 0.01%
+- **WHEN** Calculating transaction cost
+- **THEN** Return breakdown: fixed + commission + slippage + market impact
+- **AND** Apply costs to both entry and exit trades
+
+#### Scenario: Cost impact on small trades
+- **GIVEN** Trade amount = 10K with minimum commission = 10
+- **WHEN** Calculating costs for small position
+- **THEN** Apply minimum commission when percentage-based commission is lower
+- **AND** Include fixed costs in total transaction cost calculation
+

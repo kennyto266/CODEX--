@@ -421,18 +421,29 @@ def create_app(data_service: DashboardDataService) -> FastAPI:
         """
         獲取股票數據（連接真實 HKEX 數據源）
 
+        注意：此端點專門用於連接真實的 HKEX 數據源。
+        如果數據源不可用，將返回明確的錯誤信息，不會回退到 Mock 數據。
+
+        HKEX 和 gov_crawler 是獨立的數據項目，請參考：
+        - HKEX 數據源: /api/stock/data
+        - gov_crawler 數據源: /api/gov/data
+
         Args:
             symbol: 股票代碼 (e.g., "0700.HK")
             duration: 時間範圍（天數，默認 365 天）
 
         Returns:
-            股票信息字典
+            股票信息字典 或 錯誤信息
+
+        Raises:
+            HTTPException: 當數據源不可用或連接失敗時
         """
         logger.debug(f"API 調用: GET /api/stock/data?symbol={symbol}&duration={duration}")
 
         try:
             # 導入真實數據適配器
             from src.data_adapters.realtime_hkex_adapter import get_adapter
+            from fastapi import HTTPException
 
             # 獲取適配器實例
             adapter = get_adapter()
@@ -445,110 +456,333 @@ def create_app(data_service: DashboardDataService) -> FastAPI:
             )
 
             if stock_data:
+                logger.info(f"✅ 成功獲取 {symbol} 的 HKEX 數據")
                 return stock_data
             else:
-                # 如果 API 失敗，返回空響應但帶有說明
-                return {
+                logger.error(f"❌ HKEX 數據源返回空數據: {symbol}")
+                raise HTTPException(
+                    status_code=503,
+                    detail={
+                        "error": "SERVICE_UNAVAILABLE",
+                        "message": f"HKEX 數據源暫時無法返回 {symbol} 的數據",
+                        "symbol": symbol.upper(),
+                        "timestamp": datetime.now().isoformat(),
+                        "data_source": "HKEX API",
+                        "note": "請檢查 HKEX 數據源連接或稍後重試"
+                    }
+                )
+
+        except ImportError as e:
+            logger.error(f"❌ 無法導入 HKEX 數據適配器: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "ADAPTER_NOT_AVAILABLE",
+                    "message": "HKEX 數據適配器未正確安裝或配置",
                     "symbol": symbol.upper(),
-                    "name": "Unknown Stock",
-                    "last_price": 0.0,
-                    "change": 0.0,
-                    "change_percent": 0.0,
-                    "high": 0.0,
-                    "low": 0.0,
-                    "volume": 0,
-                    "market_cap": "N/A",
                     "timestamp": datetime.now().isoformat(),
-                    "data_source": "Real-time HKEX API",
-                    "note": f"Failed to fetch data for symbol: {symbol}"
+                    "data_source": "HKEX API",
+                    "note": "請檢查 src/data_adapters/realtime_hkex_adapter 是否存在"
                 }
-
-        except ImportError:
-            logger.warning("Real-time adapter not available, using mock data")
-
-            # 備用 Mock 數據（當真實數據源不可用時）
-            mock_stocks = {
-                "0700.HK": {
-                    "symbol": "0700.HK",
-                    "name": "Tencent (騰訊)",
-                    "last_price": 325.50,
-                    "change": 2.50,
-                    "change_percent": 0.77,
-                    "high": 328.00,
-                    "low": 321.00,
-                    "volume": 45230000,
-                    "market_cap": "3.2T"
-                },
-                "0939.HK": {
-                    "symbol": "0939.HK",
-                    "name": "China Construction Bank (中國建設銀行)",
-                    "last_price": 6.85,
-                    "change": -0.05,
-                    "change_percent": -0.72,
-                    "high": 7.00,
-                    "low": 6.80,
-                    "volume": 123450000,
-                    "market_cap": "1.1T"
-                },
-                "0388.HK": {
-                    "symbol": "0388.HK",
-                    "name": "Hong Kong Exchanges (香港交易所)",
-                    "last_price": 420.80,
-                    "change": 5.20,
-                    "change_percent": 1.25,
-                    "high": 425.00,
-                    "low": 415.00,
-                    "volume": 2340000,
-                    "market_cap": "354B"
-                },
-                "1398.HK": {
-                    "symbol": "1398.HK",
-                    "name": "ICBC (工商銀行)",
-                    "last_price": 5.42,
-                    "change": -0.02,
-                    "change_percent": -0.37,
-                    "high": 5.50,
-                    "low": 5.38,
-                    "volume": 234560000,
-                    "market_cap": "923B"
-                }
-            }
-
-            symbol_upper = symbol.upper()
-            if symbol_upper in mock_stocks:
-                stock_data = mock_stocks[symbol_upper]
-                stock_data["timestamp"] = datetime.now().isoformat()
-                stock_data["data_source"] = "Mock Data (Real API unavailable)"
-                return stock_data
-            else:
-                return {
-                    "symbol": symbol_upper,
-                    "name": "Unknown Stock",
-                    "last_price": 0.0,
-                    "change": 0.0,
-                    "change_percent": 0.0,
-                    "high": 0.0,
-                    "low": 0.0,
-                    "volume": 0,
-                    "market_cap": "N/A",
-                    "timestamp": datetime.now().isoformat(),
-                    "data_source": "Mock Data",
-                    "note": "Mock data - Real API not available"
-                }
+            )
 
         except Exception as e:
-            logger.error(f"Error fetching stock data: {e}")
-            return {
-                "symbol": symbol.upper(),
-                "name": "Error",
-                "last_price": 0.0,
-                "change": 0.0,
-                "change_percent": 0.0,
-                "timestamp": datetime.now().isoformat(),
-                "error": str(e)
-            }
+            logger.error(f"❌ 獲取 HKEX 股票數據失敗: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "DATA_SOURCE_ERROR",
+                    "message": f"無法從 HKEX 數據源獲取 {symbol} 的數據",
+                    "symbol": symbol.upper(),
+                    "timestamp": datetime.now().isoformat(),
+                    "data_source": "HKEX API",
+                    "error_details": str(e),
+                    "note": "請檢查 HKEX 數據源連接或稍後重試"
+                }
+            )
 
     logger.info("✅ FastAPI 應用已創建，共註冊 25+ 條 API 路由 + 4 個 WebSocket 端點")
+
+    # ==================== Gov Data API ====================
+
+    @app.get("/api/gov/data")
+    async def get_gov_data(
+        indicator: str = "hibor_overnight",
+        start_date: str = "2024-01-01",
+        end_date: str = "2025-10-28"
+    ) -> Dict[str, Any]:
+        """
+        獲取 gov_crawler 政府數據（獨立數據項目）
+
+        注意：此端點連接 gov_crawler 數據收集系統。
+        gov_crawler 是獨立的數據項目，專門收集香港政府開放數據。
+
+        數據源區分：
+        - HKEX 數據源: /api/stock/data (股票數據)
+        - gov_crawler 數據源: /api/gov/data (政府數據)
+
+        Args:
+            indicator: 指標類型 (e.g., "hibor_overnight", "property_price", "gdp")
+            start_date: 開始日期 (格式: YYYY-MM-DD)
+            end_date: 結束日期 (格式: YYYY-MM-DD)
+
+        Returns:
+            政府數據字典
+
+        Raises:
+            HTTPException: 當數據源不可用時
+        """
+        logger.debug(f"API 調用: /api/gov/data?indicator={indicator}&start_date={start_date}&end_date={end_date}")
+
+        try:
+            from fastapi import HTTPException
+
+            # 嘗試連接 gov_crawler 數據收集系統
+            # 注意：這是一個獨立的數據項目
+            gov_crawler_path = project_root / "gov_crawler"
+
+            if not gov_crawler_path.exists():
+                logger.error(f"❌ gov_crawler 項目未找到: {gov_crawler_path}")
+                raise HTTPException(
+                    status_code=503,
+                    detail={
+                        "error": "PROJECT_NOT_FOUND",
+                        "message": "gov_crawler 數據收集項目未正確安裝",
+                        "indicator": indicator,
+                        "timestamp": datetime.now().isoformat(),
+                        "data_source": "gov_crawler",
+                        "note": "請檢查 gov_crawler 目錄是否存在"
+                    }
+                )
+
+            # 檢查數據文件是否存在
+            data_file = gov_crawler_path / "data" / "all_alternative_data_20251023_210419.json"
+
+            if data_file.exists():
+                logger.info(f"✅ 找到 gov_crawler 數據文件: {data_file}")
+                import json
+                with open(data_file, 'r', encoding='utf-8') as f:
+                    all_data = json.load(f)
+
+                # 根據指標返回相應數據
+                # Gov crawler 數據結構: {'hibor': {'hibor_overnight': {...}}, 'property': {...}, ...}
+                if indicator in all_data:
+                    result = {
+                        "indicator": indicator,
+                        "data": all_data[indicator],
+                        "source": "gov_crawler",
+                        "timestamp": datetime.now().isoformat(),
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "note": "數據來自 gov_crawler 政府數據收集系統"
+                    }
+                    logger.info(f"✅ 成功獲取 gov_crawler 指標: {indicator}")
+                    return result
+                else:
+                    # 嘗試在嵌套結構中查找
+                    found = False
+                    for category, indicators in all_data.items():
+                        if isinstance(indicators, dict) and indicator in indicators:
+                            result = {
+                                "indicator": indicator,
+                                "category": category,
+                                "data": indicators[indicator],
+                                "source": "gov_crawler",
+                                "timestamp": datetime.now().isoformat(),
+                                "start_date": start_date,
+                                "end_date": end_date,
+                                "note": "數據來自 gov_crawler 政府數據收集系統"
+                            }
+                            logger.info(f"✅ 成功獲取 gov_crawler 指標: {indicator} (分類: {category})")
+                            return result
+
+                    logger.warning(f"⚠️ 指標 {indicator} 不存在於 gov_crawler 數據中")
+                    raise HTTPException(
+                        status_code=404,
+                        detail={
+                            "error": "INDICATOR_NOT_FOUND",
+                            "message": f"指標 '{indicator}' 不存在於 gov_crawler 數據中",
+                            "available_indicators": list(all_data.keys()),
+                            "timestamp": datetime.now().isoformat(),
+                            "data_source": "gov_crawler"
+                        }
+                    )
+            else:
+                logger.warning(f"⚠️ gov_crawler 數據文件不存在: {data_file}")
+                raise HTTPException(
+                    status_code=503,
+                    detail={
+                        "error": "DATA_NOT_AVAILABLE",
+                        "message": "gov_crawler 數據文件未找到或尚未生成",
+                        "indicator": indicator,
+                        "timestamp": datetime.now().isoformat(),
+                        "data_source": "gov_crawler",
+                        "note": f"請運行 gov_crawler/collect_all_alternative_data.py 生成數據",
+                        "data_file_path": str(data_file)
+                    }
+                )
+
+        except HTTPException:
+            # 重新拋出 HTTPException
+            raise
+
+        except Exception as e:
+            logger.error(f"❌ 獲取 gov_crawler 數據失敗: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "DATA_SOURCE_ERROR",
+                    "message": f"無法從 gov_crawler 獲取 {indicator} 的數據",
+                    "indicator": indicator,
+                    "timestamp": datetime.now().isoformat(),
+                    "data_source": "gov_crawler",
+                    "error_details": str(e),
+                    "note": "請檢查 gov_crawler 系統是否正確運行"
+                }
+            )
+
+    @app.get("/api/gov/indicators")
+    async def get_available_gov_indicators() -> Dict[str, Any]:
+        """
+        獲取 gov_crawler 可用的指標列表
+
+        Returns:
+            可用指標列表
+        """
+        logger.debug("API 調用: GET /api/gov/indicators")
+
+        try:
+            from fastapi import HTTPException
+            import json
+
+            gov_crawler_path = project_root / "gov_crawler"
+            data_file = gov_crawler_path / "data" / "all_alternative_data_20251023_210419.json"
+
+            if data_file.exists():
+                with open(data_file, 'r', encoding='utf-8') as f:
+                    all_data = json.load(f)
+
+                # 展平指標列表
+                all_indicators = []
+                for category, indicators in all_data.items():
+                    if isinstance(indicators, dict):
+                        for indicator in indicators.keys():
+                            all_indicators.append(indicator)
+
+                indicators = {
+                    "total_indicators": len(all_indicators),
+                    "total_categories": len(all_data),
+                    "categories": list(all_data.keys()),
+                    "indicators": all_indicators,
+                    "data_source": "gov_crawler",
+                    "last_update": datetime.now().isoformat(),
+                    "note": "數據來自 gov_crawler 政府數據收集系統"
+                }
+
+                logger.info(f"✅ 成功獲取 {len(all_indicators)} 個 gov_crawler 指標")
+                return indicators
+            else:
+                raise HTTPException(
+                    status_code=503,
+                    detail={
+                        "error": "DATA_NOT_AVAILABLE",
+                        "message": "gov_crawler 數據文件未找到",
+                        "timestamp": datetime.now().isoformat(),
+                        "data_source": "gov_crawler",
+                        "note": "請運行 gov_crawler/collect_all_alternative_data.py 生成數據"
+                    }
+                )
+
+        except HTTPException:
+            raise
+
+        except Exception as e:
+            logger.error(f"❌ 獲取 gov_crawler 指標列表失敗: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "DATA_SOURCE_ERROR",
+                    "message": "無法獲取 gov_crawler 指標列表",
+                    "timestamp": datetime.now().isoformat(),
+                    "data_source": "gov_crawler",
+                    "error_details": str(e)
+                }
+            )
+
+    @app.get("/api/gov/status")
+    async def get_gov_crawler_status() -> Dict[str, Any]:
+        """
+        獲取 gov_crawler 系統狀態
+
+        Returns:
+            gov_crawler 系統狀態信息
+        """
+        logger.debug("API 調用: GET /api/gov/status")
+
+        try:
+            from fastapi import HTTPException
+            import json
+            import os
+
+            gov_crawler_path = project_root / "gov_crawler"
+            data_file = gov_crawler_path / "data" / "all_alternative_data_20251023_210419.json"
+
+            status = {
+                "project": "gov_crawler",
+                "status": "unknown",
+                "data_source": "gov_crawler",
+                "timestamp": datetime.now().isoformat(),
+                "checks": {}
+            }
+
+            # 檢查項目目錄
+            if gov_crawler_path.exists():
+                status["checks"]["project_directory"] = "✅ 存在"
+                status["project_found"] = True
+            else:
+                status["checks"]["project_directory"] = "❌ 不存在"
+                status["project_found"] = False
+                status["status"] = "not_installed"
+
+            # 檢查數據文件
+            if data_file.exists():
+                stat = os.stat(data_file)
+                file_size = stat.st_size
+                mtime = datetime.fromtimestamp(stat.st_mtime).isoformat()
+
+                status["checks"]["data_file"] = "✅ 存在"
+                status["data_file_size"] = f"{file_size / 1024:.2f} KB"
+                status["data_file_mtime"] = mtime
+                status["data_available"] = True
+
+                # 讀取指標數量
+                try:
+                    with open(data_file, 'r', encoding='utf-8') as f:
+                        all_data = json.load(f)
+                    status["total_indicators"] = len(all_data)
+                    status["status"] = "operational"
+                except Exception as e:
+                    status["checks"]["data_parsing"] = f"❌ 解析失敗: {str(e)}"
+                    status["status"] = "data_error"
+            else:
+                status["checks"]["data_file"] = "❌ 不存在"
+                status["data_available"] = False
+                status["status"] = "no_data"
+
+            logger.info(f"✅ gov_crawler 狀態: {status['status']}")
+            return status
+
+        except Exception as e:
+            logger.error(f"❌ 獲取 gov_crawler 狀態失敗: {e}", exc_info=True)
+            return {
+                "project": "gov_crawler",
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
+                "data_source": "gov_crawler"
+            }
+
+    logger.info("✅ 已註冊 gov_crawler 數據 API 端點")
     return app
 
 
@@ -575,8 +809,8 @@ async def main():
         logger.info("✅ FastAPI 應用已創建")
 
         # 顯示啟動資訊
-        logger.info("🌐 訪問地址: http://localhost:8001")
-        logger.info("📚 API 文檔: http://localhost:8001/docs")
+        logger.info("🌐 訪問地址: http://localhost:8002")
+        logger.info("📚 API 文檔: http://localhost:8002/docs")
         logger.info("🔧 功能: 實時儀表板、API 端點、性能監控")
         logger.info("⏹️ 按 Ctrl+C 停止系統")
 
@@ -584,7 +818,7 @@ async def main():
         server_config = uvicorn.Config(
             app,
             host="0.0.0.0",
-            port=8001,
+            port=8002,
             log_level="info"
         )
         server = uvicorn.Server(server_config)
