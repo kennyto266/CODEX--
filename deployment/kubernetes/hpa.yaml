@@ -1,0 +1,343 @@
+# Kubernetes水平自动缩放器 (HPA)
+# 根据CPU、内存和自定义指标自动调整Pod副本数
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: codex-trading-hpa
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: autoscaler
+spec:
+  # 目标缩放资源
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: codex-trading-app
+
+  # 最小/最大副本数
+  minReplicas: 3
+  maxReplicas: 20
+
+  # 缩放策略
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # 5分钟冷却期
+      policies:
+      - type: Percent
+        value: 50  # 一次最多减少50%
+        periodSeconds: 60
+      - type: Pods
+        value: 2  # 或最多减少2个Pod
+        periodSeconds: 60
+      selectPolicy: Min  # 选择更保守的策略
+
+    scaleUp:
+      stabilizationWindowSeconds: 60  # 1分钟冷却期
+      policies:
+      - type: Percent
+        value: 100  # 一次最多增加100%
+        periodSeconds: 60
+      - type: Pods
+        value: 5  # 或最多增加5个Pod
+        periodSeconds: 60
+      selectPolicy: Max  # 选择更激进的策略
+
+  # 监控指标
+  metrics:
+  # CPU使用率
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  # CPU超过70%时扩容
+
+  # 内存使用率
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80  # 内存超过80%时扩容
+
+  # 请求率 (QPS)
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"  # 平均每个Pod每秒处理1000请求
+
+  # 响应时间
+  - type: Object
+    object:
+      metric:
+        name: http_request_duration_seconds
+      target:
+        type: Value
+        value: "1"  # 平均响应时间超过1秒时扩容
+      describedObject:
+        apiVersion: v1
+        kind: Service
+        name: codex-trading-service
+
+---
+
+# 数据库HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: postgres-hpa
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-postgres
+    app.kubernetes.io/component: autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: postgres
+
+  minReplicas: 1
+  maxReplicas: 3
+
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 120
+    scaleDown:
+      stabilizationWindowSeconds: 600
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 120
+
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+---
+
+# Redis HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: redis-hpa
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-redis
+    app.kubernetes.io/component: autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: redis
+
+  minReplicas: 1
+  maxReplicas: 3
+
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 65
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 75
+
+---
+
+# 开发环境HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: codex-trading-hpa-dev
+  namespace: codex-trading-dev
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: codex-trading-app-dev
+
+  minReplicas: 1
+  maxReplicas: 5
+
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+
+# 垂直自动缩放器 (VPA) - 为不可水平缩放的资源提供垂直缩放
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: codex-trading-vpa
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: codex-trading-app
+
+  updatePolicy:
+    updateMode: "Auto"  # 自动更新Pod资源限制
+
+  resourcePolicy:
+    containerPolicies:
+    - containerName: api
+      minAllowed:
+        cpu: 100m
+        memory: 128Mi
+      maxAllowed:
+        cpu: 4
+        memory: 4Gi
+      controlledResources: ["cpu", "memory"]
+
+---
+
+# Prometheus HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: prometheus-hpa
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-prometheus
+    app.kubernetes.io/component: autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: prometheus
+
+  minReplicas: 1
+  maxReplicas: 3
+
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 85
+
+---
+
+# 自定义指标HPA配置示例
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: codex-trading-custom-metrics-hpa
+  namespace: codex-trading
+  labels:
+    app.kubernetes.io/name: codex-trading
+    app.kubernetes.io/component: autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: codex-trading-app
+
+  minReplicas: 3
+  maxReplicas: 20
+
+  metrics:
+  # 队列长度
+  - type: Pods
+    pods:
+      metric:
+        name: message_queue_length
+      target:
+        type: AverageValue
+        averageValue: "100"
+
+  # 数据库连接数
+  - type: Object
+    object:
+      metric:
+        name: database_connections
+      target:
+        type: Value
+        value: "50"
+      describedObject:
+        apiVersion: v1
+        kind: Service
+        name: postgres-service
+
+  # 交易量
+  - type: Object
+    object:
+      metric:
+        name: trading_volume_per_minute
+      target:
+        type: AverageValue
+        averageValue: "10000"
+      describedObject:
+        apiVersion: v1
+        kind: Service
+        name: codex-trading-service
+
+  # 交易延迟
+  - type: Object
+    object:
+      metric:
+        name: trading_latency_ms
+      target:
+        type: Value
+        value: "500"
+      describedObject:
+        apiVersion: v1
+        kind: Service
+        name: codex-trading-service
+
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Percent
+        value: 200
+        periodSeconds: 30
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60

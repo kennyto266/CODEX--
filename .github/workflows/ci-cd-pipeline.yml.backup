@@ -1,0 +1,474 @@
+# GitHub Actions CI/CD流水线
+# 自动化构建、测试、打包和部署CODEX交易系统
+
+name: CODEX Trading System CI/CD Pipeline
+
+# 触发条件
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # 手动触发
+
+# 环境变量
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/codex-trading
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.10'
+  DOCKER_BUILDKIT: 1
+
+# 并行作业
+jobs:
+  # 代码质量检查
+  code-quality:
+    name: 代码质量检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整历史记录
+
+    - name: 设置Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 black isort mypy bandit safety
+
+    - name: 代码格式化检查 (Black)
+      run: black --check --diff .
+
+    - name: 导入排序检查 (isort)
+      run: isort --check-only --diff .
+
+    - name: 代码风格检查 (flake8)
+      run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: 类型检查 (mypy)
+      run: mypy . --ignore-missing-imports
+      continue-on-error: true
+
+    - name: 安全漏洞检查 (Bandit)
+      run: bandit -r . -f json -o bandit-report.json
+      continue-on-error: true
+
+    - name: 依赖漏洞检查 (Safety)
+      run: safety check --json --output safety-report.json
+      continue-on-error: true
+
+    - name: 上传安全报告
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+    - name: SonarCloud扫描
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # 安全扫描
+  security-scan:
+    name: 安全扫描
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 运行Trivy漏洞扫描
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: 上传Trivy扫描结果到GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: 运行OWASP ZAP扫描
+      uses: zaproxy/action-full-scan@v0.4.0
+      with:
+        target: 'https://example.com'
+      continue-on-error: true
+
+  # 单元测试
+  unit-tests:
+    name: 单元测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-xdist
+
+    - name: 运行单元测试
+      run: |
+        pytest tests/unit/ -v --cov=. --cov-report=xml --cov-report=html --junitxml=test-results.xml
+
+    - name: 上传测试覆盖率到Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: 上传测试结果
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          test-results.xml
+          htmlcov/
+
+  # 集成测试
+  integration-tests:
+    name: 集成测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [unit-tests]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: codex_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio
+
+    - name: 等待服务就绪
+      run: |
+        sleep 10
+        docker ps -a
+
+    - name: 运行集成测试
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/codex_test
+        REDIS_URL: redis://localhost:6379/0
+        ENVIRONMENT: testing
+      run: |
+        pytest tests/integration/ -v --asyncio-mode=auto
+
+  # 构建Docker镜像
+  build-image:
+    name: 构建Docker镜像
+    runs-on: ubuntu-latest
+    needs: [code-quality, unit-tests]
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+      image-tag: ${{ steps.meta.outputs.tags }}
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 登录到Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 提取元数据
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+
+    - name: 构建并推送Docker镜像
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./deployment/docker/Dockerfile
+        target: production
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+        build-args: |
+          BUILD_DATE=${{ github.event.head_commit.timestamp }}
+          VCS_REF=${{ github.sha }}
+          VERSION=${{ github.ref_name }}
+
+    - name: 运行Trivy扫描镜像
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+        format: 'sarif'
+        output: 'trivy-image-results.sarif'
+
+    - name: 上传Trivy镜像扫描结果
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-image-results.sarif'
+
+    - name: 镜像漏洞扫描报告
+      if: always()
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+        format: 'table'
+        exit-code: '1'
+
+  # 部署到测试环境
+  deploy-staging:
+    name: 部署到测试环境
+    runs-on: ubuntu-latest
+    needs: [build-image, integration-tests]
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    environment: staging
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: 配置kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        kubectl config use-context staging
+        kubectl version
+
+    - name: 部署到Kubernetes
+      run: |
+        export KUBECONFIG=kubeconfig
+        kubectl set image deployment/codex-trading-app-dev api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -n codex-trading-dev
+        kubectl rollout status deployment/codex-trading-app-dev -n codex-trading-dev --timeout=5m
+
+    - name: 运行烟雾测试
+      run: |
+        export KUBECONFIG=kubeconfig
+        sleep 30
+        kubectl run smoke-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f http://codex-trading-service-dev.codex-trading-dev:8001/health || exit 1
+
+  # 部署到生产环境
+  deploy-production:
+    name: 部署到生产环境
+    runs-on: ubuntu-latest
+    needs: [build-image]
+    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: 配置kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        kubectl config use-context production
+        kubectl version
+
+    - name: 部署到Kubernetes
+      run: |
+        export KUBECONFIG=kubeconfig
+        # 使用滚动更新
+        kubectl set image deployment/codex-trading-app api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} -n codex-trading
+        kubectl rollout status deployment/codex-trading-app -n codex-trading --timeout=10m
+
+    - name: 运行健康检查
+      run: |
+        export KUBECONFIG=kubeconfig
+        sleep 30
+        # 检查部署状态
+        kubectl get pods -n codex-trading
+        # 运行端到端测试
+        kubectl run e2e-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://api.codex.trading.com/health || exit 1
+
+    - name: 发送部署通知
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # 部署后验证
+  post-deployment:
+    name: 部署后验证
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 运行回归测试
+      run: |
+        echo "运行回归测试..."
+        python tests/regression/test_api_regression.py --env=production
+
+    - name: 生成性能报告
+      run: |
+        echo "生成性能报告..."
+        python tests/perf/load_test.py --duration=5m --output=performance-report.json
+
+    - name: 上传性能报告
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-report
+        path: performance-report.json
+
+  # 清理旧镜像
+  cleanup:
+    name: 清理旧镜像
+    runs-on: ubuntu-latest
+    if: always() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    needs: [post-deployment]
+
+    steps:
+    - name: 登录到Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 删除旧镜像
+      run: |
+        # 保留最近的20个标签，删除其余的
+        gh api --jq -r '.[0:20] | .[].tag' \
+          "https://api.github.com/orgs/${{ github.repository_owner }}/packages/container/codex-trading/versions?per_page=100" \
+          | while read tag; do
+              echo "Deleting tag: $tag"
+              gh api -X DELETE "/orgs/${{ github.repository_owner }}/packages/container/codex-trading/versions/$tag"
+            done
+
+  # 创建发布版本
+  create-release:
+    name: 创建发布版本
+    runs-on: ubuntu-latest
+    needs: [post-deployment]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 生成CHANGELOG
+      run: |
+        # 使用GitHub CLI生成变更日志
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        # 提取变更日志
+        git-chglog --output CHANGELOG.md
+
+    - name: 创建GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body_path: CHANGELOG.md
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') }}
+        files: |
+          CHANGELOG.md
+          deployment-guide.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 更新Docker Hub镜像描述
+      run: |
+        # 更新Docker Hub上的镜像描述
+        echo "### Changes in ${{ github.ref_name }}" > docker-description.md
+        echo "- See full changelog in [GitHub Release](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }})" >> docker-description.md
+        # 使用Docker Hub API更新描述
+        curl -X PATCH \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Token ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" \
+          -d "{\"full_description\": $(cat docker-description.md | jq -R .)}" \
+          "https://hub.docker.com/v/repositories/${{ secrets.DOCKER_HUB_USERNAME }}/codex-trading/"
