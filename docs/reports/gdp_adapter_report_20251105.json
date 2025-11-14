@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-11-05T16:06:44.106372",
+  "adapter_info": {
+    "name": "GDPAdapter",
+    "data_source": "gdp",
+    "indicators": {
+      "gdp_nominal": "名義GDP",
+      "gdp_growth": "GDP增長率",
+      "gdp_primary": "第一產業GDP",
+      "gdp_secondary": "第二產業GDP",
+      "gdp_tertiary": "第三產業GDP"
+    }
+  },
+  "latest_data": {
+    "gdp_nominal": 2826.2466,
+    "gdp_growth": 3.2082,
+    "gdp_primary": 9.9654,
+    "gdp_secondary": 706.0037,
+    "gdp_tertiary": 2074.6042
+  },
+  "historical_summary": {
+    "total_quarters": 20,
+    "avg_nominal_gdp": 3185.0,
+    "avg_growth_rate": 2.4570900000000004,
+    "min_growth": 1.2061,
+    "max_growth": 3.4679
+  },
+  "macro_integration": {
+    "total_macro_indicators": 35,
+    "gdp_indicators_count": 5,
+    "oscillator_value": 1.0
+  }
+}

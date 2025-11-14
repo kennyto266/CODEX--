@@ -1,0 +1,58 @@
+{
+  "test_time": "2025-11-05T23:47:33.150120",
+  "api_key_prefix": "1aacbd17d4...e4962f8db9",
+  "total_tests": 6,
+  "success_count": 6,
+  "error_count": 0,
+  "success_rate": 100.0,
+  "results": [
+    {
+      "status": "success",
+      "series_id": "GDPC1",
+      "name": "Real GDP (Quarterly)",
+      "date": "2025-04-01",
+      "value": "23770.976",
+      "message": "Data retrieved successfully"
+    },
+    {
+      "status": "success",
+      "series_id": "CPIAUCSL",
+      "name": "Consumer Price Index",
+      "date": "2025-09-01",
+      "value": "324.368",
+      "message": "Data retrieved successfully"
+    },
+    {
+      "status": "success",
+      "series_id": "UNRATE",
+      "name": "Unemployment Rate",
+      "date": "2025-08-01",
+      "value": "4.3",
+      "message": "Data retrieved successfully"
+    },
+    {
+      "status": "success",
+      "series_id": "FEDFUNDS",
+      "name": "Federal Funds Rate",
+      "date": "2025-10-01",
+      "value": "4.09",
+      "message": "Data retrieved successfully"
+    },
+    {
+      "status": "success",
+      "series_id": "PAYEMS",
+      "name": "Nonfarm Employment",
+      "date": "2025-08-01",
+      "value": "159540",
+      "message": "Data retrieved successfully"
+    },
+    {
+      "status": "success",
+      "series_id": "INDPRO",
+      "name": "Industrial Production Index",
+      "date": "2025-08-01",
+      "value": "103.9203",
+      "message": "Data retrieved successfully"
+    }
+  ]
+}

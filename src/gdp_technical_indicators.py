@@ -1,0 +1,514 @@
+"""
+GDP数据技术指标计算模块
+
+为GDP数据计算12种技术指标：
+- 移动平均 (MA)
+- 指数移动平均 (EMA)
+- RSI
+- MACD
+- 布林带 (Bollinger Bands)
+- KDJ
+- CCI
+- ADX
+- ATR
+- OBV
+- Ichimoku
+- Parabolic SAR
+
+Author: Claude Code
+Version: 1.0.0
+Date: 2025-11-10
+"""
+
+import logging
+import numpy as np
+import pandas as pd
+from typing import Dict, List, Optional, Tuple, Union
+import talib
+
+# from src.data_adapters.gdp_adapter import GDPDataSet, GDPDataPoint, GDPIndicator
+# 注释掉不存在的导入，直接使用pandas处理数据
+
+
+class GDPTechnicalIndicators:
+    """
+    GDP技术指标计算器
+    """
+
+    def __init__(self):
+        self.logger = logging.getLogger("hk_quant_system.gdp_indicators")
+
+    def calculate_indicators(
+        self,
+        df: pd.DataFrame,
+        indicator_config: Optional[Dict] = None
+    ) -> pd.DataFrame:
+        """
+        计算所有技术指标
+
+        Args:
+            df: 包含GDP数据的DataFrame，必须有'date'和'value'列
+            indicator_config: 指标配置
+
+        Returns:
+            包含所有指标的DataFrame
+        """
+        if df.empty or 'value' not in df.columns:
+            self.logger.error("Invalid input DataFrame")
+            return df
+
+        # 复制数据
+        result = df.copy()
+
+        # 确保数据按日期排序
+        result = result.sort_values('date').reset_index(drop=True)
+
+        # 计算各种指标
+        result = self.calculate_moving_averages(result)
+        result = self.calculate_ema(result)
+        result = self.calculate_rsi(result)
+        result = self.calculate_macd(result)
+        result = self.calculate_bollinger_bands(result)
+        result = self.calculate_kdj(result)
+        result = self.calculate_cci(result)
+        result = self.calculate_adx(result)
+        result = self.calculate_atr(result)
+        result = self.calculate_obv(result)
+        result = self.calculate_ichimoku(result)
+        result = self.calculate_parabolic_sar(result)
+
+        # 生成交易信号
+        result = self.generate_signals(result)
+
+        return result
+
+    def calculate_moving_averages(
+        self,
+        df: pd.DataFrame,
+        periods: List[int] = [5, 10, 20, 50, 100, 200]
+    ) -> pd.DataFrame:
+        """计算移动平均"""
+        for period in periods:
+            if len(df) >= period:
+                df[f'MA_{period}'] = talib.SMA(df['value'].values, timeperiod=period)
+        return df
+
+    def calculate_ema(
+        self,
+        df: pd.DataFrame,
+        periods: List[int] = [12, 26]
+    ) -> pd.DataFrame:
+        """计算指数移动平均"""
+        for period in periods:
+            if len(df) >= period:
+                df[f'EMA_{period}'] = talib.EMA(df['value'].values, timeperiod=period)
+        return df
+
+    def calculate_rsi(
+        self,
+        df: pd.DataFrame,
+        period: int = 14,
+        oversold: float = 30,
+        overbought: float = 70
+    ) -> pd.DataFrame:
+        """计算RSI"""
+        if len(df) >= period:
+            df['RSI'] = talib.RSI(df['value'].values, timeperiod=period)
+        return df
+
+    def calculate_macd(
+        self,
+        df: pd.DataFrame,
+        fast: int = 12,
+        slow: int = 26,
+        signal: int = 9
+    ) -> pd.DataFrame:
+        """计算MACD"""
+        if len(df) >= slow:
+            macd, macdsignal, macdhist = talib.MACD(
+                df['value'].values,
+                fastperiod=fast,
+                slowperiod=slow,
+                signalperiod=signal
+            )
+            df['MACD'] = macd
+            df['MACD_Signal'] = macdsignal
+            df['MACD_Hist'] = macdhist
+        return df
+
+    def calculate_bollinger_bands(
+        self,
+        df: pd.DataFrame,
+        period: int = 20,
+        std_dev: float = 2
+    ) -> pd.DataFrame:
+        """计算布林带"""
+        if len(df) >= period:
+            upper, middle, lower = talib.BBANDS(
+                df['value'].values,
+                timeperiod=period,
+                nbdevup=std_dev,
+                nbdevdn=std_dev,
+                matype=0
+            )
+            df['BB_Upper'] = upper
+            df['BB_Middle'] = middle
+            df['BB_Lower'] = lower
+            df['BB_Width'] = (upper - lower) / middle
+            df['BB_Position'] = (df['value'] - lower) / (upper - lower)
+        return df
+
+    def calculate_kdj(
+        self,
+        df: pd.DataFrame,
+        k_period: int = 9,
+        d_period: int = 3,
+        oversold: float = 20,
+        overbought: float = 80
+    ) -> pd.DataFrame:
+        """计算KDJ"""
+        if len(df) >= k_period:
+            # 对于GDP数据，使用价格变化率作为high/low
+            high = df['value'].rolling(window=k_period).max()
+            low = df['value'].rolling(window=k_period).min()
+
+            rsv = (df['value'] - low) / (high - low) * 100
+            rsv = rsv.fillna(50)
+
+            # 计算K和D
+            df['K'] = rsv.ewm(alpha=1/k_period).mean()
+            df['D'] = df['K'].ewm(alpha=1/d_period).mean()
+            df['J'] = 3 * df['K'] - 2 * df['D']
+        return df
+
+    def calculate_cci(
+        self,
+        df: pd.DataFrame,
+        period: int = 14
+    ) -> pd.DataFrame:
+        """计算CCI"""
+        if len(df) >= period:
+            # 使用移动平均作为典型价格
+            high = df['value'].rolling(window=period).max()
+            low = df['value'].rolling(window=period).min()
+            close = df['value']
+            typical_price = (high + low + close) / 3
+
+            sma_tp = typical_price.rolling(window=period).mean()
+            mad = typical_price.rolling(window=period).apply(
+                lambda x: np.mean(np.abs(x - x.mean()))
+            )
+
+            df['CCI'] = (typical_price - sma_tp) / (0.015 * mad)
+        return df
+
+    def calculate_adx(
+        self,
+        df: pd.DataFrame,
+        period: int = 14
+    ) -> pd.DataFrame:
+        """计算ADX"""
+        if len(df) >= period * 2:
+            high = df['value'].rolling(window=period).max()
+            low = df['value'].rolling(window=period).min()
+            close = df['value']
+
+            # 计算+DI和-DI
+            plus_dm = high.diff()
+            minus_dm = -low.diff()
+
+            plus_dm[plus_dm < 0] = 0
+            minus_dm[minus_dm < 0] = 0
+
+            tr = np.maximum(
+                high - low,
+                np.maximum(
+                    abs(high - close.shift(1)),
+                    abs(low - close.shift(1))
+                )
+            )
+
+            plus_di = 100 * (plus_dm.rolling(window=period).mean() / tr.rolling(window=period).mean())
+            minus_di = 100 * (minus_dm.rolling(window=period).mean() / tr.rolling(window=period).mean())
+
+            dx = 100 * np.abs(plus_di - minus_di) / (plus_di + minus_di)
+            df['ADX'] = dx.rolling(window=period).mean()
+            df['PLUS_DI'] = plus_di
+            df['MINUS_DI'] = minus_di
+        return df
+
+    def calculate_atr(
+        self,
+        df: pd.DataFrame,
+        period: int = 14
+    ) -> pd.DataFrame:
+        """计算ATR"""
+        if len(df) >= period + 1:
+            high = df['value']
+            low = df['value']
+            close = df['value'].shift(1)
+
+            tr = np.maximum(
+                high - low,
+                np.maximum(
+                    abs(high - close),
+                    abs(low - close)
+                )
+            )
+
+            df['ATR'] = pd.Series(tr).rolling(window=period).mean()
+            df['ATR_Pct'] = df['ATR'] / df['value'] * 100
+        return df
+
+    def calculate_obv(
+        self,
+        df: pd.DataFrame,
+        period: int = 10
+    ) -> pd.DataFrame:
+        """计算OBV（适配GDP数据）"""
+        if len(df) >= 2:
+            # 使用价格变化代替成交量
+            price_change = df['value'].diff()
+            obv = (np.sign(price_change) * 1).cumsum()  # 用+1/-1表示买卖压力
+
+            df['OBV'] = obv
+            df['OBV_MA'] = df['OBV'].rolling(window=period).mean()
+            df['OBV_Trend'] = np.where(df['OBV'] > df['OBV_MA'], 1, -1)
+        return df
+
+    def calculate_ichimoku(
+        self,
+        df: pd.DataFrame,
+        tenkan: int = 9,
+        kijun: int = 26,
+        senkou: int = 52
+    ) -> pd.DataFrame:
+        """计算Ichimoku"""
+        if len(df) >= senkou:
+            high = df['value']
+            low = df['value']
+
+            # 转换线 (Tenkan-sen)
+            tenkan_sen = (high.rolling(window=tenkan).max() + low.rolling(window=tenkan).min()) / 2
+
+            # 基准线 (Kijun-sen)
+            kijun_sen = (high.rolling(window=kijun).max() + low.rolling(window=kijun).min()) / 2
+
+            # 先行带
+            span_a = (tenkan_sen + kijun_sen) / 2
+            span_b = (high.rolling(window=senkou).max() + low.rolling(window=senkou).min()) / 2
+
+            # 延迟线 (Chikou span)
+            chikou_span = df['value'].shift(-kijun)
+
+            df['Ichimoku_Tenkan'] = tenkan_sen
+            df['Ichimoku_Kijun'] = kijun_sen
+            df['Ichimoku_SpanA'] = span_a.shift(kijun)
+            df['Ichimoku_SpanB'] = span_b.shift(kijun)
+            df['Ichimoku_Chikou'] = chikou_span
+
+            # 云图信号
+            df['Cloud_Color'] = np.where(df['Ichimoku_SpanA'] > df['Ichimoku_SpanB'], 1, -1)
+        return df
+
+    def calculate_parabolic_sar(
+        self,
+        df: pd.DataFrame,
+        af_start: float = 0.02,
+        af_max: float = 0.2
+    ) -> pd.DataFrame:
+        """计算Parabolic SAR"""
+        if len(df) >= 2:
+            high = df['value']
+            low = df['value']
+
+            # 简化的SAR计算
+            sar = np.zeros(len(df))
+            af = np.zeros(len(df))
+            ep = np.zeros(len(df))
+
+            # 初始化
+            sar[0] = low.iloc[0]
+            af[0] = af_start
+            ep[0] = high.iloc[0]
+
+            for i in range(1, len(df)):
+                # 计算SAR
+                sar[i] = sar[i-1] + af[i-1] * (ep[i-1] - sar[i-1])
+
+                # 更新EP和AF
+                if high.iloc[i] > ep[i-1]:
+                    ep[i] = high.iloc[i]
+                    af[i] = min(af[i-1] + af_start, af_max)
+                elif low.iloc[i] < ep[i-1]:
+                    ep[i] = low.iloc[i]
+                    af[i] = min(af[i-1] + af_start, af_max)
+                else:
+                    ep[i] = ep[i-1]
+                    af[i] = af[i-1]
+
+            df['Parabolic_SAR'] = sar
+            df['Parabolic_Trend'] = np.where(df['value'] > df['Parabolic_SAR'], 1, -1)
+        return df
+
+    def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """生成交易信号"""
+        signals = pd.DataFrame(index=df.index)
+        signals['date'] = df['date']
+        signals['value'] = df['value']
+
+        # 基于RSI的信号
+        if 'RSI' in df.columns:
+            signals['RSI_Signal'] = 0
+            signals.loc[df['RSI'] < 30, 'RSI_Signal'] = 1  # 买入
+            signals.loc[df['RSI'] > 70, 'RSI_Signal'] = -1  # 卖出
+
+        # 基于MACD的信号
+        if 'MACD' in df.columns and 'MACD_Signal' in df.columns:
+            signals['MACD_Signal'] = 0
+            signals.loc[df['MACD'] > df['MACD_Signal'], 'MACD_Signal'] = 1
+            signals.loc[df['MACD'] < df['MACD_Signal'], 'MACD_Signal'] = -1
+
+        # 基于布林带的信号
+        if 'BB_Position' in df.columns:
+            signals['BB_Signal'] = 0
+            signals.loc[df['BB_Position'] < 0.2, 'BB_Signal'] = 1  # 接近下轨，买入
+            signals.loc[df['BB_Position'] > 0.8, 'BB_Signal'] = -1  # 接近上轨，卖出
+
+        # 基于KDJ的信号
+        if 'K' in df.columns and 'D' in df.columns:
+            signals['KDJ_Signal'] = 0
+            signals.loc[
+                (df['K'] < 20) & (df['K'] > df['D']), 'KDJ_Signal'
+            ] = 1  # K线上穿D线且在超卖区
+            signals.loc[
+                (df['K'] > 80) & (df['K'] < df['D']), 'KDJ_Signal'
+            ] = -1  # K线下穿D线且在超买区
+
+        # 综合信号
+        signal_cols = [col for col in signals.columns if col.endswith('_Signal')]
+        if signal_cols:
+            signals['Combined_Signal'] = signals[signal_cols].sum(axis=1)
+            signals['Trading_Position'] = np.where(
+                signals['Combined_Signal'] > 0, 1,
+                np.where(signals['Combined_Signal'] < 0, -1, 0)
+            )
+
+        return signals
+
+    def calculate_performance_metrics(
+        self,
+        signals: pd.DataFrame
+    ) -> Dict[str, float]:
+        """
+        计算性能指标
+
+        Args:
+            signals: 包含交易信号的数据
+
+        Returns:
+            性能指标字典
+        """
+        if 'Trading_Position' not in signals.columns or signals.empty:
+            return {}
+
+        # 计算收益率
+        signals['Returns'] = signals['value'].pct_change()
+        signals['Strategy_Returns'] = signals['Trading_Position'].shift(1) * signals['Returns']
+
+        # 基础指标
+        total_return = (1 + signals['Returns'].fillna(0)).prod() - 1
+        strategy_return = (1 + signals['Strategy_Returns'].fillna(0)).prod() - 1
+
+        # 年化收益率
+        trading_days = len(signals)
+        annual_return = (1 + strategy_return) ** (252 / trading_days) - 1 if trading_days > 0 else 0
+
+        # 波动率
+        volatility = signals['Strategy_Returns'].std() * np.sqrt(252)
+
+        # 夏普比率
+        risk_free_rate = 0.02  # 假设无风险利率2%
+        sharpe_ratio = (annual_return - risk_free_rate) / volatility if volatility > 0 else 0
+
+        # 最大回撤
+        cumulative_returns = (1 + signals['Strategy_Returns'].fillna(0)).cumprod()
+        rolling_max = cumulative_returns.expanding().max()
+        drawdown = (cumulative_returns - rolling_max) / rolling_max
+        max_drawdown = drawdown.min()
+
+        # 胜率
+        winning_trades = (signals['Strategy_Returns'] > 0).sum()
+        total_trades = (signals['Strategy_Returns'] != 0).sum()
+        win_rate = winning_trades / total_trades if total_trades > 0 else 0
+
+        # 盈利因子
+        gross_profit = signals['Strategy_Returns'][signals['Strategy_Returns'] > 0].sum()
+        gross_loss = abs(signals['Strategy_Returns'][signals['Strategy_Returns'] < 0].sum())
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else np.inf
+
+        return {
+            'Total_Return': total_return,
+            'Strategy_Return': strategy_return,
+            'Annual_Return': annual_return,
+            'Volatility': volatility,
+            'Sharpe_Ratio': sharpe_ratio,
+            'Max_Drawdown': max_drawdown,
+            'Win_Rate': win_rate,
+            'Profit_Factor': profit_factor,
+            'Total_Trades': total_trades
+        }
+
+
+# 便捷函数
+def calculate_gdp_indicators(
+    df: pd.DataFrame,
+    indicator_config: Optional[Dict] = None
+) -> pd.DataFrame:
+    """
+    便捷函数：计算GDP技术指标
+
+    Args:
+        df: GDP数据DataFrame
+        indicator_config: 指标配置
+
+    Returns:
+        包含所有指标的DataFrame
+    """
+    calculator = GDPTechnicalIndicators()
+    return calculator.calculate_indicators(df, indicator_config)
+
+
+def generate_gdp_signals(
+    df: pd.DataFrame,
+    indicator_config: Optional[Dict] = None
+) -> pd.DataFrame:
+    """
+    便捷函数：生成GDP交易信号
+
+    Args:
+        df: GDP数据DataFrame
+        indicator_config: 指标配置
+
+    Returns:
+        包含交易信号的数据
+    """
+    calculator = GDPTechnicalIndicators()
+    result = calculator.calculate_indicators(df, indicator_config)
+    return result
+
+
+def calculate_gdp_performance(
+    signals: pd.DataFrame
+) -> Dict[str, float]:
+    """
+    便捷函数：计算GDP策略性能
+
+    Args:
+        signals: 包含交易信号的数据
+
+    Returns:
+        性能指标
+    """
+    calculator = GDPTechnicalIndicators()
+    return calculator.calculate_performance_metrics(signals)

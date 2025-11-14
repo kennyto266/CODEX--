@@ -1,0 +1,56 @@
+{
+  "report_date": "2025-11-02T14:49:48.340182",
+  "data_summary": {
+    "total_records": 864,
+    "date_range": {
+      "start": "2022-04-27",
+      "end": "2025-10-31"
+    },
+    "stock_data": {
+      "symbol": "0700.HK (Tencent)",
+      "price_range": {
+        "min": 187.747,
+        "max": 677.5,
+        "mean": 377.3802708333333
+      }
+    },
+    "government_data": {
+      "hibor_range": {
+        "min": 2.27,
+        "max": 5.77,
+        "mean": 4.5083680555555565
+      },
+      "visitor_range": {
+        "min": 121200.0,
+        "max": 294000.0,
+        "mean": 206580.55555555556
+      }
+    }
+  },
+  "backtest_results": {
+    "initial_capital": 100000.0,
+    "final_value": 117570.09345794393,
+    "total_return_pct": 17.570093457943937,
+    "annual_return_pct": 7.0772404769858355,
+    "volatility_pct": 7.108864796802818,
+    "sharpe_ratio": 0.7142125532151494,
+    "max_drawdown_pct": -10.258302583025834,
+    "total_trades": 1,
+    "win_rate_pct": 0.0
+  },
+  "signal_distribution": {
+    "HOLD": 863,
+    "BUY": 1
+  },
+  "key_insights": [
+    "Strategy generated 17.57% return over 864 days",
+    "Strong correlation between HIBOR and stock price (r=0.703)"
+  ],
+  "next_steps": [
+    "1. Test strategies on other HKEX stocks",
+    "2. Add more government indicators",
+    "3. Implement machine learning models",
+    "4. Optimize signal thresholds",
+    "5. Add risk management rules"
+  ]
+}

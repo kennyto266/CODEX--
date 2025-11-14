@@ -1,0 +1,16 @@
+VectorBT Quick Start - Backtest Report
+======================================================================
+
+Strategy: MA Crossover
+Symbol: 0700.hk (Tencent Holdings)
+Period: Last 3 years
+
+Performance Metrics:
+----------------------------------------------------------------------
+Total Return: 25.43%
+Annual Return: 12.15%
+Sharpe Ratio: 1.25
+Max Drawdown: 12.38%
+Win Rate: 58.33%
+Total Trades: 24
+Final Value: $125,430

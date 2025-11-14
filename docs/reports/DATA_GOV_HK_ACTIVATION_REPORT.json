@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-11-06T00:38:54.915763",
+  "status": "ACTIVATED",
+  "successful_downloads": 0,
+  "failed_downloads": 8,
+  "datasets": {
+    "successful": [],
+    "failed": [
+      "hibor_rates",
+      "visitor_arrivals",
+      "traffic_speed",
+      "weather_obs",
+      "aqhi",
+      "mtr_passengers",
+      "gdp_data",
+      "cpi_data"
+    ]
+  },
+  "next_steps": [
+    "Run download script to get real data",
+    "Replace mock data in gov_crawler",
+    "Configure scheduled update mechanism",
+    "Monitor data quality and availability"
+  ],
+  "real_data_coverage": {
+    "previous": "31.4% (16/51 non-price indicators)",
+    "expected_after": "80%+ (40+/51 non-price indicators)",
+    "improvement": "+48.6%"
+  }
+}

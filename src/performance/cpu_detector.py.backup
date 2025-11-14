@@ -1,0 +1,535 @@
+"""
+Phase 3: CPU核心检测与自动配置
+
+T053: CPU核心检测和自动配置
+- CPU核心数检测
+- 自动配置
+- 性能优化
+- 资源预留
+- 动态调整
+"""
+
+import logging
+import os
+import platform
+import psutil
+import subprocess
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Any
+import time
+
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CPUInfo:
+    """CPU信息"""
+    physical_cores: int
+    logical_cores: int
+    max_frequency_mhz: float
+    current_frequency_mhz: float
+    architecture: str
+    vendor: str
+    model: str
+    cache_size_kb: int
+    flags: List[str]
+    supports_simd: bool
+    supports_avx: bool
+    supports_avx2: bool
+    supports_avx512: bool
+
+
+@dataclass
+class SystemInfo:
+    """系统信息"""
+    os: str
+    os_version: str
+    python_version: str
+    total_memory_gb: float
+    available_memory_gb: float
+    cpu_info: CPUInfo
+
+
+@dataclass
+class AutoConfig:
+    """自动配置"""
+    optimal_workers: int
+    thread_pool_size: int
+    process_pool_size: int
+    memory_limit_mb: int
+    chunk_size: int
+    max_concurrent_tasks: int
+    rayon_threads: int
+    reserve_cores: int
+    performance_mode: str
+
+
+class CPUDetector:
+    """
+    CPU核心检测器
+
+    功能特性：
+    - 自动检测CPU核心数
+    - 识别SIMD和AVX支持
+    - 计算最优线程数
+    - 动态系统资源检测
+    """
+
+    def __init__(self):
+        self._system_info: Optional[SystemInfo] = None
+        self._cpu_info: Optional[CPUInfo] = None
+
+    def detect(self) -> SystemInfo:
+        """检测系统信息"""
+        if self._system_info is None:
+            self._cpu_info = self._detect_cpu()
+            self._system_info = self._detect_system()
+        return self._system_info
+
+    def _detect_cpu(self) -> CPUInfo:
+        """检测CPU信息"""
+        # 基础信息
+        physical_cores = psutil.cpu_count(logical=False)
+        logical_cores = psutil.cpu_count(logical=True)
+
+        # 频率信息
+        try:
+            cpu_freq = psutil.cpu_freq()
+            max_freq = cpu_freq.max if cpu_freq else 0
+            current_freq = cpu_freq.current if cpu_freq else 0
+        except:
+            max_freq = 0
+            current_freq = 0
+
+        # 系统信息
+        vendor = self._get_cpu_vendor()
+        model = platform.processor()
+        architecture = platform.machine()
+
+        # 缓存大小
+        cache_size = self._get_cache_size()
+
+        # CPU特性
+        flags = self._get_cpu_flags()
+        supports_simd = 'sse' in flags or 'sse2' in flags
+        supports_avx = 'avx' in flags
+        supports_avx2 = 'avx2' in flags
+        supports_avx512 = 'avx512' in flags or 'avx512f' in flags
+
+        return CPUInfo(
+            physical_cores=physical_cores,
+            logical_cores=logical_cores,
+            max_frequency_mhz=max_freq,
+            current_frequency_mhz=current_freq,
+            architecture=architecture,
+            vendor=vendor,
+            model=model,
+            cache_size_kb=cache_size,
+            flags=flags,
+            supports_simd=supports_simd,
+            supports_avx=supports_avx,
+            supports_avx2=supports_avx2,
+            supports_avx512=supports_avx512
+        )
+
+    def _get_cpu_vendor(self) -> str:
+        """获取CPU厂商"""
+        try:
+            if platform.system() == "Windows":
+                import winreg
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                   r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
+                vendor = winreg.QueryValueEx(key, "VendorIdentifier")[0]
+                winreg.CloseKey(key)
+                return vendor
+            else:
+                with open('/proc/cpuinfo', 'r') as f:
+                    for line in f:
+                        if 'vendor_id' in line:
+                            return line.split(':')[1].strip()
+        except:
+            pass
+        return "Unknown"
+
+    def _get_cache_size(self) -> int:
+        """获取缓存大小 (KB)"""
+        try:
+            if platform.system() == "Windows":
+                import winreg
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                   r"HARDWARE\DESCRIPTION\System\CentralProcessor\0")
+                cache_size, _ = winreg.QueryValueEx(key, "~L3 Cache Size")
+                winreg.CloseKey(key)
+                return cache_size
+            else:
+                with open('/sys/devices/system/cpu/cpu0/cache/index3/size', 'r') as f:
+                    return int(f.read().strip()[:-1])  # 去掉K
+        except:
+            return 0
+
+    def _get_cpu_flags(self) -> List[str]:
+        """获取CPU特性标志"""
+        try:
+            if platform.system() == "Windows":
+                # Windows下通过wmic获取
+                result = subprocess.run(
+                    ['wmic', 'cpu', 'get', 'flags', '/format:list'],
+                    capture_output=True,
+                    text=True
+                )
+                if result.returncode == 0:
+                    for line in result.stdout.split('\n'):
+                        if 'Flags=' in line:
+                            return line.split('=')[1].split()
+            else:
+                # Linux下读取/proc/cpuinfo
+                with open('/proc/cpuinfo', 'r') as f:
+                    for line in f:
+                        if 'flags' in line:
+                            return line.split(':')[1].split()
+        except:
+            pass
+        return []
+
+    def _detect_system(self) -> SystemInfo:
+        """检测系统信息"""
+        # 内存信息
+        memory = psutil.virtual_memory()
+        total_gb = memory.total / (1024**3)
+        available_gb = memory.available / (1024**3)
+
+        return SystemInfo(
+            os=platform.system(),
+            os_version=platform.version(),
+            python_version=platform.python_version(),
+            total_memory_gb=total_gb,
+            available_memory_gb=available_gb,
+            cpu_info=self._cpu_info or self._detect_cpu()
+        )
+
+    def get_optimal_config(self) -> AutoConfig:
+        """获取最优配置"""
+        system_info = self.detect()
+        cpu = system_info.cpu_info
+
+        # 计算保留核心数（给系统和其他应用使用）
+        if cpu.logical_cores >= 32:
+            reserve_cores = 4
+        elif cpu.logical_cores >= 16:
+            reserve_cores = 2
+        else:
+            reserve_cores = 1
+
+        # 计算最优工作线程数
+        # 对于I/O密集型任务，可以超过核心数
+        optimal_workers = max(1, cpu.logical_cores - reserve_cores)
+
+        # 线程池大小（考虑超线程）
+        thread_pool_size = min(optimal_workers * 2, cpu.logical_cores)
+
+        # 进程池大小（通常等于物理核心数）
+        process_pool_size = cpu.physical_cores
+
+        # 内存限制（系统内存的70%）
+        memory_limit_mb = int(system_info.total_memory_gb * 1024 * 0.7)
+
+        # 数据块大小（根据内存和核心数调整）
+        chunk_size = self._calculate_chunk_size(system_info, optimal_workers)
+
+        # 最大并发任务数
+        max_concurrent_tasks = thread_pool_size * 2
+
+        # Rayon线程数
+        rayon_threads = optimal_workers
+
+        # 性能模式
+        if cpu.logical_cores >= 32 and cpu.supports_avx512:
+            performance_mode = "ultra"
+        elif cpu.logical_cores >= 16 and cpu.supports_avx2:
+            performance_mode = "high"
+        else:
+            performance_mode = "normal"
+
+        return AutoConfig(
+            optimal_workers=optimal_workers,
+            thread_pool_size=thread_pool_size,
+            process_pool_size=process_pool_size,
+            memory_limit_mb=memory_limit_mb,
+            chunk_size=chunk_size,
+            max_concurrent_tasks=max_concurrent_tasks,
+            rayon_threads=rayon_threads,
+            reserve_cores=reserve_cores,
+            performance_mode=performance_mode
+        )
+
+    def _calculate_chunk_size(self, system_info: SystemInfo, workers: int) -> int:
+        """计算数据块大小"""
+        # 基础块大小
+        base_size = 1000
+
+        # 根据内存调整
+        memory_factor = min(2.0, system_info.total_memory_gb / 8.0)
+
+        # 根据核心数调整
+        core_factor = min(2.0, workers / 4.0)
+
+        return int(base_size * memory_factor * core_factor)
+
+    def get_benchmark_results(self) -> Dict[str, float]:
+        """运行性能基准测试"""
+        logger.info("开始CPU性能基准测试...")
+
+        results = {}
+
+        # CPU计算性能测试
+        start = time.time()
+        self._cpu_benchmark_test()
+        results['cpu_benchmark'] = time.time() - start
+
+        # 内存带宽测试
+        start = time.time()
+        self._memory_benchmark_test()
+        results['memory_benchmark'] = time.time() - start
+
+        # 并行性能测试
+        results['parallel_benchmark'] = self._parallel_benchmark_test()
+
+        logger.info(f"基准测试完成: {results}")
+
+        return results
+
+    def _cpu_benchmark_test(self, iterations: int = 1000000):
+        """CPU计算基准测试"""
+        result = 0
+        for i in range(iterations):
+            result += i * i
+        return result
+
+    def _memory_benchmark_test(self, size_mb: int = 100):
+        """内存带宽基准测试"""
+        data = bytearray(size_mb * 1024 * 1024)
+        checksum = 0
+        for i in range(0, len(data), 4096):
+            checksum += data[i]
+        return checksum
+
+    def _parallel_benchmark_test(self) -> float:
+        """并行性能基准测试"""
+        import concurrent.futures
+        import math
+
+        system_info = self.detect()
+        workers = system_info.cpu_info.logical_cores
+
+        def cpu_intensive_task(n):
+            return sum(i * i for i in range(n))
+
+        start = time.time()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = [executor.submit(cpu_intensive_task, 100000) for _ in range(workers * 4)]
+            for future in concurrent.futures.as_completed(futures):
+                future.result()
+
+        return time.time() - start
+
+    def get_system_load(self) -> Dict[str, float]:
+        """获取当前系统负载"""
+        return {
+            'cpu_percent': psutil.cpu_percent(interval=1.0),
+            'memory_percent': psutil.virtual_memory().percent,
+            'load_average': self._get_load_average(),
+        }
+
+    def _get_load_average(self) -> Optional[float]:
+        """获取系统负载平均值"""
+        try:
+            if platform.system() == "Windows":
+                # Windows下通过wmic获取
+                result = subprocess.run(
+                    ['wmic', 'computersystem', 'get', 'loadpercentage'],
+                    capture_output=True,
+                    text=True
+                )
+                if result.returncode == 0:
+                    lines = result.stdout.strip().split('\n')
+                    if len(lines) > 1:
+                        return float(lines[1].strip())
+            else:
+                # Unix/Linux下使用os.getloadavg
+                load1, _, _ = os.getloadavg()
+                return load1
+        except:
+            pass
+        return None
+
+    def get_recommendations(self) -> List[str]:
+        """获取优化建议"""
+        system_info = self.detect()
+        config = self.get_optimal_config()
+        recommendations = []
+
+        # CPU建议
+        if system_info.cpu_info.logical_cores >= 16:
+            recommendations.append("系统具有多核心CPU，建议使用并行计算")
+
+        # AVX建议
+        if system_info.cpu_info.supports_avx2:
+            recommendations.append("CPU支持AVX2，可启用向量化的数值计算")
+        elif system_info.cpu_info.supports_avx:
+            recommendations.append("CPU支持AVX，可启用基本向量优化")
+
+        # 内存建议
+        if system_info.total_memory_gb >= 16:
+            recommendations.append("系统内存充足，可增大数据块大小以提高缓存效率")
+
+        # 负载建议
+        load = self.get_system_load()
+        if load['cpu_percent'] > 80:
+            recommendations.append("CPU使用率较高，建议减少工作线程数")
+        if load['memory_percent'] > 90:
+            recommendations.append("内存使用率较高，建议降低并发数或减小块大小")
+
+        # 性能模式建议
+        if config.performance_mode == "ultra":
+            recommendations.append("检测到高性能CPU，推荐使用Rayon并行优化器")
+        elif config.performance_mode == "high":
+            recommendations.append("检测到中等性能CPU，推荐使用线程池优化")
+
+        return recommendations
+
+    def print_system_info(self):
+        """打印系统信息"""
+        system_info = self.detect()
+        config = self.get_optimal_config()
+        load = self.get_system_load()
+
+        print("\n" + "=" * 60)
+        print("系统信息检测报告")
+        print("=" * 60)
+
+        # CPU信息
+        print("\n[CPU信息]")
+        print(f"  型号: {system_info.cpu_info.model}")
+        print(f"  厂商: {system_info.cpu_info.vendor}")
+        print(f"  架构: {system_info.cpu_info.architecture}")
+        print(f"  物理核心: {system_info.cpu_info.physical_cores}")
+        print(f"  逻辑核心: {system_info.cpu_info.logical_cores}")
+        print(f"  最大频率: {system_info.cpu_info.max_frequency_mhz:.0f} MHz")
+        print(f"  当前频率: {system_info.cpu_info.current_frequency_mhz:.0f} MHz")
+        print(f"  缓存大小: {system_info.cpu_info.cache_size_kb} KB")
+
+        # 特性支持
+        print("\n[CPU特性]")
+        print(f"  SIMD: {'✓' if system_info.cpu_info.supports_simd else '✗'}")
+        print(f"  AVX: {'✓' if system_info.cpu_info.supports_avx else '✗'}")
+        print(f"  AVX2: {'✓' if system_info.cpu_info.supports_avx2 else '✗'}")
+        print(f"  AVX512: {'✓' if system_info.cpu_info.supports_avx512 else '✗'}")
+
+        # 系统信息
+        print("\n[系统信息]")
+        print(f"  操作系统: {system_info.os}")
+        print(f"  系统版本: {system_info.os_version}")
+        print(f"  Python版本: {system_info.python_version}")
+        print(f"  总内存: {system_info.total_memory_gb:.2f} GB")
+        print(f"  可用内存: {system_info.available_memory_gb:.2f} GB")
+
+        # 当前负载
+        print("\n[当前负载]")
+        print(f"  CPU使用率: {load['cpu_percent']:.1f}%")
+        print(f"  内存使用率: {load['memory_percent']:.1f}%")
+        if load['load_average'] is not None:
+            print(f"  系统负载: {load['load_average']:.2f}")
+
+        # 自动配置
+        print("\n[自动配置]")
+        print(f"  性能模式: {config.performance_mode}")
+        print(f"  推荐工作线程: {config.optimal_workers}")
+        print(f"  线程池大小: {config.thread_pool_size}")
+        print(f"  进程池大小: {config.process_pool_size}")
+        print(f"  内存限制: {config.memory_limit_mb} MB")
+        print(f"  数据块大小: {config.chunk_size}")
+        print(f"  Rayon线程数: {config.rayon_threads}")
+        print(f"  保留核心数: {config.reserve_cores}")
+
+        # 优化建议
+        print("\n[优化建议]")
+        recommendations = self.get_recommendations()
+        for i, rec in enumerate(recommendations, 1):
+            print(f"  {i}. {rec}")
+
+        print("=" * 60)
+
+
+class PerformanceOptimizer:
+    """性能优化器"""
+
+    def __init__(self):
+        self.detector = CPUDetector()
+        self.config = self.detector.get_optimal_config()
+
+    def optimize_for_quantitative_trading(self) -> Dict[str, Any]:
+        """针对量化交易优化"""
+        recommendations = {
+            'parallel_optimizer': {
+                'max_workers': self.config.thread_pool_size,
+                'chunk_size': self.config.chunk_size,
+                'use_rust': self.config.performance_mode in ['high', 'ultra'],
+            },
+            'thread_manager': {
+                'min_workers': self.config.optimal_workers // 2,
+                'max_workers': self.config.optimal_workers,
+                'keepalive_time': 60.0,
+            },
+            'work_distributor': {
+                'num_workers': self.config.optimal_workers,
+                'chunk_size': self.config.chunk_size,
+                'enable_load_balancing': True,
+            },
+            'rayon_config': {
+                'num_threads': self.config.rayon_threads,
+            },
+            'memory_config': {
+                'limit_mb': self.config.memory_limit_mb,
+                'chunk_size': self.config.chunk_size,
+            }
+        }
+
+        return recommendations
+
+    def benchmark_all(self) -> Dict[str, Any]:
+        """运行所有基准测试"""
+        results = {
+            'system_info': self.detector.detect().__dict__,
+            'auto_config': self.config.__dict__,
+            'benchmarks': self.detector.get_benchmark_results(),
+            'system_load': self.detector.get_system_load(),
+            'recommendations': self.detector.get_recommendations(),
+        }
+
+        return results
+
+
+# 示例使用
+if __name__ == "__main__":
+    # 配置日志
+    logging.basicConfig(level=logging.INFO)
+
+    # 创建检测器
+    detector = CPUDetector()
+
+    # 打印系统信息
+    detector.print_system_info()
+
+    # 运行基准测试
+    print("\n[基准测试]")
+    benchmarks = detector.get_benchmark_results()
+    for name, value in benchmarks.items():
+        print(f"  {name}: {value:.4f}s")
+
+    # 获取性能优化配置
+    optimizer = PerformanceOptimizer()
+    print("\n[量化交易优化配置]")
+    recommendations = optimizer.optimize_for_quantitative_trading()
+    import json
+    print(json.dumps(recommendations, indent=2))

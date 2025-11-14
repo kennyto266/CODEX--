@@ -1,0 +1,69 @@
+{
+  "best_strategy": {
+    "strategy": "signal_zscore",
+    "total_return_pct": 28.662148144072052,
+    "annual_return_pct": 38.59963001659368,
+    "sharpe_ratio": 1.590125261574026,
+    "max_drawdown_pct": -3.7621128879562433,
+    "total_trades": 14,
+    "final_value": 128662.14814407205,
+    "trades": 14
+  },
+  "all_results": [
+    {
+      "strategy": "signal_zscore",
+      "total_return_pct": 28.662148144072052,
+      "annual_return_pct": 38.59963001659368,
+      "sharpe_ratio": 1.590125261574026,
+      "max_drawdown_pct": -3.7621128879562433,
+      "total_trades": 14,
+      "final_value": 128662.14814407205,
+      "trades": 14
+    },
+    {
+      "strategy": "signal_bb",
+      "total_return_pct": 3.8426924184854285,
+      "annual_return_pct": 5.005083942601929,
+      "sharpe_ratio": 0.33983753151737295,
+      "max_drawdown_pct": -3.8151115513683838,
+      "total_trades": 2,
+      "final_value": 103842.69241848543,
+      "trades": 2
+    },
+    {
+      "strategy": "signal_rsi",
+      "total_return_pct": 0.0,
+      "annual_return_pct": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown_pct": 0.0,
+      "total_trades": 0,
+      "final_value": 100000,
+      "trades": 0
+    },
+    {
+      "strategy": "signal_macrossover",
+      "total_return_pct": -10.906500900158003,
+      "annual_return_pct": -13.892710311344757,
+      "sharpe_ratio": -0.7292540646363049,
+      "max_drawdown_pct": -14.659593506624985,
+      "total_trades": 29,
+      "final_value": 89093.499099842,
+      "trades": 29
+    },
+    {
+      "strategy": "signal_macd",
+      "total_return_pct": -54.37921598813497,
+      "annual_return_pct": -63.81377863524771,
+      "sharpe_ratio": -5.742947536690543,
+      "max_drawdown_pct": -54.37921598813497,
+      "total_trades": 63,
+      "final_value": 45620.78401186502,
+      "trades": 63
+    }
+  ],
+  "data_info": {
+    "total_records": 203,
+    "date_range": "2025-01-14 to 2025-10-23",
+    "data_source": "Real HIBOR Data with Technical Analysis"
+  }
+}

@@ -1,0 +1,68 @@
+[package]
+name = "rust-core"
+version = "0.1.0"
+edition = "2021"
+description = "High-performance quantitative trading core in Rust"
+license = "MIT"
+authors = ["Claude Code"]
+
+[lib]
+name = "quant_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 for Python bindings
+pyo3 = { version = "0.22", features = ["abi3", "extension-module"], optional = true }
+
+# Parallel computing
+rayon = "1.10"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Numeric computing
+ndarray = "0.16"
+statrs = "0.16"
+
+# Async support
+tokio = { version = "1.0", features = ["full"], optional = true }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+# Time handling
+chrono = "0.4"
+log = "0.4"
+env_logger = "0.11"
+# CPU core detection
+num_cpus = "1.16"
+
+# Random numbers for testing
+rand = "0.8"
+
+# Testing
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.4"
+
+# Benchmarks
+[[bench]]
+name = "backtest_bench"
+harness = false
+
+[features]
+default = ["python"]
+python = ["pyo3"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+opt-level = 0
+debug = true

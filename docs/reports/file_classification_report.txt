@@ -1,0 +1,6 @@
+================================================================================
+Traceback (most recent call last):
+  File "C:\Users\Penguin8n\CODEX--\CODEX--\classify_untracked.py", line 46, in <module>
+    print("未跟\u8e2a文件分\u7c7b分析\u62a5告")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'cp950' codec can't encode character '\u8e2a' in position 2: illegal multibyte sequence

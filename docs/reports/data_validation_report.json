@@ -1,0 +1,198 @@
+{
+  "timestamp": "2025-11-02T13:29:34.788733",
+  "validation_results": {
+    "hkex_data": {
+      "file_existence": {
+        "exists": true,
+        "size_bytes": 3256,
+        "last_modified": "2025-10-20T13:03:32.800173",
+        "is_readable": true
+      },
+      "data_freshness": {
+        "status": "STALE",
+        "age_hours": 312.43,
+        "max_age_hours": 24,
+        "freshness_score": 0,
+        "file_time": "2025-10-20T13:03:32.800173",
+        "current_time": "2025-11-02T13:29:34.789206"
+      },
+      "data_completeness": {
+        "status": "INCOMPLETE",
+        "total_rows": 45,
+        "valid_rows": 33,
+        "empty_rows": 12,
+        "completeness_pct": 73.33,
+        "first_valid_date": "2025-09-01T00:00:00",
+        "last_valid_date": "2025-10-17T00:00:00"
+      },
+      "opnspec_api": {
+        "status": "AVAILABLE",
+        "response_code": 200,
+        "response_time_ms": 570.73,
+        "data_size": 549870,
+        "has_data": true
+      },
+      "real_data_comparison": {
+        "has_real_data": true,
+        "real_data_size": 2713
+      }
+    },
+    "gov_data": {
+      "hibor_data_20251023_205857.csv": {
+        "file_existence": {
+          "exists": true,
+          "size_bytes": 26777,
+          "last_modified": "2025-10-23T20:58:57.746627",
+          "is_readable": true
+        },
+        "data_freshness": {
+          "status": "STALE",
+          "age_hours": 232.51,
+          "max_age_hours": 168,
+          "freshness_score": 0,
+          "file_time": "2025-10-23T20:58:57.746627",
+          "current_time": "2025-11-02T13:29:35.985063"
+        },
+        "data_completeness": {
+          "status": "COMPLETE",
+          "total_rows": 262,
+          "valid_rows": 262,
+          "empty_rows": 0,
+          "completeness_pct": 100.0,
+          "first_valid_date": null,
+          "last_valid_date": null
+        }
+      },
+      "hibor_data_20251023_205904.csv": {
+        "file_existence": {
+          "exists": true,
+          "size_bytes": 26792,
+          "last_modified": "2025-10-23T20:59:04.270559",
+          "is_readable": true
+        },
+        "data_freshness": {
+          "status": "STALE",
+          "age_hours": 232.51,
+          "max_age_hours": 168,
+          "freshness_score": 0,
+          "file_time": "2025-10-23T20:59:04.270559",
+          "current_time": "2025-11-02T13:29:35.985819"
+        },
+        "data_completeness": {
+          "status": "COMPLETE",
+          "total_rows": 262,
+          "valid_rows": 262,
+          "empty_rows": 0,
+          "completeness_pct": 100.0,
+          "first_valid_date": null,
+          "last_valid_date": null
+        }
+      },
+      "rvd_property_prices_1982_1998.csv": {
+        "file_existence": {
+          "exists": true,
+          "size_bytes": 11268,
+          "last_modified": "2025-10-27T21:34:48.391024",
+          "is_readable": true
+        },
+        "data_freshness": {
+          "status": "FRESH",
+          "age_hours": 135.91,
+          "max_age_hours": 168,
+          "freshness_score": 1.91,
+          "file_time": "2025-10-27T21:34:48.391024",
+          "current_time": "2025-11-02T13:29:35.986456"
+        },
+        "data_completeness": {
+          "status": "COMPLETE",
+          "total_rows": 69,
+          "valid_rows": 69,
+          "empty_rows": 0,
+          "completeness_pct": 100.0,
+          "first_valid_date": null,
+          "last_valid_date": null
+        }
+      },
+      "visitor_data_20251023_205857.csv": {
+        "file_existence": {
+          "exists": true,
+          "size_bytes": 887,
+          "last_modified": "2025-10-23T20:58:57.749591",
+          "is_readable": true
+        },
+        "data_freshness": {
+          "status": "STALE",
+          "age_hours": 232.51,
+          "max_age_hours": 168,
+          "freshness_score": 0,
+          "file_time": "2025-10-23T20:58:57.749591",
+          "current_time": "2025-11-02T13:29:35.986886"
+        },
+        "data_completeness": {
+          "status": "COMPLETE",
+          "total_rows": 12,
+          "valid_rows": 12,
+          "empty_rows": 0,
+          "completeness_pct": 100.0,
+          "first_valid_date": null,
+          "last_valid_date": null
+        }
+      },
+      "visitor_data_20251023_205904.csv": {
+        "file_existence": {
+          "exists": true,
+          "size_bytes": 885,
+          "last_modified": "2025-10-23T20:59:04.273062",
+          "is_readable": true
+        },
+        "data_freshness": {
+          "status": "STALE",
+          "age_hours": 232.51,
+          "max_age_hours": 168,
+          "freshness_score": 0,
+          "file_time": "2025-10-23T20:59:04.273062",
+          "current_time": "2025-11-02T13:29:35.987138"
+        },
+        "data_completeness": {
+          "status": "COMPLETE",
+          "total_rows": 12,
+          "valid_rows": 12,
+          "empty_rows": 0,
+          "completeness_pct": 100.0,
+          "first_valid_date": null,
+          "last_valid_date": null
+        }
+      }
+    }
+  },
+  "summary": {
+    "overall_status": "WARNING",
+    "critical_issues": [
+      "HKEX data is stale: 312.43 hours old",
+      "Insufficient data completeness: 73.33%"
+    ],
+    "recommendations": [
+      "Fix HKEX crawler to implement daily auto-update",
+      "Check data collection logic to ensure complete data"
+    ]
+  },
+  "quality_score": {
+    "weighted_score": 5.2,
+    "max_score": 10,
+    "grade": "C+",
+    "components": {
+      "Freshness": {
+        "score": 0,
+        "weight": 0.4
+      },
+      "Completeness": {
+        "score": 7.33,
+        "weight": 0.3
+      },
+      "API_Availability": {
+        "score": 10,
+        "weight": 0.3
+      }
+    }
+  }
+}

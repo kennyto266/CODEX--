@@ -1,0 +1,36 @@
+{
+  "test_name": "基本性能測試",
+  "timestamp": "2025-11-04T01:45:16.054608",
+  "results": [
+    {
+      "test_name": "基本性能測試",
+      "total_time": 5.007362365722656,
+      "throughput": 6430.531215480136,
+      "avg_latency": 15.548819547854595,
+      "p50_latency": 15.588521957397461,
+      "p95_latency": 16.246557235717773,
+      "p99_latency": 16.434907913208008,
+      "min_latency": 7.866859436035156,
+      "max_latency": 16.787052154541016,
+      "success_rate": 100.0,
+      "error_count": 0,
+      "total_requests": 32200,
+      "timestamp": "2025-11-04T01:45:11.048281"
+    },
+    {
+      "test_name": "基本性能測試",
+      "total_time": 5.001185178756714,
+      "throughput": 3199.2416653481273,
+      "avg_latency": 15.627220809459686,
+      "p50_latency": 15.66934585571289,
+      "p95_latency": 16.150712966918945,
+      "p99_latency": 16.284942626953125,
+      "min_latency": 14.612436294555664,
+      "max_latency": 23.937225341796875,
+      "success_rate": 100.0,
+      "error_count": 0,
+      "total_requests": 16000,
+      "timestamp": "2025-11-04T01:45:16.053136"
+    }
+  ]
+}

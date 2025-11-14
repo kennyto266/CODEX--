@@ -1,0 +1,80 @@
+[package]
+name = "rust-nonprice"
+version = "0.1.0"
+edition = "2021"
+authors = ["Quantitative Trading System <quant@trading.com>"]
+description = "High-performance Rust system for non-price data technical indicators"
+license = "MIT"
+repository = "https://github.com/your-org/rust-nonprice"
+keywords = ["finance", "trading", "technical-indicators", "quant"]
+categories = ["finance", "science"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lib]
+name = "rust_nonprice"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "rust-nonprice"
+path = "src/cli.rs"
+
+[dependencies]
+# Core dependencies - Locked to compatible versions
+polars = { version = "0.32", features = ["csv", "parquet", "ipc"] }
+rayon = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+num_cpus = "1.16"
+once_cell = "1.19"
+
+# Date and time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Math and statistics
+statrs = "0.16"
+
+# Error handling and logging
+log = "0.4"
+
+# File I/O
+csv = "1.3"
+
+# CLI
+clap = { version = "4.0", features = ["derive", "cargo"] }
+colored = "2.1"
+
+[dependencies.pyo3]
+version = "0.22"
+optional = true
+features = ["abi3", "extension-module"]
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.4"
+mockall = "0.12"
+
+[dev-dependencies.tempfile]
+version = "3.10"
+
+[features]
+default = ["python"]
+python = ["pyo3"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.test]
+opt-level = 0
+debug = true

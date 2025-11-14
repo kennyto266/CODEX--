@@ -1,0 +1,130 @@
+{
+  "timestamp": "2025-11-02T13:52:52.242225",
+  "verification_results": {
+    "hkma_api": {
+      "api_name": "HKMA",
+      "endpoint": "https://api.hkma.gov.hk/public/market-data/interest-rate-rest",
+      "status": "HTTP_ERROR",
+      "response_code": null,
+      "response_time_ms": null,
+      "data_available": false,
+      "error": "400"
+    },
+    "data_gov_hk": {
+      "api_name": "data.gov.hk",
+      "endpoint": "https://data.gov.hk/api/3/action/package_list",
+      "status": "HTTP_ERROR",
+      "response_code": null,
+      "response_time_ms": null,
+      "datasets_count": null,
+      "error": "404"
+    },
+    "local_data": {
+      "data_dir": "gov_crawler\\data",
+      "files_analyzed": 3,
+      "stale_files": 3,
+      "fresh_files": 0,
+      "file_details": [
+        {
+          "file": "all_alternative_data_20251023_210419.json",
+          "size_bytes": 100445,
+          "modified": "2025-10-23T21:04:19.725091",
+          "age_days": 9,
+          "status": "STALE"
+        },
+        {
+          "file": "hibor_data_20251023_205857.csv",
+          "size_bytes": 26777,
+          "modified": "2025-10-23T20:58:57.746627",
+          "age_days": 9,
+          "status": "STALE"
+        },
+        {
+          "file": "visitor_data_20251023_205857.csv",
+          "size_bytes": 887,
+          "modified": "2025-10-23T20:58:57.749591",
+          "age_days": 9,
+          "status": "STALE"
+        }
+      ],
+      "hibor_quality": {
+        "total_records": 262,
+        "rate_range": "4.12% - 4.28%",
+        "average_rate": "4.20%",
+        "is_reasonable": true
+      }
+    }
+  },
+  "summary": {
+    "overall_status": "WARNING",
+    "critical_issues": [
+      "HKMA API is not available",
+      "Local 3 government data files are stale"
+    ],
+    "recommendations": [
+      "Check network connection or HKMA service status",
+      "Establish automated data update mechanism"
+    ]
+  },
+  "real_data_sources": [
+    {
+      "source": "HKMA (HK Monetary Authority)",
+      "url": "https://www.hkma.gov.hk/eng/data-and-statistics/",
+      "data_types": [
+        "HIBOR rates",
+        "Exchange Fund",
+        "Monetary stats"
+      ],
+      "api_available": true,
+      "update_frequency": "Daily",
+      "priority": "HIGH"
+    },
+    {
+      "source": "C&SD (Census & Statistics Dept)",
+      "url": "https://www.censtatd.gov.hk/en/",
+      "data_types": [
+        "GDP",
+        "CPI",
+        "Retail sales",
+        "Unemployment"
+      ],
+      "api_available": "Partial",
+      "update_frequency": "Monthly/Quarterly",
+      "priority": "HIGH"
+    },
+    {
+      "source": "data.gov.hk Open Data Portal",
+      "url": "https://data.gov.hk/",
+      "data_types": [
+        "Traffic data",
+        "Environment data",
+        "Education data"
+      ],
+      "api_available": true,
+      "update_frequency": "Varies",
+      "priority": "MEDIUM"
+    },
+    {
+      "source": "Tourism Board",
+      "url": "https://www.discoverhongkong.com/",
+      "data_types": [
+        "Visitor stats",
+        "Hotel occupancy"
+      ],
+      "api_available": false,
+      "update_frequency": "Monthly",
+      "priority": "MEDIUM"
+    },
+    {
+      "source": "Housing Authority",
+      "url": "https://www.housingauthority.gov.hk/",
+      "data_types": [
+        "Property price index",
+        "Rent index"
+      ],
+      "api_available": false,
+      "update_frequency": "Monthly",
+      "priority": "MEDIUM"
+    }
+  ]
+}

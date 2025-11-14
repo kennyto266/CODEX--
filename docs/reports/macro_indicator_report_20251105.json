@@ -1,0 +1,143 @@
+{
+  "timestamp": "20251105_160841",
+  "summary": {
+    "timestamp": "2025-11-05 16:08:41.788549",
+    "total_indicators": 35,
+    "valid_indicators": 32,
+    "invalid_indicators": 3,
+    "validity_ratio": 0.9142857142857143,
+    "quality_level": "GOOD",
+    "last_update": "2025-11-05 16:08:41.784930",
+    "validation_details": {
+      "hibor_overnight": true,
+      "hibor_1m": true,
+      "hibor_3m": true,
+      "hibor_6m": true,
+      "hibor_12m": true,
+      "gdp_nominal": true,
+      "gdp_growth": true,
+      "gdp_primary": true,
+      "gdp_secondary": true,
+      "gdp_tertiary": true,
+      "retail_total": true,
+      "retail_clothing": true,
+      "retail_supermarket": true,
+      "retail_restaurants": true,
+      "retail_electronics": true,
+      "retail_yoy_growth": true,
+      "property_price": true,
+      "property_rental": true,
+      "property_return": true,
+      "property_transactions": true,
+      "property_volume": true,
+      "visitor_arrivals": false,
+      "visitor_mainland": true,
+      "visitor_growth": false,
+      "trade_export": true,
+      "trade_import": true,
+      "trade_balance": true,
+      "traffic_flow": true,
+      "traffic_speed": true,
+      "traffic_congestion": true,
+      "mtr_passengers": false,
+      "mtr_peak_hour": true,
+      "border_hk_arrivals": true,
+      "border_visitor_arrivals": true,
+      "border_hk_departures": true
+    },
+    "categories": {
+      "hibor": [
+        "hibor_overnight",
+        "hibor_1m",
+        "hibor_3m",
+        "hibor_6m",
+        "hibor_12m"
+      ],
+      "gdp": [
+        "gdp_nominal",
+        "gdp_growth",
+        "gdp_primary",
+        "gdp_secondary",
+        "gdp_tertiary"
+      ],
+      "retail": [
+        "retail_total",
+        "retail_clothing",
+        "retail_supermarket",
+        "retail_restaurants",
+        "retail_electronics",
+        "retail_yoy_growth"
+      ],
+      "property": [
+        "property_price",
+        "property_rental",
+        "property_return",
+        "property_transactions",
+        "property_volume"
+      ],
+      "visitor": [
+        "visitor_arrivals",
+        "visitor_mainland",
+        "visitor_growth"
+      ],
+      "trade": [
+        "trade_export",
+        "trade_import",
+        "trade_balance"
+      ],
+      "traffic": [
+        "traffic_flow",
+        "traffic_speed",
+        "traffic_congestion"
+      ],
+      "mtr": [
+        "mtr_passengers",
+        "mtr_peak_hour"
+      ],
+      "border": [
+        "border_hk_arrivals",
+        "border_visitor_arrivals",
+        "border_hk_departures"
+      ]
+    }
+  },
+  "latest_indicators": {
+    "hibor_overnight": 5.243,
+    "hibor_1m": 3.9306,
+    "hibor_3m": 2.9851,
+    "hibor_6m": 6.0987,
+    "hibor_12m": 6.9231,
+    "gdp_nominal": 4.6091,
+    "gdp_growth": -2.6161,
+    "gdp_primary": -3.0469,
+    "gdp_secondary": -4.0717,
+    "gdp_tertiary": 1.514,
+    "retail_total": 63.0753,
+    "retail_clothing": 85.9367,
+    "retail_supermarket": 33.5372,
+    "retail_restaurants": 55.367,
+    "retail_electronics": 1.9994,
+    "retail_yoy_growth": 63.4527,
+    "property_price": 10134.0135,
+    "property_rental": 22606.6642,
+    "property_return": 33849.2268,
+    "property_transactions": 35984.6654,
+    "property_volume": 44296.4778,
+    "visitor_arrivals": 1469809.9533,
+    "visitor_mainland": 407369.0028,
+    "visitor_growth": 1567972.2983,
+    "trade_export": 4900.0029,
+    "trade_import": 6909.2717,
+    "trade_balance": 7137.379,
+    "traffic_flow": 325.5065,
+    "traffic_speed": 19.6846,
+    "traffic_congestion": 643.8298,
+    "mtr_passengers": 1660254.9149,
+    "mtr_peak_hour": 501251.908,
+    "border_hk_arrivals": 184004.8292,
+    "border_visitor_arrivals": 515906.4115,
+    "border_hk_departures": 857909.9582
+  },
+  "oscillator": 1.0,
+  "market_regime": "BULL"
+}

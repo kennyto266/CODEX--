@@ -1,0 +1,416 @@
+/* 港股量化交易系统 - 自定义样式 */
+
+/* 全局字体设置 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    line-height: 1.6;
+    color: #333;
+}
+
+/* 中文字体优化 */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+/* 标题样式 */
+h1 {
+    font-size: 2.5em;
+    border-bottom: 3px solid #2980B9;
+    padding-bottom: 0.3em;
+}
+
+h2 {
+    font-size: 2em;
+    color: #2980B9;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.3em;
+}
+
+h3 {
+    font-size: 1.5em;
+    color: #34495e;
+}
+
+/* 代码块样式 */
+.highlight {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    margin: 1em 0;
+}
+
+.highlight pre {
+    padding: 1em;
+    overflow-x: auto;
+    font-size: 0.9em;
+}
+
+/* 内联代码 */
+code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: #e83e8c;
+}
+
+/* 引用块 */
+blockquote {
+    border-left: 4px solid #2980B9;
+    padding-left: 1em;
+    margin: 1.5em 0;
+    color: #555;
+    font-style: italic;
+}
+
+/* 表格样式 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+}
+
+table th {
+    background: #2980B9;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+table tr:hover {
+    background: #f8f9fa;
+}
+
+/* 提示框样式 */
+.admonition {
+    border-radius: 4px;
+    padding: 1em;
+    margin: 1.5em 0;
+    border-left: 4px solid;
+}
+
+.admonition.note {
+    background: #e3f2fd;
+    border-color: #2196F3;
+}
+
+.admonition.tip {
+    background: #e8f5e9;
+    border-color: #4CAF50;
+}
+
+.admonition.warning {
+    background: #fff3e0;
+    border-color: #FF9800;
+}
+
+.admonition.danger {
+    background: #ffebee;
+    border-color: #f44336;
+}
+
+/* 导航栏样式 */
+.wy-nav-top {
+    background: #2980B9 !important;
+}
+
+/* 侧边栏样式 */
+.wy-nav-side {
+    background: #2c3e50;
+}
+
+.wy-menu-vertical a {
+    color: #ecf0f1;
+}
+
+.wy-menu-vertical a:hover {
+    background: #34495e;
+    color: #fff;
+}
+
+/* 版本选择器 */
+.version {
+    background: #34495e;
+    color: #ecf0f1;
+}
+
+/* 按钮样式 */
+.btn {
+    border-radius: 4px;
+    padding: 0.5em 1em;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #2980B9;
+    border-color: #2980B9;
+}
+
+.btn-primary:hover {
+    background: #1f6391;
+    border-color: #1f6391;
+}
+
+/* 代码复制按钮 */
+.copybtn {
+    background: #2980B9 !important;
+    color: white !important;
+    border: none;
+    border-radius: 3px;
+    padding: 5px 10px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.copybtn:hover {
+    background: #1f6391 !important;
+}
+
+/* 图标样式 */
+.admonition .admonition-title:before {
+    font-size: 1.2em;
+    margin-right: 0.5em;
+}
+
+/* 链接样式 */
+a {
+    color: #2980B9;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #1f6391;
+    text-decoration: underline;
+}
+
+/* 列表样式 */
+ul, ol {
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+li {
+    margin: 0.5em 0;
+}
+
+/* 网格布局卡片 */
+.rst-content .section > .grid {
+    display: grid;
+    gap: 1.5em;
+    margin: 1.5em 0;
+}
+
+.rst-content .section > .grid-1 {
+    grid-template-columns: 1fr;
+}
+
+.rst-content .section > .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.rst-content .section > .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.rst-content .section > .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* 卡片样式 */
+.rst-content .grid .t避難倅 ortal {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 1.5em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+}
+
+.rst-content .grid .t避難倅 ortal:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.rst-content .grid .t避難倅 ortal .t避難倅 ortal-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    color: #2980B9;
+}
+
+.rst-content .grid .t避難倅 ortal .t避難倅 ortal-content {
+    color: #555;
+    line-height: 1.6;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .rst-content .section > .grid-2,
+    .rst-content .section > .grid-3,
+    .rst-content .section > .grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    h2 {
+        font-size: 1.5em;
+    }
+
+    h3 {
+        font-size: 1.3em;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* 打印样式 */
+@media print {
+    .wy-nav-side,
+    .wy-nav-top,
+    .rst-footer-buttons,
+    .copybtn {
+        display: none !important;
+    }
+
+    .wy-nav-content-wrap {
+        margin-left: 0;
+    }
+
+    a {
+        color: #000;
+        text-decoration: underline;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+}
+
+/* 加载动画 */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2980B9;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 徽章样式 */
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    font-size: 0.85em;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+
+.badge-success {
+    background: #4CAF50;
+    color: white;
+}
+
+.badge-warning {
+    background: #FF9800;
+    color: white;
+}
+
+.badge-danger {
+    background: #f44336;
+    color: white;
+}
+
+.badge-info {
+    background: #2196F3;
+    color: white;
+}
+
+/* 进度条 */
+.progress {
+    width: 100%;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1em 0;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #2980B9;
+    transition: width 0.3s;
+}
+
+/* 工具提示 */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}

@@ -1,0 +1,203 @@
+{
+  "timestamp": "2025-11-02T13:29:14.573596",
+  "total_issues": 24,
+  "by_severity": {
+    "CRITICAL": 0,
+    "WARNING": 24,
+    "INFO": 0
+  },
+  "issues": [
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 0005_hk_20251102_132750.csv is too small (273 bytes)",
+      "timestamp": "2025-11-02T13:29:14.560379",
+      "file": "data\\0005_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 0005_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.560410",
+      "file": "data\\0005_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 0388_hk_20251102_132750.csv is too small (269 bytes)",
+      "timestamp": "2025-11-02T13:29:14.560519",
+      "file": "data\\0388_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 0388_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.560537",
+      "file": "data\\0388_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 0700_hk_20251102_132738.csv is too small (273 bytes)",
+      "timestamp": "2025-11-02T13:29:14.560636",
+      "file": "data\\0700_hk_20251102_132738.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 0700_hk_20251102_132738.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.560651",
+      "file": "data\\0700_hk_20251102_132738.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 0700_hk_20251102_132750.csv is too small (273 bytes)",
+      "timestamp": "2025-11-02T13:29:14.560737",
+      "file": "data\\0700_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 0700_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.560750",
+      "file": "data\\0700_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 0939_hk_20251102_132750.csv is too small (257 bytes)",
+      "timestamp": "2025-11-02T13:29:14.560836",
+      "file": "data\\0939_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 0939_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.560849",
+      "file": "data\\0939_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 1398_hk_20251102_132750.csv is too small (258 bytes)",
+      "timestamp": "2025-11-02T13:29:14.560929",
+      "file": "data\\1398_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 1398_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.560941",
+      "file": "data\\1398_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 2318_hk_20251102_132750.csv is too small (262 bytes)",
+      "timestamp": "2025-11-02T13:29:14.561020",
+      "file": "data\\2318_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 2318_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.561031",
+      "file": "data\\2318_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 2628_hk_20251102_132750.csv is too small (265 bytes)",
+      "timestamp": "2025-11-02T13:29:14.561111",
+      "file": "data\\2628_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 2628_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.561122",
+      "file": "data\\2628_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 3988_hk_20251102_132750.csv is too small (258 bytes)",
+      "timestamp": "2025-11-02T13:29:14.561195",
+      "file": "data\\3988_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 3988_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.561209",
+      "file": "data\\3988_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 9988_hk_20251102_132750.csv is too small (274 bytes)",
+      "timestamp": "2025-11-02T13:29:14.561284",
+      "file": "data\\9988_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 9988_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.561295",
+      "file": "data\\9988_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SMALL_FILE",
+      "severity": "WARNING",
+      "message": "File 9999_hk_20251102_132750.csv is too small (270 bytes)",
+      "timestamp": "2025-11-02T13:29:14.561369",
+      "file": "data\\9999_hk_20251102_132750.csv",
+      "action": "Check if data is complete"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file 9999_hk_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.561380",
+      "file": "data\\9999_hk_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "READ_ERROR",
+      "severity": "WARNING",
+      "message": "Error reading file merged_hkex_data_20251102_132750.csv: can't subtract offset-naive and offset-aware datetimes",
+      "timestamp": "2025-11-02T13:29:14.561511",
+      "file": "data\\merged_hkex_data_20251102_132750.csv",
+      "action": "Check file format and encoding"
+    },
+    {
+      "type": "SYSTEM_ERRORS",
+      "severity": "WARNING",
+      "message": "Found 1 errors in hkex_fetcher.log",
+      "timestamp": "2025-11-02T13:29:14.569311",
+      "file": "hkex_fetcher.log",
+      "action": "Check log file for details and fix errors"
+    }
+  ]
+}

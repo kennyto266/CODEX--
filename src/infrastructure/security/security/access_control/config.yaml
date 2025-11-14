@@ -1,0 +1,384 @@
+# 港股量化交易系統 - 訪問控制配置
+
+# 數據庫配置
+database:
+  # RBAC數據庫
+  rbac:
+    path: "data/rbac.db"
+    backup_interval: 3600  # 秒 (1小時)
+
+  # MFA數據庫
+  mfa:
+    path: "data/mfa.db"
+    encryption_key: null  # 自動生成或指定
+
+  # 會話數據庫
+  session:
+    path: "data/sessions.db"
+    cleanup_interval: 1800  # 秒 (30分鐘)
+
+  # API訪問控制數據庫
+  api:
+    path: "data/api_access.db"
+
+  # ABAC策略文件
+  abac:
+    policy_path: "data/abac_policies.json"
+
+# Redis配置 (可選，用於分佈式會話和緩存)
+redis:
+  enabled: false
+  url: "redis://localhost:6379/0"
+  session_prefix: "session:"
+  rate_limit_prefix: "rate_limit:"
+
+# JWT令牌配置
+jwt:
+  secret_key: null  # 自動生成或指定
+  algorithm: "HS256"
+  access_token_expire: 3600  # 秒 (1小時)
+  refresh_token_expire: 604800  # 秒 (7天)
+  id_token_expire: 3600  # 秒 (1小時)
+
+# 會話管理配置
+session:
+  idle_timeout: 1800  # 秒 (30分鐘)
+  absolute_timeout: 86400  # 秒 (24小時)
+  max_concurrent_sessions: 5
+  cleanup_expired: true
+  session_fixation_protection: true
+
+# MFA配置
+mfa:
+  enabled: true
+  required_for_roles: ["admin", "trader", "risk_manager"]
+  methods:
+    totp:
+      enabled: true
+      issuer_name: "HK Quant System"
+      digits: 6
+      period: 30
+    sms:
+      enabled: true
+      provider: "twilio"  # 或其他供應商
+      code_length: 6
+      expire_minutes: 10
+    email:
+      enabled: true
+      code_length: 6
+      expire_minutes: 10
+    backup_codes:
+      enabled: true
+      count: 10
+      length: 8
+  trusted_device:
+    enabled: true
+    expire_days: 30
+
+# 速率限制配置
+rate_limit:
+  enabled: true
+  default_limit: 60  # 每分鐘
+  default_window: 60  # 秒
+  endpoints:
+    "/api/v1/trade/execute":
+      limit: 10
+    "/api/v1/strategy/optimize":
+      limit: 5
+    "/api/v1/data/export":
+      limit: 20
+  client_based_limit: true
+  ip_based_limit: 100
+
+# 密碼策略
+password:
+  min_length: 12
+  require_uppercase: true
+  require_lowercase: true
+  require_numbers: true
+  require_special_chars: true
+  max_age_days: 90
+  history_count: 5  # 不能重複使用最近5個密碼
+  lockout_threshold: 5  # 失敗5次後鎖定
+  lockout_duration: 900  # 秒 (15分鐘)
+
+# 角色和權限配置
+rbac:
+  default_roles:
+    - name: "admin"
+      type: "admin"
+      description: "系統管理員"
+      permissions: ["*"]  # 所有權限
+    - name: "trader"
+      type: "trader"
+      description: "交易員"
+      permissions:
+        - "trade:execute"
+        - "trade:view"
+        - "portfolio:view"
+        - "portfolio:modify"
+        - "strategy:execute"
+        - "strategy:view"
+        - "data:read"
+        - "data:export"
+    - name: "analyst"
+      type: "analyst"
+      description: "分析師"
+      permissions:
+        - "data:read"
+        - "data:export"
+        - "analysis:view"
+        - "analysis:create"
+        - "strategy:view"
+        - "strategy:create"
+        - "backtest:execute"
+        - "report:view"
+    - name: "risk_manager"
+      type: "risk_manager"
+      description: "風險管理員"
+      permissions:
+        - "risk:view"
+        - "risk:modify"
+        - "compliance:view"
+        - "compliance:modify"
+        - "alert:view"
+        - "alert:modify"
+        - "limit:view"
+        - "limit:modify"
+        - "trade:view"
+        - "portfolio:view"
+        - "data:read"
+    - name: "auditor"
+      type: "auditor"
+      description: "審計員"
+      permissions:
+        - "audit:view"
+        - "audit:export"
+        - "log:view"
+        - "report:view"
+        - "user:view"
+        - "permission:view"
+        - "session:view"
+    - name: "viewer"
+      type: "viewer"
+      description: "查看者"
+      permissions:
+        - "data:read"
+        - "report:view"
+    - name: "guest"
+      type: "guest"
+      description: "訪客"
+      permissions:
+        - "data:read:public"
+
+  # 角色層次結構
+  role_hierarchy:
+    admin: ["trader", "analyst", "auditor", "risk_manager", "viewer"]
+    trader: ["viewer"]
+    analyst: ["viewer"]
+    risk_manager: ["viewer"]
+    auditor: ["viewer"]
+    viewer: []
+    guest: []
+
+# API密鑰配置
+api_keys:
+  enabled: true
+  default_rate_limit: 60
+  require_signature: true
+  signature_algorithm: "HMAC-SHA256"
+  allowed_scopes:
+    - "data:read"
+    - "data:write"
+    - "trade:execute"
+    - "portfolio:view"
+    - "portfolio:modify"
+    - "analysis:view"
+    - "strategy:execute"
+    - "user:manage"
+
+# ABAC策略配置
+abac:
+  enabled: true
+  default_effect: "deny"
+  policies:
+    - id: "policy_001"
+      name: "工作時間管理員訪問"
+      effect: "permit"
+      type: "allow"
+      conditions:
+        - attribute: "user.role"
+          operator: "=="
+          value: "admin"
+        - attribute: "env.hour"
+          operator: ">="
+          value: 9
+        - attribute: "env.hour"
+          operator: "<"
+          value: 18
+      target_resources: ["*"]
+      target_actions: ["*"]
+      priority: 10
+
+    - id: "policy_002"
+      name: "非工作時間敏感數據限制"
+      effect: "deny"
+      type: "deny"
+      conditions:
+        - attribute: "resource.classification"
+          operator: "=="
+          value: "sensitive"
+        - attribute: "env.hour"
+          operator: "<"
+          value: 9
+      target_resources: ["trade_data", "user_data", "financial_data"]
+      target_actions: ["read", "export"]
+      priority: 20
+
+    - id: "policy_003"
+      name: "IP白名單"
+      effect: "permit"
+      type: "require"
+      conditions:
+        - attribute: "env.client_ip"
+          operator: "in"
+          value: ["192.168.1.0/24", "10.0.0.0/8", "127.0.0.1"]
+      target_resources: ["*"]
+      target_actions: ["*"]
+      priority: 30
+
+# 環境配置
+environment:
+  name: "production"  # development, testing, production
+  debug: false
+  trusted_hosts: ["localhost", "127.0.0.1", "*.quant-system.local"]
+
+# 安全配置
+security:
+  # 加密
+  encryption:
+    algorithm: "AES-256-GCM"
+    key_rotation_days: 90
+
+  # 敏感數據保護
+  sensitive_data:
+    mask_logs: true
+    pii_fields: ["email", "phone", "id_number", "bank_account"]
+    encryption_required: true
+
+  # 防暴力破解
+  brute_force_protection:
+    enabled: true
+    max_attempts: 5
+    lockout_duration: 900  # 秒
+    ip_whitelist: ["127.0.0.1", "::1"]
+
+  # 地理位置限制
+  geo_restriction:
+    enabled: false
+    allowed_countries: ["HK", "US", "SG"]
+    blocked_countries: ["CN", "RU", "KP"]
+
+  # HTTPS配置
+  https:
+    required: true
+    hsts_max_age: 31536000  # 秒 (1年)
+    redirect_to_https: true
+
+# 審計配置
+audit:
+  enabled: true
+  log_level: "INFO"
+  log_file: "logs/audit.log"
+  log_format: "json"
+  include_sensitive: false
+  retention_days: 365
+  events:
+    - "login"
+    - "logout"
+    - "session_expire"
+    - "permission_change"
+    - "data_access"
+    - "data_modify"
+    - "trade_execute"
+    - "api_access"
+    - "security_event"
+
+# 監控配置
+monitoring:
+  metrics_enabled: true
+  metrics_endpoint: "/metrics"
+  health_check_endpoint: "/health"
+  performance_tracking: true
+  alert_thresholds:
+    failed_logins_per_hour: 100
+    session_creation_rate: 1000  # 每分鐘
+    api_error_rate: 0.05  # 5%
+
+# 通知配置
+notifications:
+  enabled: true
+  channels:
+    email:
+      enabled: true
+      smtp_server: "smtp.example.com"
+      smtp_port: 587
+      use_tls: true
+    webhook:
+      enabled: false
+      url: null
+    telegram:
+      enabled: false
+      bot_token: null
+      chat_id: null
+
+  events:
+    - "security_breach"
+    - "suspicious_activity"
+    - "failed_login_spike"
+    - "permission_escalation"
+    - "unusual_access_pattern"
+
+# 備份配置
+backup:
+  enabled: true
+  interval: 86400  # 秒 (24小時)
+  retention: 30  # 天
+  encryption: true
+  compression: true
+  destinations:
+    - "local://backups/"
+    # - "s3://quant-system-backups/"
+    # - "azure://quant-system-backups/"
+
+# 合規配置
+compliance:
+  gdpr:
+    enabled: true
+    data_retention_days: 2555  # 7年
+    right_to_be_forgotten: true
+    data_portability: true
+
+  sox:
+    enabled: true
+    audit_trail_required: true
+    change_management: true
+
+  iso27001:
+    enabled: true
+    information_classification: true
+    access_control_policy: true
+
+# 開發配置
+development:
+  enabled: false
+  bypass_mfa: false
+  disable_rate_limit: false
+  debug_queries: false
+  test_users:
+    - user_id: "admin"
+      password: "admin123"
+      roles: ["admin"]
+    - user_id: "trader"
+      password: "trader123"
+      roles: ["trader"]

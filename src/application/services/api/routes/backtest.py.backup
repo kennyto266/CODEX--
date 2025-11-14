@@ -1,0 +1,211 @@
+"""
+回测引擎API端点
+提供策略回测和优化功能
+"""
+
+from typing import Any, Dict, List, Optional
+
+import structlog
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
+
+logger = structlog.get_logger("api.backtest")
+
+router = APIRouter()
+
+
+class BacktestRequest(BaseModel):
+    """回测请求模型"""
+    symbol: str = Field(..., description="股票代码，如：0700.HK")
+    start_date: str = Field(..., description="开始日期，格式：YYYY-MM-DD")
+    end_date: str = Field(..., description="结束日期，格式：YYYY-MM-DD")
+    strategy: str = Field(..., description="策略类型，如：kdj, rsi, macd")
+    initial_capital: float = Field(100000.0, description="初始资金")
+    parameters: Optional[Dict[str, Any]] = Field(
+        default=None, description="策略参数"
+    )
+
+
+class BacktestResult(BaseModel):
+    """回测结果模型"""
+    strategy: str
+    symbol: str
+    start_date: str
+    end_date: str
+    total_return: float
+    annualized_return: float
+    sharpe_ratio: float
+    max_drawdown: float
+    win_rate: float
+    trades_count: int
+    final_value: float
+    parameters: Dict[str, Any]
+
+
+@router.post(
+    "/backtest/run",
+    response_model=BacktestResult,
+    summary="运行策略回测",
+    description="根据指定策略和参数运行回测分析",
+)
+async def run_backtest(request: BacktestRequest) -> BacktestResult:
+    """
+    运行策略回测
+
+    - **symbol**: 股票代码（港股格式，如0700.HK）
+    - **start_date**: 回测开始日期
+    - **end_date**: 回测结束日期
+    - **strategy**: 策略类型（kdj, rsi, macd, ma, bb等）
+    - **initial_capital**: 初始资金，默认10万元
+    - **parameters**: 策略参数（可选）
+    """
+    try:
+        logger.info(
+            "开始回测",
+            symbol=request.symbol,
+            strategy=request.strategy,
+            start_date=request.start_date,
+            end_date=request.end_date,
+        )
+
+        # TODO: 这里应该调用实际的回测引擎
+        # 暂时返回模拟数据
+        result = BacktestResult(
+            strategy=request.strategy,
+            symbol=request.symbol,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            total_return=15.67,
+            annualized_return=8.32,
+            sharpe_ratio=1.23,
+            max_drawdown=-5.45,
+            win_rate=62.5,
+            trades_count=48,
+            final_value=115670.0,
+            parameters=request.parameters or {},
+        )
+
+        logger.info("回测完成", result=result)
+
+        return result
+
+    except Exception as e:
+        logger.error("回测失败", error=str(e))
+        raise HTTPException(status_code=500, detail=f"回测执行失败: {str(e)}")
+
+
+@router.get(
+    "/backtest/optimize",
+    response_model=List[BacktestResult],
+    summary="策略参数优化",
+    description="自动搜索最优策略参数",
+)
+async def optimize_strategy(
+    symbol: str = Query(..., description="股票代码"),
+    strategy: str = Query(..., description="策略类型"),
+    start_date: str = Query(..., description="开始日期"),
+    end_date: str = Query(..., description="结束日期"),
+    max_workers: int = Query(8, description="并行工作线程数"),
+) -> List[BacktestResult]:
+    """
+    策略参数优化
+
+    自动搜索指定策略的最优参数组合
+    """
+    try:
+        logger.info(
+            "开始参数优化",
+            symbol=symbol,
+            strategy=strategy,
+            start_date=start_date,
+            end_date=end_date,
+            max_workers=max_workers,
+        )
+
+        # TODO: 调用实际的参数优化引擎
+        # 暂时返回模拟的优化结果
+        results = [
+            BacktestResult(
+                strategy=strategy,
+                symbol=symbol,
+                start_date=start_date,
+                end_date=end_date,
+                total_return=15.67,
+                annualized_return=8.32,
+                sharpe_ratio=1.23,
+                max_drawdown=-5.45,
+                win_rate=62.5,
+                trades_count=48,
+                final_value=115670.0,
+                parameters={"k_period": 9, "d_period": 3, "oversold": 20, "overbought": 80},
+            ),
+            BacktestResult(
+                strategy=strategy,
+                symbol=symbol,
+                start_date=start_date,
+                end_date=end_date,
+                total_return=14.23,
+                annualized_return=7.65,
+                sharpe_ratio=1.15,
+                max_drawdown=-6.12,
+                win_rate=60.4,
+                trades_count=52,
+                final_value=114230.0,
+                parameters={"k_period": 12, "d_period": 3, "oversold": 25, "overbought": 75},
+            ),
+        ]
+
+        logger.info("参数优化完成", results_count=len(results))
+
+        return results
+
+    except Exception as e:
+        logger.error("参数优化失败", error=str(e))
+        raise HTTPException(status_code=500, detail=f"参数优化失败: {str(e)}")
+
+
+@router.get(
+    "/backtest/strategies",
+    response_model=List[str],
+    summary="获取可用策略列表",
+    description="返回所有支持的回测策略类型",
+)
+async def get_strategies() -> List[str]:
+    """
+    获取支持的策略列表
+    """
+    strategies = [
+        "kdj",
+        "rsi",
+        "macd",
+        "ma",
+        "bb",
+        "cci",
+        "adx",
+        "atr",
+        "obv",
+        "ichimoku",
+        "sar",
+    ]
+
+    return strategies
+
+
+@router.get(
+    "/backtest/history",
+    response_model=List[BacktestResult],
+    summary="获取历史回测记录",
+    description="分页获取历史回测结果",
+)
+async def get_backtest_history(
+    page: int = Query(1, ge=1, description="页码"),
+    size: int = Query(20, ge=1, le=100, description="每页数量"),
+) -> List[BacktestResult]:
+    """
+    获取历史回测记录
+
+    支持分页查询
+    """
+    # TODO: 从数据库查询历史记录
+    # 暂时返回空列表
+    return []
