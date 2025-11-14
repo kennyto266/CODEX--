@@ -442,7 +442,8 @@ class DashboardAPI:
             await self.realtime_service.cleanup()
             
             # 清理组件
-            if hasattr(self.agent_card_component, "cleanup"):        except Exception as e:
+            if hasattr(self.agent_card_component, "cleanup"):
+                await self.agent_card_component.cleanup()        except Exception as e:
             self.logger.error(f"清理仪表板API服务失败: {e}")
     
     async def get_all_agents(self) -> List[Any]:
@@ -565,17 +566,21 @@ class DashboardAPI:
             self.logger.error(f"重启Agent失败: {e}")
             return False
 
-
-# 请求/响应模型gy_display_component, "cleanup"):
+    async def cleanup_components(self):
+        """清理组件"""
+        try:
+            # 清理组件
+            if hasattr(self.agent_card_component, "cleanup"):
+                await self.agent_card_component.cleanup()
+            if hasattr(self.strategy_display_component, "cleanup"):
                 await self.strategy_display_component.cleanup()
             if hasattr(self.performance_charts_component, "cleanup"):
                 await self.performance_charts_component.cleanup()
-            
+
             self._services_initialized = False
             self.logger.info("仪表板API服务清理完成")
-            
         except Exception as e:
-            self.logger.error(f"清理仪表板API服务失败: {e}")
+            self.logger.error(f"清理组件失败: {e}")
 
 
 # 请求/响应模型

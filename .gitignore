@@ -28,6 +28,42 @@ MANIFEST
 
 # PyInstaller
 *.manifest
+
+# Machine Learning / NLP
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.joblib
+*.bin
+*.pth
+*.pt
+models/
+.cache/
+transformers_cache/
+.huggingface/
+
+# NLP Data
+*.csv.bak
+*.json.tmp
+training_data/
+test_outputs/
+logs/
+wandb/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 *.spec
 
 # Installer logs

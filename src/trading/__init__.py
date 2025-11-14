@@ -5,6 +5,7 @@
 """
 
 from .base_trading_api import BaseTradingAPI, OrderType, OrderStatus, OrderSide
+from .futu_trading_api import FutuTradingAPI
 from .broker_apis import (
     InteractiveBrokersAPI,
     TDAmeritradeAPI,
@@ -22,8 +23,9 @@ from .position_manager import PositionManager
 
 __all__ = [
     "BaseTradingAPI",
+    "FutuTradingAPI",
     "OrderType",
-    "OrderStatus", 
+    "OrderStatus",
     "OrderSide",
     "InteractiveBrokersAPI",
     "TDAmeritradeAPI",

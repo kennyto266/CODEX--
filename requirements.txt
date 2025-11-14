@@ -39,6 +39,25 @@ passlib[bcrypt]==1.7.4
 PyJWT==2.8.0
 cryptography==41.0.7
 
+# NLP 和機器學學 (用於非價格數據爬蟲)
+transformers>=4.30.0
+torch>=2.0.0
+pyyaml>=6.0
+aiohttp>=3.8.0
+numpy>=1.24.3
+scipy>=1.10.0
+
+# 網頁爬蟲支援
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+requests>=2.31.0
+selenium>=4.15.0
+playwright>=1.40.0
+
+# 數據驗證和質量
+jsonschema>=4.19.0
+pydantic>=2.5.0
+
 # API 和網路
 requests>=2.31.0
 python-multipart==0.0.6

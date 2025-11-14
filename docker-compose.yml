@@ -1,22 +1,35 @@
 version: '3.8'
 
 services:
-  # 主应用服务
-  quant-system:
-    build: .
+  # 主应用服务 - 港股量化分析系統
+  hk-quant-trading:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hk_quant_trading_system
     ports:
       - "8001:8001"
+      - "8050:8050"  # 監控端口
     environment:
+      - APP_ENV=production
+      - APP_TIMEZONE=Asia/Hong_Kong
       - DATABASE_URL=postgresql://quant_user:quant_password@postgres:5432/quant_system
       - REDIS_URL=redis://redis:6379/0
       - CACHE_TTL=3600
       - RATE_LIMIT_DEFAULT=100/minute
+      - TRADING_UNIVERSE=HSI_80
+      - INITIAL_CAPITAL=1000000
+      - MAX_POSITIONS=10
+      - RISK_LIMIT=0.02
     depends_on:
       - postgres
       - redis
     volumes:
+      - ./data:/app/data
       - ./logs:/app/logs
+      - ./config:/app/config
       - ./models:/app/models
+      - ./cache:/app/cache
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]

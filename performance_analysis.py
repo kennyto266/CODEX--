@@ -4,12 +4,20 @@
 
 import time
 import psutil
-import memory_profiler
+try:
+    import memory_profiler
+    HAS_MEMORY_PROFILER = True
+except ImportError:
+    HAS_MEMORY_PROFILER = False
+    print("Warning: memory_profiler not installed, using simplified version")
 from functools import wraps
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Any, Callable
 import logging
+
+# 配置日誌
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class PerformanceProfiler:
     """性能分析器"""
@@ -192,7 +200,7 @@ def performance_test():
         return indicators
     
     # 运行测试
-    print("运行性能测试...")
+    print("Running performance tests...")
     
     # 测试原始方法
     for _ in range(10):
@@ -204,46 +212,61 @@ def performance_test():
     
     # 输出结果
     summary = profiler.get_summary()
-    print("\n性能测试结果:")
+    print("\nPerformance Test Results:")
     print("-" * 50)
-    
+
     for func_name, metrics in summary.items():
         print(f"{func_name}:")
-        print(f"  调用次数: {metrics['calls']}")
-        print(f"  平均时间: {metrics['avg_time']:.4f}s")
-        print(f"  最大时间: {metrics['max_time']:.4f}s")
-        print(f"  平均内存: {metrics['avg_memory']:.2f}MB")
-        print(f"  最大内存: {metrics['max_memory']:.2f}MB")
+        print(f"  Calls: {metrics['calls']}")
+        print(f"  Avg Time: {metrics['avg_time']:.4f}s")
+        print(f"  Max Time: {metrics['max_time']:.4f}s")
+        print(f"  Avg Memory: {metrics['avg_memory']:.2f}MB")
+        print(f"  Max Memory: {metrics['max_memory']:.2f}MB")
         print()
 
-# 性能优化建议
+# Performance Optimization Recommendations
 PERFORMANCE_RECOMMENDATIONS = {
-    "高优先级": [
-        "使用连接池减少HTTP连接开销",
-        "实现数据预加载和缓存策略",
-        "使用向量化计算替代循环",
-        "优化DataFrame数据类型减少内存使用"
+    "High Priority": [
+        "Use connection pooling to reduce HTTP connection overhead",
+        "Implement data preloading and caching strategies",
+        "Use vectorized computation instead of loops",
+        "Optimize DataFrame data types to reduce memory usage"
     ],
-    "中优先级": [
-        "实现异步处理提升并发性能",
-        "使用数据库替代文件存储",
-        "实现分页加载大量数据",
-        "添加性能监控和告警"
+    "Medium Priority": [
+        "Implement async processing to improve concurrent performance",
+        "Use database instead of file storage",
+        "Implement pagination for large data loading",
+        "Add performance monitoring and alerting"
     ],
-    "低优先级": [
-        "使用CDN加速静态资源",
-        "实现数据压缩传输",
-        "优化前端渲染性能",
-        "添加缓存预热机制"
+    "Low Priority": [
+        "Use CDN to accelerate static resources",
+        "Implement data compression for transmission",
+        "Optimize frontend rendering performance",
+        "Add cache preheating mechanism"
     ]
 }
 
 if __name__ == "__main__":
-    performance_test()
-    
-    print("\n性能优化建议:")
-    print("=" * 50)
-    for priority, recommendations in PERFORMANCE_RECOMMENDATIONS.items():
-        print(f"\n{priority}:")
-        for i, rec in enumerate(recommendations, 1):
-            print(f"  {i}. {rec}")
+    try:
+        print("Starting Performance Analysis...")
+        print("System Information:")
+        print(f"  CPU Cores: {psutil.cpu_count()}")
+        print(f"  Available Memory: {psutil.virtual_memory().available / 1024 / 1024 / 1024:.1f} GB")
+        print()
+
+        performance_test()
+
+        print("\nPerformance Optimization Recommendations:")
+        print("=" * 50)
+        for priority, recommendations in PERFORMANCE_RECOMMENDATIONS.items():
+            print(f"\n{priority}:")
+            for i, rec in enumerate(recommendations, 1):
+                print(f"  {i}. {rec}")
+
+        print("\nAnalysis Complete!")
+
+    except Exception as e:
+        print(f"Error occurred during performance analysis: {e}")
+        print("Please check if required modules are installed correctly")
+        import traceback
+        traceback.print_exc()
