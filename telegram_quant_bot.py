@@ -45,7 +45,7 @@ sys.path.insert(0, project_root)
 # 导入量化交易系统
 try:
     from complete_project_system import (
-        get_stock_data, 
+        get_stock_data,
         run_strategy_optimization,
         calculate_technical_indicators,
         calculate_risk_metrics,
@@ -55,6 +55,24 @@ try:
 except ImportError as e:
     logging.warning(f"量化交易系统导入失败: {e}")
     QUANT_SYSTEM_OK = False
+
+# 导入GLM4.6 API集成
+try:
+    from src.telegram.glm46_integration import get_glm46_instance
+    GLM46_OK = True
+except ImportError as e:
+    logging.warning(f"GLM4.6 API集成导入失败: {e}")
+    GLM46_OK = False
+
+# 导入体育数据集成
+try:
+    from src.telegram.sports_integration import get_sports_instance
+    from src.telegram.fast_nba_crawler import get_fast_nba_crawler_instance
+    from src.telegram.chrome_nba_crawler import get_chrome_nba_crawler_instance
+    SPORTS_OK = True
+except ImportError as e:
+    logging.warning(f"体育数据集成导入失败: {e}")
+    SPORTS_OK = False
 
 # ========== 单实例与Webhook工具 ==========
 def _acquire_single_instance_lock():
@@ -293,57 +311,29 @@ def _is_allowed_user_and_chat(update: Update) -> bool:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     name = user.first_name if user and user.first_name else "朋友"
-    text = (
-        f"嗨 {name}! 👋\n\n"
-        "🤖 **量化交易系统Bot**\n\n"
-        "📊 **主要功能:**\n"
-        "• 股票技术分析\n"
-        "• 策略参数优化\n"
-        "• 风险评估\n"
-        "• 市场情绪分析\n\n"
-        "输入 /help 查看所有可用指令"
-    )
-    await reply_long(update, text)
+    text = f"嗨，{name}！我是企鵝助手。輸入 /help 查看功能。"
+    await update.message.reply_text(text)
 
 def build_help_text() -> str:
     lines = [
-        "🤖 量化交易系统Bot - 帮助\n",
-        "📊 功能分类：",
-        "- 技术分析：/analyze <代码>、/risk <代码>、/sentiment <代码>",
-        "- 策略优化：/optimize <代码>",
-        "- 系统信息：/status、/id、/help",
-        "- 实用工具：/echo、/history [n]",
-        "- 高级功能：/summary、/cursor、/wsl、/tftcap\n",
+        "🤖 企鵝助手\n\n",
+        "📊 股票分析:",
+        "• /analyze <代碼> - 技術分析",
+        "• /risk <代碼> - 風險評估",
+        "• /optimize <代碼> - 策略優化\n",
 
-        "📈 技术与风险：",
-        "/analyze <股票代码>  分析技术指标（SMA/EMA/RSI/MACD/布林带）",
-        "/risk <股票代码>      计算 VaR、波动率、最大回撤、风险评分",
-        "/sentiment <股票代码> 市场情绪分析（趋势强度/波动情绪）",
-        "/optimize <股票代码>  高计算量参数优化（Sharpe最大化）\n",
+        "🤖 AI功能:",
+        "• /ai <問題> - AI問答\n",
 
-        "🧰 实用工具：",
-        "/echo <文字>          原样回声（仅私聊回应）",
-        "/history [n]          查看最近 n 条消息（默认20，上限200）\n",
+        "🏀 體育娛樂:",
+        "• /nba - NBA比分",
+        "• /football - 足球比分",
+        "• /scores <球隊> - 特定球隊\n",
 
-        "🧠 高级：需要配置与白名单（详见README/规则）",
-        "/summary              GPT-5 总结最近消息（需 CURSOR_API_KEY）",
-        "/cursor <提示词>      调用 Cursor GPT-5 执行（需白名单与 CURSOR_API_KEY）",
-        "/wsl <指令>           在WSL执行白名单命令（高风险，需白名单，可选密钥）",
-        "/tftcap               浏览器截图指定区块（需安装 Playwright）\n",
-
-        "🔑 权限与环境：",
-        "- 需在虚拟环境(.venv310)与正确路径中运行",
-        "- /summary、/cursor、/wsl 仅限白名单与已配置密钥",
-        "- 可能需要环境变量：TELEGRAM_BOT_TOKEN、CURSOR_API_KEY\n",
-
-        "💡 示例：",
-        "/analyze 0700.HK",
-        "/optimize 2800.HK",
-        "/risk 0700.HK",
-        "/echo hello",
-        "/history 10",
-        "/summary",
-        "/cursor 使用中文总结以下要点…",
+        "🔧 系統功能:",
+        "• /status - 系統狀態",
+        "• /help - 顯示幫助",
+        "• /start - 開始使用"
     ]
     return "\n".join(lines)
 
@@ -357,7 +347,7 @@ async def analyze_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
     
     if not context.args:
-        await reply_long(update, "用法：/analyze <股票代码>\n例如：/analyze 0700.HK")
+        await reply_long(update, "用法：/analyze <股票代碼>\n例如：/analyze 0700.HK")
         return
     
     symbol = context.args[0].upper()
@@ -393,7 +383,7 @@ async def optimize_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
     
     if not context.args:
-        await reply_long(update, "用法：/optimize <股票代码>\n例如：/optimize 0700.HK")
+        await reply_long(update, "用法：/optimize <股票代碼>\n例如：/optimize 0700.HK")
         return
     
     symbol = context.args[0].upper()
@@ -436,7 +426,7 @@ async def risk_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     
     if not context.args:
-        await reply_long(update, "用法：/risk <股票代码>\n例如：/risk 0700.HK")
+        await reply_long(update, "用法：/risk <股票代碼>\n例如：/risk 0700.HK")
         return
     
     symbol = context.args[0].upper()
@@ -488,7 +478,7 @@ async def sentiment_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
     
     if not context.args:
-        await reply_long(update, "用法：/sentiment <股票代码>\n例如：/sentiment 0700.HK")
+        await reply_long(update, "用法：/sentiment <股票代碼>\n例如：/sentiment 0700.HK")
         return
     
     symbol = context.args[0].upper()
@@ -543,11 +533,17 @@ async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     
     # 当前时间
     text += f"⏰ 当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-    
+
     # 系统信息
     text += f"🐍 Python版本: {sys.version.split()[0]}\n"
     text += f"📊 Pandas版本: {pd.__version__}\n"
     text += f"🔢 NumPy版本: {np.__version__}\n"
+
+    # 系统模块状态
+    text += f"🤖 GLM4.6 AI: {'✅' if GLM46_OK else '❌'}\n"
+    text += f"🏀 体育数据: {'✅' if SPORTS_OK else '❌'}\n"
+    text += f"🏀 NBA爬虫: {'✅' if SPORTS_OK else '❌'}\n"
+    text += f"📈 量化系统: {'✅' if QUANT_SYSTEM_OK else '❌'}\n"
     
     await reply_long(update, text)
 
@@ -768,6 +764,109 @@ async def cursor_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     out = await _run_cmd(base_args)
     await reply_long(update, out or '执行失败')
 
+async def ai_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """GLM4.6 AI命令处理器"""
+    if not GLM46_OK:
+        await reply_long(update, "❌ GLM4.6 API集成未正确加载，请检查系统配置")
+        return
+
+    if not context.args:
+        await reply_long(update, "用法：/ai <問題>\n例如：/ai 分析0700.HK的技術指標")
+        return
+
+    question = " ".join(context.args)
+
+    try:
+        # 获取GLM4.6实例
+        glm46 = get_glm46_instance()
+
+        # 检查配置
+        if not glm46.is_configured():
+            await reply_long(update, "❌ GLM4.6 API未配置，请设置GLM46_API_KEY环境变量")
+            return
+
+        # 调用GLM4.6 API
+        response = await glm46.answer_general_question(question)
+
+        if response:
+            # 限制回復長度並簡化格式
+            if len(response) > 100:
+                response = response[:97] + "..."
+
+            formatted_response = f"🤖 {response}"
+            await update.message.reply_text(formatted_response)
+        else:
+            await reply_long(update, "❌ GLM4.6 API调用失败，请稍后重试")
+
+    except Exception as e:
+        logging.error(f"GLM4.6处理问题时出错: {e}")
+        await reply_long(update, f"❌ GLM4.6处理问题时发生错误: {str(e)}")
+
+async def nba_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """NBA比分命令处理器 - 使用MCP修正的真實ESPN數據"""
+    if not SPORTS_OK:
+        await reply_long(update, "体育数据集成未正确加载，请检查系统配置")
+        return
+
+    try:
+        # 使用MCP修正版NBA爬蟲獲取真實數據
+        from src.telegram.mcp_nba_crawler import get_mcp_nba_crawler_instance
+        mcp_crawler = get_mcp_nba_crawler_instance()
+        scores = await mcp_crawler.crawl_nba_scores()
+
+        await reply_long(update, scores)
+
+    except Exception as e:
+        logging.error(f"获取ESPN NBA比分时出错: {e}")
+        await reply_long(update, f"获取ESPN NBA比分时发生错误: {str(e)}")
+
+async def football_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """足球比分命令处理器"""
+    if not SPORTS_OK:
+        await reply_long(update, "❌ 体育数据集成未正确加载，请检查系统配置")
+        return
+
+    await update.effective_message.reply_text("⚽ 正在获取足球比赛实况...")
+
+    try:
+        # 获取体育数据实例
+        sports = get_sports_instance()
+
+        # 获取足球比分
+        scores = await sports.get_football_scores()
+
+        await reply_long(update, scores)
+
+    except Exception as e:
+        logging.error(f"获取足球比分时出错: {e}")
+        await reply_long(update, f"❌ 获取足球比分时发生错误: {str(e)}")
+
+async def scores_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """特定队比赛查询处理器"""
+    if not SPORTS_OK:
+        await reply_long(update, "❌ 体育数据集成未正确加载，请检查系统配置")
+        return
+
+    if not context.args:
+        await reply_long(update, "用法：/scores <球队名>\n例如：/scores 湖人\n/scores 皇家马德里")
+        return
+
+    team_name = " ".join(context.args)
+    await update.effective_message.reply_text(f"🔍 正在查找 {team_name} 的比赛...")
+
+    try:
+        # 获取体育数据实例
+        sports = get_sports_instance()
+
+        # 获取特定队的比分
+        scores = await sports.get_specific_team_scores(team_name)
+
+        await reply_long(update, scores)
+
+    except Exception as e:
+        logging.error(f"获取{team_name}比分时出错: {e}")
+        await reply_long(update, f"❌ 获取{team_name}比分时发生错误: {str(e)}")
+
 async def tftcap_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not _PW_OK:
         await reply_long(update, (
@@ -921,6 +1020,10 @@ async def post_init(app: Application) -> None:
         BotCommand("history", "查看最近消息"),
         BotCommand("summary", "总结最近消息（需API Key）"),
         BotCommand("cursor", "调用 Cursor（需白名单与API Key）"),
+        BotCommand("ai", "GLM4.6 AI助手（需GLM46_API_KEY）"),
+        BotCommand("nba", "NBA比赛实况"),
+        BotCommand("football", "足球比赛实况"),
+        BotCommand("scores", "查询特定球队比分"),
         BotCommand("wsl", "在WSL执行（需白名单）"),
         BotCommand("tftcap", "浏览器截图（需Playwright）"),
     ]
@@ -948,6 +1051,10 @@ def build_app(token: str) -> Application:
     app.add_handler(CommandHandler("history", history_cmd))
     app.add_handler(CommandHandler("summary", summary_cmd))
     app.add_handler(CommandHandler("cursor", cursor_cmd))
+    app.add_handler(CommandHandler("ai", ai_cmd))
+    app.add_handler(CommandHandler("nba", nba_cmd))
+    app.add_handler(CommandHandler("football", football_cmd))
+    app.add_handler(CommandHandler("scores", scores_cmd))
     app.add_handler(CommandHandler("wsl", wsl_cmd))
     app.add_handler(CommandHandler("tftcap", tftcap_cmd))
 
